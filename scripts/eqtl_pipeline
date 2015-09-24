@@ -1,0 +1,305 @@
+#!/bin/sh
+#; -*- mode: Makefile;-*-
+#the next line restarts using\
+exec make --warn-undefined-variables -Rf "$0"  ${1+"$@"} 
+# =========================================================
+# Copyright 2015
+#
+#
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# =========================================================
+###############################################################
+# disable deletion of temporary files
+.SECONDARY: 
+.ONESHELL:
+
+SHELL=bash
+##################
+# Setup some paths
+# path to script
+path=.
+path?=$(shell if which eqtl_pipeline >/dev/null 2>/dev/null; then dirname $(MAKEFILE_LIST); else dirname `which eqtl_pipeline`; fi)
+
+ifdef path
+ PATH:=$(path):$(PATH)
+endif
+
+# Requires make 4.1 or above
+VERSION_OK=$(shell if [ `make --version|head -n 1 | cut -f3 -d\ ` \< 4.1 ]; then echo 0; else echo 1; fi )
+ifeq ($(VERSION_OK),0)
+ $(error make version needs to be 4.1 or above)
+endif
+
+script_path:=$(shell dirname `which eqtl_pipeline`)
+################################################################################
+# Auxiliary functions
+################################################################################
+
+# Information messages
+define p_info=
+$(info $(shell date "+%H:%M:%S %d/%m/%Y * ") $(1))
+endef
+
+# Error messages
+define p_error=
+$(info $(shell date "+%H:%M:%S %d/%m/%Y") * ERROR: $(1)) && $(error Fatal error)
+endef
+
+# complain if a file does not exist and exit
+file_exists=$(if  $(realpath $(1)),,$(call p_error,$(1) not found))
+
+#  check if a variable  $(1) is defined - return the variable name if it is defined or empty otherwise
+is_defined=$(if $(subst undefined,,$(origin $(1))),$(1),)
+
+
+################################################################################
+# Variables
+################################################################################
+
+#Version and license info
+pname=eqtlXXXXX
+version=0.0.1
+contact="Add contact"
+license=This pipeline is distributed  under the terms of the GNU General Public License 3
+
+
+################################################################################
+# Default values
+################################################################################
+# max. memory (in MB)
+def_max_mem=6000
+
+def_max_threads=1
+
+################################################################################
+# go...
+
+$(info *****************************************************)
+$(info * $(pname) $(version))
+$(info * $(contact))
+$(info * $(license))
+$(info *)
+$(info * Initializing...)
+
+
+###############################################
+# Load configuration (mandatory)
+# use a configuration file?
+ifdef conf
+ $(call file_exists,$(conf))
+ $(info * Trying to load configuration file $(conf)...)
+ include $(conf)
+ $(info * Configuration loaded.)
+else
+ $(call p_error,Configuration file missing)
+endif
+
+###############################################
+# Load some definitions
+# include $(script_path)/../aux/mk/irap_defs.mk
+
+###############################################################
+# Check and validate the parameters values
+
+$(info * )
+$(info * Required Parameters:)
+
+#***********************
+# Name of the experiment
+ifndef name
+ $(call p_error, missing argument name!)
+else
+ $(info *	name=$(name))
+endif
+
+# cov_matrix?
+# 
+# expr_matrix
+
+
+
+#************************
+# ?
+ifndef vcf_dir
+ $(call p_error,missing argument vcf_dir)
+endif
+$(info *	vcf_dir=$(vcf_dir))
+$(call file_exists,$(vcf_dir))
+
+#********* 
+# GTF file?
+ifndef gtf_file
+ gtf_file?=$(subst .fa,.gtf,$(reference))
+endif
+$(info *       gtf_file  = $(gtf_file))
+$(call file_exists,$(gtf_file))
+
+# vcfs??
+$(foreach l,$(vcf_files),$(call file_exists,$(l)))
+
+#####################
+# Other Optional parameters
+#####################
+$(info * )
+$(info * Optional Parameters:)
+
+#********
+# Threads
+#********
+ifndef max_threads
+ max_threads=$(def_max_threads)
+endif
+$(info *	max_threads=$(max_threads))
+
+#********************
+# Temporary directory
+#********************
+# 
+ifndef tmp_dir
+ tmp_dir=$(data_dir)/tmp
+endif
+
+#$(shell mkdir -p tmp_dir)
+$(info *	tmp_dir=$(tmp_dir) (temporary directory))
+
+
+#####################
+# Normalization method
+SUPPORTED_NORM_METHODS=peer panama
+#norm_method expr_norm_method?
+ifneq (,$(filter $(norm_method),$(SUPPORTED_NORM_METHODS) none)
+$(error $(norm_method) not supported)
+endif
+
+ifeq ($(norm_method),peer) 
+$(info peer!!!)
+else 
+$(info *	norm_method=$(norm_method))
+endif
+
+#
+# mem in MB
+ifndef max_mem
+max_mem=$(def_max_mem)
+endif
+# max memory in GB
+max_mem_gb:=$(shell expr $(max_mem) \/ 1000)
+
+# set memory (in bytes) to 65% of the max. memory available
+#ifndef SAMTOOLS_SORT_MEM
+# SAMTOOLS_SORT_MEM:=`expr $(max_mem) \* 1000000 \* 65 \/ 100`
+#endif
+
+
+# samtools 1.x
+ifndef SAMTOOLS_SORT_MEM
+ SAMTOOLS_SORT_MEM:=$(shell bash -c "expr $(max_mem_gb) \* 75 \/ 100")G
+endif
+
+
+
+################################################################################
+# Make stuff
+phony_targets=
+silent_targets= 
+
+empty:=
+space:=$(empty) $(empty)#
+################################################################################
+# AUXILIARY FUNCTIONS
+################################################################################
+
+################################################################################
+# TODO: STAGE0
+SETUP_DATA_FILES=
+STAGE3_OUT_FILES=
+STAGE2_OUT_FILES=
+STAGE4_OUT_FILES=
+STAGE5_OUT_FILES=
+
+
+#STAGE1_OUT_FILES=$(foreach p,$(se),$(call lib2filt_folder,$(p))$(p).f.fastq) $(foreach p,$(pe),$(call lib2filt_folder,$(p))$(p)_1.f.fastq)
+
+################################################################################
+# Default target
+all: setup quality_filtering_and_report mapping quantification DE GSE
+
+
+################################################################################
+#
+################################################################################
+# Generic file extension rules
+
+
+# uncompress rules
+%.fa: %.fa.gz
+	gunzip -c $< > $@.tmp && mv $@.tmp $@
+
+%.fasta: %.fasta.gz
+	gunzip -c $< > $@.tmp && mv $@.tmp $@
+
+%.gtf: %.gtf.gz
+	gunzip -c $< > $@.tmp && mv $@.tmp $@
+
+
+
+################################################################################
+# stage 0 - setup/initialization
+setup: setup_dirs setup_files
+
+phony_targets+= setup setup_files
+
+################################################################################
+# Setup initial files
+# file with the length of the features (gene, isoform, exon)
+SETUP_DATA_FILES+= $(name)/data/$(reference_basename).gene_class.txt $(index_files) $(gtf_file_abspath).checked  $(gtf_file_abspath).exon_id.gtf $(juncs_file_abspath) $(name)/data/$(reference_basename).chr_sizes.txt  $(annot_tsv) $(name)/data/$(reference_basename).introns.bed 
+
+
+# No need to include these files since they are generated by some rule
+# $(name)/data/introns.bed -> $(name)/data/genes.bed $(name)/data/exons.bed 
+# $(gff3_file_abspath).csv -> $(gff3_file_abspath) 
+
+setup_files: $(SETUP_DATA_FILES)
+
+print_stage0_files: setup_dirs
+	echo $(SETUP_DATA_FILES)
+
+
+################################################################################
+# Setup directory structure
+phony_targets+= setup_dirs
+
+setup_dirs: $(tmp_dir) $(name)/report/riq/ $(if $(mapper),$(name)/$(mapper)/) $(name)/data/  $(if $(quant_method),$(name)/$(mapper)/$(quant_method)/)  $(if $(de_method),$(name)/$(mapper)/$(quant_method)/$(de_method)/)
+	$(call p_info,[DONE] Directory structure created)
+
+$(tmp_dir):
+	mkdir -p $@
+
+# really required?
+#$(data_dir)/data:
+#	mkdir -p $@
+
+
+###################################################
+# FORCE the program to run even if files haven't changed
+FORCE:
+
+
+#PHONY: performance improvement. Tell MAKE that those targets don't generate any files. 
+.PHONY:  $(phony_targets)
+.SILENT: $(silent_targets)
+
+###################################################
