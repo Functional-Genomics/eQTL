@@ -127,17 +127,40 @@ endif
 
 # cov_matrix?
 # 
-# expr_matrix
 
+# expr_matrix (TSV File)
+ifndef expr_matrix
+ $(call p_error, missing argument expr_matrix!)
+else
+ $(info *	name=$(expr_matrix))
+endif
+
+
+# two columns
+# 1st column: DNA
+# 2st column: RNA
+ifndef dna_rna_mapfile=
+ $(call p_error, missing argument dna_rna_mapfile)
+else
+ $(info *	name=$(dna_rna_mapfile))
+endif
+$(call file_exists,$(dna_rna_mapfile))
 
 
 #************************
 # ?
-ifndef vcf_dir
- $(call p_error,missing argument vcf_dir)
+ifndef vcfs
+ $(call p_error,missing argument vcfs)
 endif
-$(info *	vcf_dir=$(vcf_dir))
-$(call file_exists,$(vcf_dir))
+$(info *	vcfs=$(vcfs))
+#$(call file_exists,$(vcfs))
+$(foreach l,$(vcfs),$(call file_exists,$(l)))
+
+# TODO
+cov_matrix=
+
+
+# eqtl_pipeline vcfs=`ls mydir/*.vcf.gz`
 
 #********* 
 # GTF file?
@@ -148,13 +171,68 @@ $(info *       gtf_file  = $(gtf_file))
 $(call file_exists,$(gtf_file))
 
 # vcfs??
-$(foreach l,$(vcf_files),$(call file_exists,$(l)))
+
+chromosomes=1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
+
+# 2 remove
+LIMIX_BINARY=/panfs/nobackup/production/sds-pawg/ccalabre/germlinevcf/limix_pmbio/build/release.linux2/interfaces/python/bin/
+
+peer_iterations=100
+
+#
+# ${name}
+#   |+-------------dna_[dna_filter_options_md5]
+#   |+-------------rna_[rna_filter_options_md5]
+#   |+-------------peer_[step3_md5]/
+#   |+-------------panama_[step3_md5]/
+#   |+-------------none_[step3_md5]/
+#	{1,2,...}
+#       1.hd5
+
+
+# HASH
+step1_hash=`echo $(minGQ) $(minRD) $(rm_filter_all) $(vcf_filter)|md5sum|cut -f1 -d\ `
+step2_hash=`echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d\ `
+# TODO
+ifeq ($(corr_method),peer)
+#peer
+step3_hash=`echo $(step1_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d\ `
+else
+# panama
+ifeq ($(corr_method),peer)
+step3_hash=`echo $(step1_hash) $(step2_hash)  $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d\ `
+else
+step3_hash=`echo $(step1_hash) $(step2_hash)|md5sum|cut -f1 -d\ `
+fi
+fi
+
+step1_dir=$(name)/dna_$(step1_hash)
+step2_dir=$(name)/rna_$(step2_hash)
+step3_dir=$(name)/$(corr_method)_$(step3_hash)
+
+$(info step1_dir=$(step1_dir))
+
 
 #####################
 # Other Optional parameters
 #####################
 $(info * )
 $(info * Optional Parameters:)
+
+
+#
+def_minGQ=50
+def_minRD=20
+def_rm_filter_all=true
+def_vcf_filter=
+# vcf_filter="TP > 0.95 ....."
+
+def_max_missing=
+def_mac=
+
+# TODO
+# use the default values if necessary
+#$(for v,minGQ,minRD,rm_filter_all, )
 
 #********
 # Threads
@@ -176,18 +254,18 @@ endif
 $(info *	tmp_dir=$(tmp_dir) (temporary directory))
 
 
-#####################
-# Normalization method
-SUPPORTED_NORM_METHODS=peer panama
-#norm_method expr_norm_method?
-ifneq (,$(filter $(norm_method),$(SUPPORTED_NORM_METHODS) none)
-$(error $(norm_method) not supported)
+##############################
+# expression correction method
+SUPPORTED_CORR_METHODS=peer panama
+#corr_method expr_corr_method?
+ifneq (,$(filter $(corr_method),$(SUPPORTED_CORR_METHODS) none)
+$(error $(corr_method) not supported)
 endif
 
-ifeq ($(norm_method),peer) 
+ifeq ($(corr_method),peer) 
 $(info peer!!!)
 else 
-$(info *	norm_method=$(norm_method))
+$(info *	corr_method=$(corr_method))
 endif
 
 #
@@ -243,6 +321,23 @@ all: setup quality_filtering_and_report mapping quantification DE GSE
 ################################################################################
 # Generic file extension rules
 
+# to fix
+%.vcf.gz.tbi: %.vcf.gz
+	tabix -p $<
+
+%.vcf.tbi: %.vcf
+	tabix -p $<  
+
+# TODO
+%.gtf.eqtl.csv: %.gtf
+	grep CDS $< | cut -f 1,2,3,4,5  > $@.tmp && mv $@.tmp $@
+
+
+
+
+
+
+
 
 # uncompress rules
 %.fa: %.fa.gz
@@ -253,6 +348,163 @@ all: setup quality_filtering_and_report mapping quantification DE GSE
 
 %.gtf: %.gtf.gz
 	gunzip -c $< > $@.tmp && mv $@.tmp $@
+
+
+
+
+#################################################################################
+# DNA
+
+step1: step1_a step1_b step1_d
+# STEP1
+step1_a: tbi_files
+step1_b: fix_vcf_headers
+step1_c: filter_vcfs
+step1_d: $(step1_dir)/Kpop.hf5 $(step1_dir)/data_consistent
+
+
+# required: .tbi for each vcf
+TBI_FILES=$(foreach l,$(vcfs),$(l).tbi))
+tbi_files: $(TBI_FILES)
+
+
+# fix spaces in header?
+FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
+fix_vcf_headers: $(FIXEDHEADER_VCFS) 
+	echo $(FIXEDHEADER_VCFS)
+
+%.fixedheader.vcf.gz: %.vcf.gz
+	fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
+
+
+# filter VCF
+$(step1_dir)/1/%.filt.vcf.gz: %.vcf.gz
+	filter_vcf.sh $<  1  $@.tmp $(minRD) $(minGQ) $(rm_filter_all) "$(vcf_filter)"
+
+
+$(step1_dir)/1/chr1.merged.vcf.gz: $(foreach l,$(vcfs),$(step1_dir)/1/$(subst .vcf.gz,.filter.vcf.gz,$(l))) $(foreach l,$(vcfs),$(step1_dir)/1/$(subst .vcf.gz,.filter.vcf.gz.tbi,$(l)))
+	$(file > $@.lst, $(foreach l,$(vcfs),$(step1_dir)/1/$(subst .vcf.gz,.filter.vcf.gz,$(l)))) && \
+	bcftools merge -l $@.lst | bgzip -c > $@.tmp && \
+	mv $@.tmp $@
+
+
+##select MAC >=5, allow max missing sites in 20 percent of samples
+$(step1_dir)/plink/1/chr1.merged.vcf.gz.plink: $(step1_dir)/1/chr1.merged.vcf.gz
+	mkdir -p $(@D) &&
+	vcftools --gzvcf $< --max-missing 0.8 --mac 5 --recode --recode-INFO-all --out /dev/stdout | \
+        vcftools --vcf /dev/stdin --plink --out $@.plink.tmp && mv $@.tmp $@ 
+
+
+$(step1_dir)/plink/1/plink_chr1.done: $(step1_dir)/plink/1/chr1.merged.vcf.gz.plink
+        plink --file $< --make-bed --noweb --out $(subst .done,,$@) && touch $@
+
+
+##convert genotypes into hdf5 file using limix binaries
+##echo 'convert plink files into hdf5 files using limix binaries'
+$(step1_dir)/plink/1/chr1.hf5: $(step1_dir)/plink/1/plink_chr1.done
+	echo 'input missing genotypes and calculate genetic kinship per chr'$chromosome &&
+        python $(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --plink=$(subst .done,,$<) &&\
+        cd ${data_dir}chr${chromosome} && \ 
+        geno_preprocessing.py $@.tmp &&
+	mv $@.tmp $@
+
+
+#build_Kpop.py outfile hf5files....
+#build_Kpop.py kop.hf5.tmp ...chr1.hf5 ...chr2.hf5 ...chr3.hf5
+$(step1_dir)/Kpop.hf5: $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hf5)
+	build_Kpop.py  $@.tmp $^ &&\
+	mv $@.tmp $@
+
+$(step1_dir)/data_consistent: $(dna_rna_mapfile) $(step1_dir)/Kpop.hf5 $(expr_matrix)
+	check_consistency $(dna_rna_mapfile) $(step1_dir)/Kpop.hf5 $(expr_matrix) && touch $(step1_dir)/data_consistent
+
+################################################################################
+# RNA
+
+#
+gtf_eqtl_csv=$(subst .gtf,.gtf.eqtl.csv,$(gtf_file))
+expr_matrix_filename=$(baseme $(expr_matrix))
+
+step2: $(stage2_dir)/$(expr_matrix_filename).filtered.hdf
+
+step0: $(name)/$(expr_matrix_filename).matched.hdf
+
+$(name)/$(expr_matrix).matched.csv: $(dna_rna_mapfile) $(expr_matrix)
+	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@
+
+#        python ${python_scripts}pheno_preprocessing.py $data_dir $pheno_in $analysis_IDs $phenofileout  &&
+
+min_expr=
+min_perc_samples=
+#possible values: gaussian log none
+expr_transform=
+hidden_k=
+
+# TODO: hdf->hf5 ====> hdf5!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+%.hdf: %.csv
+	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< &&\	
+	hdf_annotation.py $(gtf_eqtl_csv) $@.tmp && \
+	mv $@.tmp $@	
+
+
+$(stage2_dir)/%.filtered.hdf: $(name)/%.hdf
+	cp $< $@.tmp && \
+	filtering_pheno.py $@.tmp $(min_expr) $(min_perc_samples) filtered $(expr_transform) && \
+	mv $@.tmp $@
+
+
+# echo 'filtering pheno data based on gene expression. Use gauss or log to normalise.'
+: 
+
+
+
+######################################################################
+# step3
+step3: $(step1_dir)/data_consistent
+
+
+
+# kpop - ktot
+$(step3_dir)/panama/panama.hf5: $(step1_dir)/Kpop.hf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf
+	mkdir -p $(@D) && \
+	cp $(step1_dir)/Kpop.hf5 $@.tmp && \
+	runpanama.py  $@.tmp $(stage2_dir)/$(expr_matrix_filename).filtered.hdf $(hidden_k) $(expr_transform) &&\
+	mv $@.tmp  $@
+
+$(step3_dir)/peer/peer.hf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf
+	mkdir -p $(@D) && \
+	cp $< $@.tmp && \
+        runpeer.py $@.tmp $(expr_transform) $(hidden_k) $(peer_iterations) $@.tmp && \
+	mv $@.tmp  $@
+
+$(step3_dir)/none/none.hf5: $(step1_dir)/Kpop.hf5
+	mkdir -p $(@D) && \
+	cp $< $@.tmp && \
+	mv $@.tmp  $@
+
+################################################################################
+step4:
+
+$(stage1_dir)/complete:
+$(stage2_dir)/complete:
+# 
+#
+n_folds=1000
+
+#: $(stage1_dir)/complete $(stage2_dir)/complete $(stage2_dir)/$(expr_matrix_filename).filtered.hdf $(step3_dir)/$(corr_method)/$(corr_method).hf5 $(step1_dir)/Kpop.hf5 
+#	cis_eqtl_run.py $(chr) $(step1_dir) $(stage2_dir)/$(expr_matrix_filename).filtered.hdf  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hf5 $(step1_dir)/Kpop.hf5 $(expr_transform) $(n_folds)
+# 
+#
+
+# foreach chr
+#   foreach fold_j in 1...nfolds
+#     cis_eqtl.py $(chr) $(fold_j) $(nfolds) $(outname) -> chr/$nfolds_fold_j.hdf5
+
+
+#cis_eqtl_summary2.py $(path2eqtl)/$chr/ $(nfolds)  outfile
+
+#get_final_res.py $chromosome &&
 
 
 
@@ -277,6 +529,11 @@ setup_files: $(SETUP_DATA_FILES)
 print_stage0_files: setup_dirs
 	echo $(SETUP_DATA_FILES)
 
+
+################################################################################
+# get paths
+print_step3_dir:
+	echo $(step3_dir)
 
 ################################################################################
 # Setup directory structure
