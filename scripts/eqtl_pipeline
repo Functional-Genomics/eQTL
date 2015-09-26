@@ -297,7 +297,7 @@ space:=$(empty) $(empty)#
 
 ################################################################################
 # Default target
-all: step1 step2 step3	
+all: step1 step2 step3	step4
 
 
 ################################################################################
@@ -450,7 +450,7 @@ $(step3_dir)/none/none.hdf5: $(step1_dir)/Kpop.hdf5
 $(step3_dir)/complete: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 
 ################################################################################
-step4: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/complete
+step4: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
 # 
 #
 n_folds=1000
@@ -463,13 +463,34 @@ n_folds=1000
 # foreach chr
 #   foreach fold_j in 1...nfolds
 #     cis_eqtl.py $(chr) $(fold_j) $(nfolds) $(outname) -> chr/$nfolds_fold_j.hdf5
+All_CisQTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(step3_dir)/$(chr)/$(n_folds)_$(j).hdf5))
+
+# $(1)=chr
+define CisQTL_JOBS_chr=
+$(foreach j,$(shell seq $(n_folds)), $(step3_dir)/$(1)/$(n_folds)_$(j).hdf5)
+endef
+
+#$(info $(All_CisQTL_JOBS))
+
+# $(1) = chr
+define make-cisqtl-rule-chr=
+$(step3_dir)/$(1)/$(n_folds)_%.hdf5:
+	cis_eqtl.py $(1) $$* $(n_folds) $$@.tmp && mv $$@.tmp $$@
+
+# Claudia: are the following filenames ok?
+$(step3_dir)/$(1)/summary.hdf5: $(call CisQTL_JOBS_chr,$(1))
+	cis_eqtl_summary2.py $$(@D) $(n_folds) $$@.tmp && mv $$@.tmp $$@
+
+$(step3_dir)/$(1).hdf5: $(step3_dir)/$(1)/summary.hdf5
+	get_final_res.py $(step3_dir)/$(1)/summary.hdf5 $$@.tmp && mv $$@.tmp $$@
+
+endef
+
+$(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 
 
-#cis_eqtl_summary2.py $(path2eqtl)/$chr/ $(nfolds)  outfile
-
-#get_final_res.py $chromosome &&
-
-
+$(step3_dir)/step4.complete:  $(step3_dir)/complete $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+	touch $@
 
 phony_targets+= setup setup_files
 
