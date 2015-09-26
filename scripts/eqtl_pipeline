@@ -345,7 +345,7 @@ fix_vcf_headers: $(FIXEDHEADER_VCFS)
 define make-rules-for-chr=
 
 $(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
-	$(file > $$@.lst, $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l)))) && \
+	$$(file > $$@.lst, $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l)))) && \
 	bcftools merge -l $$@.lst | bgzip -c > $$@.tmp && \
 	mv $$@.tmp $$@
 
