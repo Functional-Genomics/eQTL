@@ -30,12 +30,7 @@ SHELL=bash
 ##################
 # Setup some paths
 # path to script
-path=.
-path?=$(shell if which eqtl_pipeline >/dev/null 2>/dev/null; then $(warning "eqtl_pipeline not in path"); else dirname `which eqtl_pipeline`; fi)
 
-ifdef path
- PATH:=$(path):$(PATH)
-endif
 
 # Requires make 4.1 or above
 VERSION_OK=$(shell if [ `make --version|head -n 1 | cut -f3 -d\ ` \< 4.1 ]; then echo 0; else echo 1; fi )
@@ -43,7 +38,7 @@ ifeq ($(VERSION_OK),0)
  $(error make version needs to be 4.1 or above)
 endif
 
-script_path:=$(shell dirname "`which eqtl_pipeline`"	)
+script_path!=dirname "`which eqtl_pipeline`"
 ################################################################################
 # Auxiliary functions
 ################################################################################
@@ -174,10 +169,10 @@ $(call file_exists,$(gtf_file))
 
 chromosomes=1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
 
+
+
 # 2 remove
 LIMIX_BINARY=/panfs/nobackup/production/sds-pawg/ccalabre/germlinevcf/limix_pmbio/build/release.linux2/interfaces/python/bin/
-
-peer_iterations=100
 
 
 
@@ -189,7 +184,8 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD rm_filter_all vcf_filter min_expr min_perc_samples expr_transform hidden_k max_missing mac
+def_vars=minGQ minRD rm_filter_all vcf_filter min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations
+peer_iterations?=100
 minGQ?=50
 minRD?=20
 rm_filter_all?=true
@@ -265,18 +261,17 @@ endif
 
 
 # HASH
-step1_hash:=$(shell echo $(minGQ) $(minRD) $(rm_filter_all) $(vcf_filter)|md5sum|cut -f1 -d\ )
-step2_hash:=$(shell echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d\ )
+step1_hash!=echo $(minGQ) $(minRD) $(rm_filter_all) $(vcf_filter)|md5sum|cut -f1 -d' ' 
+step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d' '
 
-$(info $(step1_hash))
 
 ifeq ($(corr_method),peer)
-step3_hash=`echo $(step1_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d\ `
+step3_hash!=echo $(step1_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
 else
 ifeq ($(corr_method),panama)
-step3_hash=`echo $(step1_hash) $(step2_hash)  $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d\ `
+step3_hash!=echo $(step1_hash) $(step2_hash)  $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
 else
-step3_hash=`echo $(step1_hash) $(step2_hash)|md5sum|cut -f1 -d\ `
+step3_hash!=echo $(step1_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
 endif
 
@@ -299,19 +294,8 @@ space:=$(empty) $(empty)#
 ################################################################################
 
 ################################################################################
-# TODO: STAGE0
-SETUP_DATA_FILES=
-STAGE3_OUT_FILES=
-STAGE2_OUT_FILES=
-STAGE4_OUT_FILES=
-STAGE5_OUT_FILES=
-
-
-#STEP1_OUT_FILES=$(foreach p,$(se),$(call lib2filt_folder,$(p))$(p).f.fastq) $(foreach p,$(pe),$(call lib2filt_folder,$(p))$(p)_1.f.fastq)
-
-################################################################################
 # Default target
-all: setup quality_filtering_and_report mapping quantification DE GSE
+all: step1 step2 step3	
 
 
 ################################################################################
@@ -319,25 +303,22 @@ all: setup quality_filtering_and_report mapping quantification DE GSE
 ################################################################################
 # Generic file extension rules
 
-# to fix
+# 
 %.vcf.gz.tbi: %.vcf.gz
-	tabix -p $<
+	tabix -p $< || ( rm -f $@ && exit 1)
 
 %.vcf.tbi: %.vcf
 	tabix -p $<  
 
-# TODO
+# TODO (Claudia)
 %.gtf.eqtl.csv: %.gtf
 	grep CDS $< | cut -f 1,2,3,4,5  > $@.tmp && mv $@.tmp $@
 
 
-# default target
-all: step1 step2 step3
-
 #################################################################################
 # DNA
 
-step1: step1_a step1_b step1_d
+step1: $(step1_dir)/complete
 # STEP1
 step1_a: tbi_files
 step1_b: fix_vcf_headers
@@ -346,7 +327,7 @@ step1_d: $(step1_dir)/Kpop.hdf5 $(step1_dir)/data_consistent
 
 
 # required: .tbi for each vcf
-TBI_FILES=$(foreach l,$(vcfs),$(l).tbi))
+TBI_FILES=$(foreach l,$(vcfs),$(l).tbi)
 tbi_files: $(TBI_FILES)
 
 
@@ -359,37 +340,40 @@ fix_vcf_headers: $(FIXEDHEADER_VCFS)
 	fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
 
 
-# filter VCF
-$(step1_dir)/1/%.filt.vcf.gz: %.vcf.gz
-	filter_vcf.sh $<  1  $@.tmp $(minRD) $(minGQ) $(rm_filter_all) "$(vcf_filter)"
+# Rules to process each chr
+# chr=$(1) 
+define make-rules-for-chr=
 
+$(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
+	$(file > $$@.lst, $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l)))) && \
+	bcftools merge -l $$@.lst | bgzip -c > $$@.tmp && \
+	mv $$@.tmp $$@
 
-$(step1_dir)/1/chr1.merged.vcf.gz: $(foreach l,$(vcfs),$(step1_dir)/1/$(subst .vcf.gz,.filter.vcf.gz,$(l))) $(foreach l,$(vcfs),$(step1_dir)/1/$(subst .vcf.gz,.filter.vcf.gz.tbi,$(l)))
-	$(file > $@.lst, $(foreach l,$(vcfs),$(step1_dir)/1/$(subst .vcf.gz,.filter.vcf.gz,$(l)))) && \
-	bcftools merge -l $@.lst | bgzip -c > $@.tmp && \
-	mv $@.tmp $@
-
+$(step1_dir)/$(1)/%.filt.vcf.gz: %.vcf.gz
+	filter_vcf.sh $$<  $(1)  $$@.tmp $(minRD) $(minGQ) $(rm_filter_all) "$(vcf_filter)" && mv $$@.tmp $$@
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
-$(step1_dir)/plink/1/chr1.merged.vcf.gz.plink: $(step1_dir)/1/chr1.merged.vcf.gz
-	mkdir -p $(@D) &&
-	vcftools --gzvcf $< --max-missing 0.8 --mac 5 --recode --recode-INFO-all --out /dev/stdout | \
-        vcftools --vcf /dev/stdin --plink --out $@.plink.tmp && mv $@.tmp $@ 
+$(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1).merged.vcf.gz
+	mkdir -p $$(@D) &&
+	vcftools --gzvcf $$< --max-missing 0.8 --mac $(mac) --recode --recode-INFO-all --out /dev/stdout | \
+        vcftools --vcf /dev/stdin --plink --out $$@.plink.tmp && mv $$@.tmp $$@ 
 
 
-$(step1_dir)/plink/1/plink_chr1.done: $(step1_dir)/plink/1/chr1.merged.vcf.gz.plink
-		plink --file $< --make-bed --noweb --out $(subst .done,,$@) && touch $@
-
+$(step1_dir)/plink/$(1)/plink_chr$(1).done: $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink
+	plink --file $$< --make-bed --noweb --out $$(subst .done,,$$@) && touch $$@
 
 ##convert genotypes into hdf5 file using limix binaries
 ##echo 'convert plink files into hdf5 files using limix binaries'
-$(step1_dir)/plink/1/chr1.hdf5: $(step1_dir)/plink/1/plink_chr1.done
-	echo 'input missing genotypes and calculate genetic kinship per chr'$chromosome &&
-	python $(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --plink=$(subst .done,,$<) && \
-        cd ${data_dir}chr${chromosome} && \
-        geno_preprocessing.py $@.tmp &&
-	mv $@.tmp $@
+$(step1_dir)/plink/$(1)/chr$(1).hdf5: $(step1_dir)/plink/$(1)/plink_chr$(1).done
+	python $(LIMIX_BINARY)/limix_converter --outfile=$$@.tmp --plink=$$(subst .done,,$$<) && \
+	cd $$(@D) && \
+	geno_preprocessing.py $$@.tmp && \
+	mv $$@.tmp $$@
 
+endef
+
+# Generate the rules per chr
+$(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
 
 #build_Kpop.py outfile hdf5files....
 #build_Kpop.py kop.hdf5.tmp ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
@@ -400,6 +384,9 @@ $(step1_dir)/Kpop.hdf5: $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/c
 $(step1_dir)/data_consistent: $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix)
 	check_consistency $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix) && touch $(step1_dir)/data_consistent
 
+$(step1_dir)/complete: $(step1_dir)/Kpop.hdf5 $(step1_dir)/data_consistent
+	touch $@
+
 ################################################################################
 # RNA
 
@@ -407,17 +394,13 @@ $(step1_dir)/data_consistent: $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_m
 gtf_eqtl_csv=$(subst .gtf,.gtf.eqtl.csv,$(gtf_file))
 expr_matrix_filename:=$(basename $(expr_matrix))
 
-step2: $(step2_dir)/$(expr_matrix_filename).filtered.hdf
-
 step0: $(name)/$(expr_matrix_filename).matched.hdf
+
+step2: $(step2_dir)/complete
 
 $(name)/$(expr_matrix).matched.csv: $(dna_rna_mapfile) $(expr_matrix)
 	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@
 
-#        python ${python_scripts}pheno_preprocessing.py $data_dir $pheno_in $analysis_IDs $phenofileout  &&
-
-
-# TODO: hdf->hdf5 ====> hdf5!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 %.hdf: %.csv
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
@@ -430,7 +413,8 @@ $(step2_dir)/%.filtered.hdf: $(name)/%.hdf
 	filtering_pheno.py $@.tmp $(min_expr) $(min_perc_samples) filtered $(expr_transform) && \
 	mv $@.tmp $@
 
-
+$(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf $(name)/$(expr_matrix_filename).matched.hdf
+	echo $@
 # echo 'filtering pheno data based on gene expression. Use gauss or log to normalise.'
 : 
 
@@ -438,8 +422,7 @@ $(step2_dir)/%.filtered.hdf: $(name)/%.hdf
 
 ######################################################################
 # step3
-step3: $(step1_dir)/data_consistent
-
+step3: $(step3_dir)/complete
 
 
 # kpop - ktot
@@ -460,11 +443,10 @@ $(step3_dir)/none/none.hdf5: $(step1_dir)/Kpop.hdf5
 	cp $< $@.tmp && \
 	mv $@.tmp  $@
 
-################################################################################
-step4:
+$(step3_dir)/complete: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 
-$(step1_dir)/complete:
-$(step2_dir)/complete:
+################################################################################
+step4: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/complete
 # 
 #
 n_folds=1000
@@ -485,47 +467,7 @@ n_folds=1000
 
 
 
-################################################################################
-# stage 0 - setup/initialization
-setup: setup_dirs setup_files
-
 phony_targets+= setup setup_files
-
-################################################################################
-# Setup initial files
-# file with the length of the features (gene, isoform, exon)
-SETUP_DATA_FILES+= $(name)/data/$(reference_basename).gene_class.txt $(index_files) $(gtf_file_abspath).checked  $(gtf_file_abspath).exon_id.gtf $(juncs_file_abspath) $(name)/data/$(reference_basename).chr_sizes.txt  $(annot_tsv) $(name)/data/$(reference_basename).introns.bed 
-
-
-# No need to include these files since they are generated by some rule
-# $(name)/data/introns.bed -> $(name)/data/genes.bed $(name)/data/exons.bed 
-# $(gff3_file_abspath).csv -> $(gff3_file_abspath) 
-
-setup_files: $(SETUP_DATA_FILES)
-
-print_stage0_files: setup_dirs
-	echo $(SETUP_DATA_FILES)
-
-
-################################################################################
-# get paths
-print_step3_dir:
-	echo $(step3_dir)
-
-################################################################################
-# Setup directory structure
-phony_targets+= setup_dirs
-
-setup_dirs: $(tmp_dir) $(name)/report/riq/ $(if $(mapper),$(name)/$(mapper)/) $(name)/data/  $(if $(quant_method),$(name)/$(mapper)/$(quant_method)/)  $(if $(de_method),$(name)/$(mapper)/$(quant_method)/$(de_method)/)
-	$(call p_info,[DONE] Directory structure created)
-
-$(tmp_dir):
-	mkdir -p $@
-
-# really required?
-#$(data_dir)/data:
-#	mkdir -p $@
-
 
 ###################################################
 # FORCE the program to run even if files haven't changed
