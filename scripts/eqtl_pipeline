@@ -189,18 +189,22 @@ $(info * Optional Parameters:)
 
 
 #
-def_minGQ=50
-def_minRD=20
-def_rm_filter_all=true
-def_vcf_filter=
+def_vars=minGQ minRD rm_filter_all vcf_filter min_expr min_perc_samples expr_transform hidden_k max_missing mac
+minGQ?=50
+minRD?=20
+rm_filter_all?=true
+vcf_filter?=
 # vcf_filter="TP > 0.95 ....."
 
-def_max_missing=
-def_mac=
+min_expr?=1
+min_perc_samples?=0.5
+#possible values: gaussian log none
+expr_transform?=none
+hidden_k?=10
+max_missing?=
+mac?=
 
-# TODO
-# use the default values if necessary
-#$(for v,minGQ,minRD,rm_filter_all, )
+$(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
 
 #********
 # Threads
@@ -261,24 +265,24 @@ endif
 
 
 # HASH
-step1_hash=`echo $(minGQ) $(minRD) $(rm_filter_all) $(vcf_filter)|md5sum|cut -f1 -d\ `
-step2_hash=`echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d\ `
-# TODO
+step1_hash:=$(shell echo $(minGQ) $(minRD) $(rm_filter_all) $(vcf_filter)|md5sum|cut -f1 -d\ )
+step2_hash:=$(shell echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d\ )
+
+$(info $(step1_hash))
+
 ifeq ($(corr_method),peer)
-#peer
 step3_hash=`echo $(step1_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d\ `
 else
-# panama
-ifeq ($(corr_method),peer)
+ifeq ($(corr_method),panama)
 step3_hash=`echo $(step1_hash) $(step2_hash)  $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d\ `
 else
 step3_hash=`echo $(step1_hash) $(step2_hash)|md5sum|cut -f1 -d\ `
-fi
-fi
+endif
+endif
 
-step1_dir=$(name)/dna_$(step1_hash)
-step2_dir=$(name)/rna_$(step2_hash)
-step3_dir=$(name)/$(corr_method)_$(step3_hash)
+step1_dir:=$(name)/dna_$(step1_hash)
+step2_dir:=$(name)/rna_$(step2_hash)
+step3_dir:=$(name)/$(corr_method)_$(step3_hash)
 
 $(info step1_dir=$(step1_dir))
 
@@ -303,7 +307,7 @@ STAGE4_OUT_FILES=
 STAGE5_OUT_FILES=
 
 
-#STAGE1_OUT_FILES=$(foreach p,$(se),$(call lib2filt_folder,$(p))$(p).f.fastq) $(foreach p,$(pe),$(call lib2filt_folder,$(p))$(p)_1.f.fastq)
+#STEP1_OUT_FILES=$(foreach p,$(se),$(call lib2filt_folder,$(p))$(p).f.fastq) $(foreach p,$(pe),$(call lib2filt_folder,$(p))$(p)_1.f.fastq)
 
 ################################################################################
 # Default target
@@ -327,24 +331,8 @@ all: setup quality_filtering_and_report mapping quantification DE GSE
 	grep CDS $< | cut -f 1,2,3,4,5  > $@.tmp && mv $@.tmp $@
 
 
-
-
-
-
-
-
-# uncompress rules
-%.fa: %.fa.gz
-	gunzip -c $< > $@.tmp && mv $@.tmp $@
-
-%.fasta: %.fasta.gz
-	gunzip -c $< > $@.tmp && mv $@.tmp $@
-
-%.gtf: %.gtf.gz
-	gunzip -c $< > $@.tmp && mv $@.tmp $@
-
-
-
+# default target
+all: step1 step2 step3
 
 #################################################################################
 # DNA
@@ -354,7 +342,7 @@ step1: step1_a step1_b step1_d
 step1_a: tbi_files
 step1_b: fix_vcf_headers
 step1_c: filter_vcfs
-step1_d: $(step1_dir)/Kpop.hf5 $(step1_dir)/data_consistent
+step1_d: $(step1_dir)/Kpop.hdf5 $(step1_dir)/data_consistent
 
 
 # required: .tbi for each vcf
@@ -390,36 +378,36 @@ $(step1_dir)/plink/1/chr1.merged.vcf.gz.plink: $(step1_dir)/1/chr1.merged.vcf.gz
 
 
 $(step1_dir)/plink/1/plink_chr1.done: $(step1_dir)/plink/1/chr1.merged.vcf.gz.plink
-        plink --file $< --make-bed --noweb --out $(subst .done,,$@) && touch $@
+		plink --file $< --make-bed --noweb --out $(subst .done,,$@) && touch $@
 
 
 ##convert genotypes into hdf5 file using limix binaries
 ##echo 'convert plink files into hdf5 files using limix binaries'
-$(step1_dir)/plink/1/chr1.hf5: $(step1_dir)/plink/1/plink_chr1.done
+$(step1_dir)/plink/1/chr1.hdf5: $(step1_dir)/plink/1/plink_chr1.done
 	echo 'input missing genotypes and calculate genetic kinship per chr'$chromosome &&
-        python $(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --plink=$(subst .done,,$<) && \
+	python $(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --plink=$(subst .done,,$<) && \
         cd ${data_dir}chr${chromosome} && \
         geno_preprocessing.py $@.tmp &&
 	mv $@.tmp $@
 
 
-#build_Kpop.py outfile hf5files....
-#build_Kpop.py kop.hf5.tmp ...chr1.hf5 ...chr2.hf5 ...chr3.hf5
-$(step1_dir)/Kpop.hf5: $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hf5)
+#build_Kpop.py outfile hdf5files....
+#build_Kpop.py kop.hdf5.tmp ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
+$(step1_dir)/Kpop.hdf5: $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
 	build_Kpop.py  $@.tmp $^ && \
 	mv $@.tmp $@
 
-$(step1_dir)/data_consistent: $(dna_rna_mapfile) $(step1_dir)/Kpop.hf5 $(expr_matrix)
-	check_consistency $(dna_rna_mapfile) $(step1_dir)/Kpop.hf5 $(expr_matrix) && touch $(step1_dir)/data_consistent
+$(step1_dir)/data_consistent: $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix)
+	check_consistency $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix) && touch $(step1_dir)/data_consistent
 
 ################################################################################
 # RNA
 
 #
 gtf_eqtl_csv=$(subst .gtf,.gtf.eqtl.csv,$(gtf_file))
-expr_matrix_filename=$(baseme $(expr_matrix))
+expr_matrix_filename:=$(basename $(expr_matrix))
 
-step2: $(stage2_dir)/$(expr_matrix_filename).filtered.hdf
+step2: $(step2_dir)/$(expr_matrix_filename).filtered.hdf
 
 step0: $(name)/$(expr_matrix_filename).matched.hdf
 
@@ -428,13 +416,8 @@ $(name)/$(expr_matrix).matched.csv: $(dna_rna_mapfile) $(expr_matrix)
 
 #        python ${python_scripts}pheno_preprocessing.py $data_dir $pheno_in $analysis_IDs $phenofileout  &&
 
-min_expr=
-min_perc_samples=
-#possible values: gaussian log none
-expr_transform=
-hidden_k=
 
-# TODO: hdf->hf5 ====> hdf5!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# TODO: hdf->hdf5 ====> hdf5!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 %.hdf: %.csv
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
@@ -442,7 +425,7 @@ hidden_k=
 	mv $@.tmp $@	
 
 
-$(stage2_dir)/%.filtered.hdf: $(name)/%.hdf
+$(step2_dir)/%.filtered.hdf: $(name)/%.hdf
 	cp $< $@.tmp && \
 	filtering_pheno.py $@.tmp $(min_expr) $(min_perc_samples) filtered $(expr_transform) && \
 	mv $@.tmp $@
@@ -460,19 +443,19 @@ step3: $(step1_dir)/data_consistent
 
 
 # kpop - ktot
-$(step3_dir)/panama/panama.hf5: $(step1_dir)/Kpop.hf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf
+$(step3_dir)/panama/panama.hdf5: $(step1_dir)/Kpop.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	mkdir -p $(@D) && \
-	cp $(step1_dir)/Kpop.hf5 $@.tmp && \
-	runpanama.py  $@.tmp $(stage2_dir)/$(expr_matrix_filename).filtered.hdf $(hidden_k) $(expr_transform) &&\
+	cp $(step1_dir)/Kpop.hdf5 $@.tmp && \
+	runpanama.py  $@.tmp $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(hidden_k) $(expr_transform) &&\
 	mv $@.tmp  $@
 
-$(step3_dir)/peer/peer.hf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf
+$(step3_dir)/peer/peer.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	mkdir -p $(@D) && \
 	cp $< $@.tmp && \
-        runpeer.py $@.tmp $(expr_transform) $(hidden_k) $(peer_iterations) $@.tmp && \
+	runpeer.py $@.tmp $(expr_transform) $(hidden_k) $(peer_iterations) $@.tmp && \
 	mv $@.tmp  $@
 
-$(step3_dir)/none/none.hf5: $(step1_dir)/Kpop.hf5
+$(step3_dir)/none/none.hdf5: $(step1_dir)/Kpop.hdf5
 	mkdir -p $(@D) && \
 	cp $< $@.tmp && \
 	mv $@.tmp  $@
@@ -480,14 +463,14 @@ $(step3_dir)/none/none.hf5: $(step1_dir)/Kpop.hf5
 ################################################################################
 step4:
 
-$(stage1_dir)/complete:
-$(stage2_dir)/complete:
+$(step1_dir)/complete:
+$(step2_dir)/complete:
 # 
 #
 n_folds=1000
 
-#: $(stage1_dir)/complete $(stage2_dir)/complete $(stage2_dir)/$(expr_matrix_filename).filtered.hdf $(step3_dir)/$(corr_method)/$(corr_method).hf5 $(step1_dir)/Kpop.hf5 
-#	cis_eqtl_run.py $(chr) $(step1_dir) $(stage2_dir)/$(expr_matrix_filename).filtered.hdf  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hf5 $(step1_dir)/Kpop.hf5 $(expr_transform) $(n_folds)
+#: $(step1_dir)/complete $(step2_dir)/complete $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(step1_dir)/Kpop.hdf5 
+#	cis_eqtl_run.py $(chr) $(step1_dir) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(step1_dir)/Kpop.hdf5y $(expr_transform) $(n_folds)
 # 
 #
 
