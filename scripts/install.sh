@@ -35,7 +35,7 @@ fi
 #
 # limix dependancies:
 #
-# python libraries (should anaconda installation went well, no need to install them):
+# python libraries (should have been already installed by anaconda):
 # scipy, numpy, pandas, cython
 #
 # Swig:
