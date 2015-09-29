@@ -44,7 +44,7 @@ fi
 # GCC:
 # gcc version > 4.2.1
 #
-# LIMIX reccomanded installation
+# LIMIX reccomended installation
 pip install limix
 
 #################################################################################################################
@@ -65,7 +65,7 @@ pip install limix
 # SWIG 2.0 or later
 #
 
-#Install PEER from source (reccomanded)
+#Install PEER from source (reccomended)
  
 git clone git@github.com:PMBio/peer.git
 #create a target directory for the build:
