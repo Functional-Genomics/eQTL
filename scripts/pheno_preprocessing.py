@@ -22,7 +22,7 @@ phenofile=sys.argv[2]
 phenofileout=sys.argv[3]
 
 
-### reading
+### reading (Pheno reading should to be reviewed)
 mapfile=np.loadtxt(mapfile, delimiter='\t', dtype='S50')
 
 GE=open(file,'r').readlines()
