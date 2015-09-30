@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 import getopt, sys, os
 import h5py
-import csv
-import numpy as np
 import pandas as ps
 
 def usage():
