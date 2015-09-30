@@ -3,7 +3,7 @@ MAINTAINER Nuno Fonseca email: nuno.fonseca at gmail.com
 
 # Update the image with the latest packages (recommended)
 # and install missing packages
-RUN sed -i "s/failovermethod=priority/failovermethod=roundrobin/" /etc/yum.repos.d/fedora.repo  && yum update -y && yum install -y zlib-devel python-devel bzip2-devel python python-pip R R-devel unzip make wget  tar xorg-x11-server-Xvfb && yum clean all 
+RUN sed -i "s/failovermethod=priority/failovermethod=roundrobin/" /etc/yum.repos.d/fedora.repo  && yum update -y && yum install -y zlib-devel python-devel bzip2-devel python python-pip R R-devel unzip make cmake wget  tar xorg-x11-server-Xvfb && yum clean all 
 
 # 
 WORKDIR /opt

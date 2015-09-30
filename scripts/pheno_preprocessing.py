@@ -1,31 +1,51 @@
 #!/usr/bin/env python
 import getopt, sys, os
-import h5py
+import h5py 
+import numpy as np
 import pandas as pd
+import os.path
+import warnings
 
 def usage():
 	print """
-		 This script generates a csv matrix of gene expression with samples specified in the map file. It requires 3 mandatory arguments.
+This script generates a matrix of gene expression with samples specified in the map file. It requires 3 mandatory arguments.
 		
-		Usage:
-		pheno_preprocessing.py <map_file> <pheno> <outphenoname>
-
+Usage: pheno_preprocessing.py <map_file.tsv> <pheno.tsv> <outphenoname.tsv>
 		"""
 #check arguments
 if len(sys.argv[1:])!=3:
         usage()
-        sys.exit()
+        sys.exit(1)
 
 #arguments
 mapfile=sys.argv[1]
 phenofile=sys.argv[2]
 phenofileout=sys.argv[3]
 
+if os.path.isfile(mapfile)!=True:
+        sys.stderr.write("ERROR: mapfile "+mapfile+" not found\n")
+        sys.exit(1)
 
+if os.path.isfile(phenofile)!=True:
+        sys.stderr.write("ERROR: phenofile "+phenofile+" not found\n")
+        sys.exit(1)
+
+
+##############################################
 ### reading (Pheno reading should be reviewed)
-mapfile=np.loadtxt(mapfile, delimiter='\t', dtype='S50')
+try:
+        with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                mapfile=np.loadtxt(mapfile, delimiter='\t', dtype='S50')
+except Exception as e:
+        sys.stderr.write("ERROR: unable to load "+mapfile+" - "+str(e)+"\n")
+        sys.exit(1)
 
-GE = pd.read_csv(phenofile, delimiter = "\t")
+try:
+        GE = pd.read_csv(phenofile, delimiter = "\t")
+except Exception as e:
+        sys.stderr.write("ERROR: unable to load "+phenofile+" - "+str(e)+"\n")
+        sys.exit(1)
 
 header = GE.colums.values.tolist()
 #header = map(lambda x:x.replace('"',''), header)
@@ -51,5 +71,4 @@ GEt = GEsliced.T
 phenofileout = open(phenofileout, 'w')
 GEt.to_csv(phenofileout, sep = '\t', header = False)
 phenofileout.close()
-
-
+sys.exit(0)
