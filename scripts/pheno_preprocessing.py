@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import os.path
-
+import warnings
 
 def usage():
 	print """
@@ -34,8 +34,9 @@ if os.path.isfile(phenofile)!=True:
 ##############################################
 ### reading (Pheno reading should be reviewed)
 try:
-        warnings.simplefilter("ignore")
-        mapfile=np.loadtxt(mapfile, delimiter='\t', dtype='S50')
+        with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                mapfile=np.loadtxt(mapfile, delimiter='\t', dtype='S50')
 except Exception as e:
         sys.stderr.write("ERROR: unable to load "+mapfile+" - "+str(e)+"\n")
         sys.exit(1)
