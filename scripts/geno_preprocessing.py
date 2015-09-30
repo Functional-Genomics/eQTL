@@ -4,8 +4,6 @@
 	usage> python geno_preprocessing.py chr1.hf5 """
 
 import os, sys
-limix_path=''
-sys.path.insert(0,limix_path)
 import scipy as SP
 import h5py
 
