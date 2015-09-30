@@ -8,7 +8,7 @@ def usage():
 		 This script generates a csv matrix of gene expression with samples specified in the map file. It requires 3 mandatory arguments.
 		
 		Usage:
-		pheno_preprocessing.py <map_file.csv> <pheno.tsv> <outphenoname.matched.csv>
+		pheno_preprocessing.py <map_file> <pheno> <outphenoname>
 
 		"""
 #check arguments
