@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import getopt, sys, os
 import h5py
-import pandas as ps
+import pandas as pd
 
 def usage():
 	print """
@@ -49,7 +49,7 @@ GEt = GEsliced.T
 
 #write the new CSV file with Gene expression 
 phenofileout = open(phenofileout, 'w')
-Get.to_csv(phenofileout, sep = '\t', header = False)
+GEt.to_csv(phenofileout, sep = '\t', header = False)
 phenofileout.close()
 
 
