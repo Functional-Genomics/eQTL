@@ -34,6 +34,7 @@ if os.path.isfile(phenofile)!=True:
 ##############################################
 ### reading (Pheno reading should be reviewed)
 try:
+        warnings.simplefilter("ignore")
         mapfile=np.loadtxt(mapfile, delimiter='\t', dtype='S50')
 except Exception as e:
         sys.stderr.write("ERROR: unable to load "+mapfile+" - "+str(e)+"\n")
