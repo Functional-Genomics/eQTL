@@ -9,8 +9,9 @@ def usage():
 		
 		Usage:
 		pheno_preprocessing.py <map_file.csv> <pheno.tsv> <outphenoname.matched.csv>
-		"""
 
+		"""
+#check arguments
 if len(sys.argv[1:])!=3:
         usage()
         sys.exit()
