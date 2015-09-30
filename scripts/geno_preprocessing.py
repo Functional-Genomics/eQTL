@@ -9,7 +9,7 @@ sys.path.insert(0,limix_path)
 import scipy as SP
 import h5py
 
-##impute missing genotypes 
+#impute missing genotypes 
 def impute_missing(matrix):
 
 	'''this function imputes missing genotypes based on non-missing ones 
@@ -38,7 +38,13 @@ def kinship(matrix, genofile):
 	return 'Done'
 
 if __name__ == '__main__':
+
 	geno = sys.argv[1]
+
+	if os.path.isfile(geno)!=True:
+        	sys.stderr.write("ERROR: file "+geno+" not found\n")
+        	sys.exit(1)
+
 	geno = h5py.File(geno)
 	geno_matrix = geno['genotype/matrix'][:]
 	impute_missing(geno_matrix)
