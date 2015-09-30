@@ -36,6 +36,11 @@ def kinship(matrix, genofile):
 	return 'Done'
 
 if __name__ == '__main__':
+        
+        if len(sys.argv[1:])!=1:
+                sys.stderr.write("ERROR: geno file not provided\n")
+                sys.stderr.write("Usage: geno_preprocessing.py hdf5_file\n")
+                sys.exit(1)
 
 	geno = sys.argv[1]
 
