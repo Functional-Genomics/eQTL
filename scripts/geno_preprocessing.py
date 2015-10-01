@@ -7,9 +7,7 @@ import h5py
 #usage
 def usage():
 	print """ This script inputes missing values based on the mean of non-missing genotypes .
-		Usage:
-		
-		python geno_preprocessing.py <chr1.hf5> """
+Usage: geno_preprocessing.py hdf5_file"""
 
 #impute missing genotypes 
 def impute_missing(matrix):
@@ -41,13 +39,10 @@ def kinship(matrix, genofile):
 
 if __name__ == '__main__':
         
-        if len(sys.argv[1:])!=1:
-                sys.stderr.write("ERROR: geno file not provided\n")
-                sys.stderr.write("Usage: geno_preprocessing.py hdf5_file\n")
-                sys.exit(1)
 
 	#check argument
 	if len(sys.argv[1:]) != 1:
+                sys.stderr.write("ERROR: geno hdf5 file not provided\n")
 	        usage()
         	sys.exit(1)
 
