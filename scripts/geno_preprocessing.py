@@ -25,7 +25,7 @@ def impute_missing(matrix):
 	return 'Done'
 
 #calculate kinship 
-def kinship(matrix, genofile):
+def corr_matrix(matrix, genofile):
 
 	'''this function standardises the geno data by centering SNPs to mean 0, with unit variance. 
 	Then it calculates matrix of correlation N x N, using matrix of N samples x G genotypes ''' 
@@ -33,9 +33,9 @@ def kinship(matrix, genofile):
 	matrix /= matrix.std(0)
 	K = SP.dot(matrix,matrix.T)
 	##populate Geno dataset with kinship matrix
-	Kpopshape=K.shape
-	kinship=genofile.create_dataset('genotype/Kpop',Kpopshape,dtype="float64")
-	kinship[...]=K[:]
+	Kshape=K.shape
+	kpop=genofile.create_dataset('genotype/Kpop',Kshape,dtype="float64")
+	kpop[...]=K[:]
 	return 'Done'
 
 if __name__ == '__main__':
@@ -56,7 +56,7 @@ if __name__ == '__main__':
 	geno = h5py.File(geno)
 	geno_matrix = geno['genotype/matrix'][:]
 	impute_missing(geno_matrix)
-	kinship(geno_matrix, geno)
+	corr_matrix(geno_matrix, geno)
 	print 'check if keys are ok'
 	for i in geno.keys():
     		for z in geno[i].keys():
