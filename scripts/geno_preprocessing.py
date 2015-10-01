@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
-""" This script inpute missing values by mean of non-missing ones.
-	usage> python geno_preprocessing.py chr1.hf5 """
-
 import os, sys
 import scipy as SP
 import h5py
+
+#usage
+def usage():
+	print """ This script inputes missing values based on the mean of non-missing genotypes .
+		Usage:
+		
+		python geno_preprocessing.py <chr1.hf5> """
 
 #impute missing genotypes 
 def impute_missing(matrix):
@@ -42,9 +46,14 @@ if __name__ == '__main__':
                 sys.stderr.write("Usage: geno_preprocessing.py hdf5_file\n")
                 sys.exit(1)
 
+	#check argument
+	if len(sys.argv[1:]) != 1:
+	        usage()
+        	sys.exit(1)
+
 	geno = sys.argv[1]
 
-	if os.path.isfile(geno)!=True:
+	if os.path.isfile(geno) != True:
         	sys.stderr.write("ERROR: file "+geno+" not found\n")
         	sys.exit(1)
 
