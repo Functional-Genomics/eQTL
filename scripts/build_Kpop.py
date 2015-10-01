@@ -6,9 +6,9 @@ import h5py
 
 def usage():
 
-        print ''' This script builds the final genetic kinship matrix by summing up all the chromosomal kinship matrices given.
+        print ''' This script builds the final genetic kinship matrix (Kpop.hdf5) by summing up all the chromosomal kinship matrices given.
 
-Usage: build_Kpop.py <Kpop.hdf5> <chr1.hdf5> <chr2.hdf5> ... <chr22.hdf5> '''
+Usage: build_Kpop.py <Kpop.hdf5> <chr1.hdf5> [<chr2.hdf5> ... ]'''
 
 def build_kpop(chrmatrix,Kpop,samples):
 	if samples == '':
@@ -24,24 +24,29 @@ def build_kpop(chrmatrix,Kpop,samples):
 
 if __name__ == "__main__":
 	#check arguments
-	if 'Kpop' not in sys.argv[1]:
-		sys.stderr.write("ERROR: Kpop out file not provided\n")
-		usage()
+        if len(sys.argv[1:]) == 0 :
+		sys.stderr.write("ERROR: missing parameters\n")
+                usage();
 		sys.exit(1)
+        # is  the following code really necessary?
+	#if 'Kpop' not in sys.argv[1]:
+	#	sys.stderr.write("ERROR: Kpop out file not provided\n")
+	#	usage()
+	#	sys.exit(1)
 	elif len(sys.argv[1:]) < 2 :
 		sys.stderr.write("ERROR: chromosome not provided\n")
 		sys.exit(1)
 
 	#arguments
-	Kpopfile = h5py.File(sys.argv[1],'w')
 	chr = sys.argv[2:]
 
-	#check files exist
+	#check if files exist first
 	for file in chr:
 		if os.path.isfile(file) != True:
-			Kpopfile.close()
 			sys.stderr.write("ERROR: file "+file+" not found\n")
 			sys.exit(1)
+                        
+	Kpopfile = h5py.File(sys.argv[1],'w')
 
  	#populating Kpop matrix
 	samples = ''
