@@ -27,9 +27,10 @@ def impute_missing(matrix):
 #calculate kinship 
 def kinship(matrix, genofile):
 
-	'''this function calculates matrix of correlation N x N, using
-		matrix of N samples x G genotypes ''' 
-
+	'''this function standardises the geno data by centering SNPs to mean 0, with unit variance. 
+	Then it calculates matrix of correlation N x N, using matrix of N samples x G genotypes ''' 
+	matrix -= matrix.mean(0)
+	matrix /= matrix.std(0)
 	K = SP.dot(matrix,matrix.T)
 	##populate Geno dataset with kinship matrix
 	Kpopshape=K.shape
