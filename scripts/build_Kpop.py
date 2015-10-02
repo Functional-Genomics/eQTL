@@ -43,7 +43,7 @@ if __name__ == "__main__":
 			sys.exit(1)
         
 	#open Kpop out file                
-	Kpopfile = open(sys.argv[1],'w')
+	Kpopfile = h5py.File(sys.argv[1],'w')
  	#populating Kpop matrix
 	samples = ''
 	Kpop = ''
