@@ -26,15 +26,11 @@ if __name__ == "__main__":
 	#check arguments
         if len(sys.argv[1:]) == 0 :
 		sys.stderr.write("ERROR: missing parameters\n")
-                usage();
+                usage()
 		sys.exit(1)
-        # is  the following code really necessary?
-	#if 'Kpop' not in sys.argv[1]:
-	#	sys.stderr.write("ERROR: Kpop out file not provided\n")
-	#	usage()
-	#	sys.exit(1)
 	elif len(sys.argv[1:]) < 2 :
-		sys.stderr.write("ERROR: chromosome not provided\n")
+		sys.stderr.write("ERROR: full set of parameters not provided \n")
+		usage()
 		sys.exit(1)
 
 	#arguments
@@ -45,9 +41,9 @@ if __name__ == "__main__":
 		if os.path.isfile(file) != True:
 			sys.stderr.write("ERROR: file "+file+" not found\n")
 			sys.exit(1)
-                        
-	Kpopfile = h5py.File(sys.argv[1],'w')
-
+        
+	#open Kpop out file                
+	Kpopfile = open(sys.argv[1],'w')
  	#populating Kpop matrix
 	samples = ''
 	Kpop = ''
