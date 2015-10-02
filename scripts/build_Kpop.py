@@ -48,7 +48,7 @@ if __name__ == "__main__":
 	samples = ''
 	Kpop = ''
 	for file in chr:
-    		X=h5py.File(file,'r')
+    		X=h5py.File(file,'r' ) #catch warning if file is corrupted
 		matrix = X['genotype/Kpop'][:]
 		Kpop,samples = build_kpop(matrix,Kpop,samples)
 		X.close()
