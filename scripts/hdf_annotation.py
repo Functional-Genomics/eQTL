@@ -46,4 +46,5 @@ for i in phenofile.keys():
 
 phenofile.close()
 
+sys.exit(0)
 
