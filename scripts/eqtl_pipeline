@@ -102,10 +102,6 @@ else
  $(call p_error,Configuration file missing)
 endif
 
-###############################################
-# Load some definitions
-# include $(script_path)/../aux/mk/irap_defs.mk
-
 ###############################################################
 # Check and validate the parameters values
 
@@ -170,10 +166,8 @@ $(call file_exists,$(gtf_file))
 chromosomes?=1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
 
 
-
 # 2 remove
 LIMIX_BINARY=/panfs/nobackup/production/sds-pawg/ccalabre/germlinevcf/limix_pmbio/build/release.linux2/interfaces/python/bin/
-
 
 
 #####################
@@ -248,6 +242,11 @@ ifndef SAMTOOLS_SORT_MEM
  SAMTOOLS_SORT_MEM:=$(shell bash -c "expr $(max_mem_gb) \* 75 \/ 100")G
 endif
 
+#
+TARGETS1=
+TARGETS2=
+TARGETS3=
+TARGETS4=
 
 #
 # ${name}
@@ -258,6 +257,7 @@ endif
 #   |+-------------none_[step3_md5]/
 #	{1,2,...}
 #       1.hd5
+
 
 
 # HASH
@@ -332,6 +332,8 @@ step1_d: $(step1_dir)/Kpop.hdf5 $(step1_dir)/data_consistent
 TBI_FILES=$(foreach l,$(vcfs),$(l).tbi)
 tbi_files: $(TBI_FILES)
 
+TARGETS1+=$(TBI_FILES)
+
 
 # fix spaces in header?
 FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
@@ -379,11 +381,15 @@ endef
 # Generate the rules per chr
 $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
 
+
 #build_Kpop.py outfile hdf5files....
 #build_Kpop.py kop.hdf5.tmp ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
 $(step1_dir)/Kpop.hdf5: $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
 	build_Kpop.py  $@.tmp $^ && \
 	mv $@.tmp $@
+
+TARGETS2+=$(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
+TARGETS3+=$(step1_dir)/data_consistent
 
 $(step1_dir)/data_consistent: $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix)
 	check_consistency $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix) && touch $(step1_dir)/data_consistent
@@ -397,6 +403,8 @@ $(step1_dir)/complete: $(step1_dir)/Kpop.hdf5 $(step1_dir)/data_consistent
 #
 gtf_eqtl_csv=$(subst .gtf,.gtf.eqtl.csv,$(gtf_file))
 expr_matrix_filename!=basename $(expr_matrix)
+
+TARGETS1+=step2
 
 step0: $(name)/$(expr_matrix_filename).matched.csv
 
@@ -428,7 +436,7 @@ $(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(name
 # step3
 step3: $(step3_dir)/complete
 
-
+TARGETS3+= $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 # kpop - ktot
 $(step3_dir)/panama/panama.hdf5: $(step1_dir)/Kpop.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	mkdir -p $(@D) && \
@@ -471,6 +479,7 @@ $(foreach j,$(shell seq $(n_folds)), $(step3_dir)/$(1)/$(n_folds)_$(j).hdf5)
 endef
 
 #$(info $(All_CisQTL_JOBS))
+TARGETS4+=$(All_CisQTL_JOBS)
 
 # $(1) = chr
 define make-cisqtl-rule-chr=
@@ -492,7 +501,22 @@ $(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 $(step3_dir)/step4.complete:  $(step3_dir)/complete $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
 	touch $@
 
+TARGETS5+=$(step3_dir)/complete $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+
 phony_targets+= setup setup_files
+
+###################################################
+targets1:
+	echo $(TARGETS1)
+targets2:
+	echo $(TARGETS2)
+targets3:
+	echo $(TARGETS3)
+targets4:
+	echo $(TARGETS4)
+targets5:
+	echo $(TARGETS5)
+
 
 ###################################################
 # FORCE the program to run even if files haven't changed
