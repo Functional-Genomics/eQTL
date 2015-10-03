@@ -32,9 +32,7 @@ function submit_job {
     fi
 
     #########################################################
-    # limit the number of parallel jobs by using lsf's groups
-    
-    # default group: irap
+    # limit the number of parallel jobs by using lsf's groups    
     # TODO: define groups by stage: 
     #    irap_qc, ...
     local GROUP=
@@ -49,6 +47,23 @@ function submit_job {
     else
 	$ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"   -cwd `pwd` -o "`get_path2logfile`/$jobname-%J.out" -e "`get_path2logfile`/$jobname-%J.err" -J $jobname  $cmd2e max_threads=$THREADS   max_mem=$MEM	
     fi
+}
+
+function submit_job_get_email {
+    local jobname=$1
+    local waitforids=$2
+    shift
+    shift
+    local cmd2e=$*
+    local ECHO=
+    if [ "$DEBUG-" = "1-" ]; then
+        ECHO=echo
+    fi
+    local GROUP=
+    if [ "$LSF_GROUP-" != "-" ]; then
+	GROUP="-g $LSF_GROUP"
+    fi
+    $ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"   -cwd `pwd` -J $jobname  $cmd2e max_threads=$THREADS   max_mem=$MEM	
 }
 
 
@@ -100,6 +115,12 @@ submit_jobs eqtl3_$JOBNAME_SUF "eqtl2_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
 targets=`eqtl_pipeline $* targets4 | tail -n 1`
 submit_jobs eqtl4_$JOBNAME_SUF "eqtl3_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
 
+targets=`eqtl_pipeline $* targets5 | tail -n 1`
+submit_jobs eqtl5_$JOBNAME_SUF "eqtl4_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
+
+# final job
+targets=step4
+submit_job_get_email  eqtl6_$JOBNAME_SUF "eqtl5_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
 
 resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
