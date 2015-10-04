@@ -68,6 +68,7 @@ if __name__ == '__main__':
 	pheno = h5py.File(pheno, 'r')
 	hidden_k = int(hidden_k)
 	snr_threshold = int(snr_threshold)
+	fileout = h5py.File(fileout, 'w')
 
 	#read matrix
 	phenotype = pheno['phenotype/Ytransformed'][:] #catch warnings here
