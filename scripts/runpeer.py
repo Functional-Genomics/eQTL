@@ -1,9 +1,10 @@
 #!/usr/bin/python
 
 import sys, os
-sys.path.append('./../')
-peer_path='/nfs/research/stegle/software/opt/peer/build/python' #add this to the install.sh script?
-sys.path.insert(0,peer_path)
+#sys.path.append('./../')
+# this is really necessary?
+#peer_path='/nfs/research/stegle/software/opt/peer/build/python' #add this to the install.sh script?
+#sys.path.insert(0,peer_path)
 import peer
 import h5py
 import scipy as sp

@@ -196,12 +196,13 @@ function peer_install {
 function fix_paths {
     # TODO: FIX THIS PATH
     limix_path=$EPIPELINE_DIR/
-    #
-    pythonfiles2fix=geno_preprocessing.py
+    peer_path=$EPIPELINE_DIR/
+    # limix
+    pythonfiles2fix="geno_preprocessing.py"
     for f in $pythonfiles2fix; do
 	pprint_msg "Fixing limix_path in $f..."
-	sed -i "s|^limix_path=.*|limix_path=$limix_path|" $EPIPELINE_DIR/scripts/$f
-	pprint_msg "Fixing limix_path in $f...done."
+	sed -i "s|^limix_path=.*|limix_path='$limix_path'|" $EPIPELINE_DIR/scripts/$f
+	pprint_msg "Fixing limix_path in $f...done."	
     done
 }
 
@@ -284,7 +285,7 @@ SETUP_FILE=$EPIPELINE_DIR/eqtl_setup.sh
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$EPIPELINE_DIR/lib
 
 # Python - where to install the packages
-export PYTHONUSERBASE=$EPIPELINE_DIR/python
+export PYTHONUSERBASE=$EPIPELINE_DIR/anaconda
 mkdir -p $PYTHONUSERBASE/lib/python2.7/site-packages
 
 # R
@@ -316,7 +317,7 @@ export LD_LIBRARY_PATH=\$EPIPELINE_DIR/lib:\$LD_LIBRARY_PATH:/usr/local/lib
 export CFLAGS="-I\$EPIPELINE_DIR/include \$CFLAGS"
 export R_LIBS_USER=$EPIPELINE_DIR/Rlibs
 export CXXFLAGS="-I\$EPIPELINE_DIR/include -L\$IRAP_DIR/lib \$CXXFLAGS"
-export PYTHONUSERBASE=\$IRAP_DIR/python
+export PYTHONUSERBASE=\$EPIPELINE_DIR/anaconda
 EOF
 source $SETUP_FILE
 set -e 
