@@ -29,7 +29,7 @@ def select_genes_on_SNR(phenotype, t):
 	#get the percentile of the SNR distribution based on threshold user defined
 	perc = sp.percentile(sp.sort(SNR),t)
 	#take indexes of those genes with SNR >=t
-	index = sp.where(SNR >= t)[0]
+	index = sp.where(SNR >= perc)[0]
 	#take genes from phenotype matrix with SNR >= t
 	Y = sp.take(phenotype,index, axis=1)
 	return Y
