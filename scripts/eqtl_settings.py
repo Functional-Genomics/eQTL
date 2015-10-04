@@ -4,10 +4,10 @@ import sys,os
 
 def usage():
 	print '''
-This script creates a dictionary of paramteres used for eQTL analysis.
+This script creates a dictionary of parameters used for eQTL analysis.
 
 Usage:
-settings.py <geno.hdf5> <pheno.filtered.hdf5> <correction_method> <correction_method.hdf5> <Kpop.hdf5> <covariates.hdf5> 
+eqtl_settings.py <geno.hdf5> <pheno.filtered.hdf5> <correction_method> <correction_method.hdf5> <Kpop.hdf5> <covariates.hdf5> 
 '''
 
 def read_args(geno,pheno,correction_method,hdf5_correction,Kpop,covariates):
