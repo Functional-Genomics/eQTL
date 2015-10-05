@@ -75,12 +75,12 @@ function check_dependencies {
 function download {
     URL=$1
     OFILE=$2
-    if [ $OS == "linux" ]; then	    
-	wget  --no-check-certificate -c -nc -L "$URL" -O $OFILE
-    else
+#    if [ $OS == "linux" ]; then	    
+     wget  --no-check-certificate -c -nc -L "$URL" -O $OFILE
+#    else
 	# 
-	curl $URL
-    fi
+#	curl $URL
+#    fi
 
 }
 
@@ -130,7 +130,7 @@ function anaconda_install {
     download https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/$file $file
     chmod +x $file
     mkdir -p $EPIPELINE_DIR/anaconda
-    ./Anaconda-$ANACONDA_VERSION-Linux-x86_64.sh -p $EPIPELINE_DIR/anaconda -b -f
+    ./$file -p $EPIPELINE_DIR/anaconda -b -f
     pprint_msg "Installing anaconda...done."
 }
 #export PATH="/path/to/anaconda/bin:$PATH"
@@ -226,7 +226,7 @@ function epipeline_install {
     mkdir -p  $EPIPELINE_DIR/lib
     cp -a $EPIPELINE_SRC_DIR/scripts/* $EPIPELINE_DIR/scripts
     #cp -a $EPIPELINE_SRC_DIR/bin/* $EPIPELINE_DIR/bin
-    fix_paths
+    #fix_paths
     pprint_msg "Installing epipeline...done."
 }
 
