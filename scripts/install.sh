@@ -84,6 +84,16 @@ function download {
 
 }
 
+function get_fullpath {
+
+    F=$1
+    if [ $OS == "linux" ]; then	    
+	readlink -f $F
+    else
+	# 
+	greadlink -f $F
+    fi    
+}
 ################################################################
 # Software to install 
 
@@ -273,8 +283,8 @@ uname -a
 # Check dependencies
 check_dependencies
 # Full path
-EPIPELINE_DIR=$(readlink -f "$EPIPELINE_DIR")
-EPIPELINE_SRC_DIR=$(readlink -f "$EPIPELINE_SRC_DIR")
+EPIPELINE_DIR=`get_fullpath "$EPIPELINE_DIR"`
+EPIPELINE_SRC_DIR=`get_fullpath "$EPIPELINE_SRC_DIR"`
 pprint_msg "EPIPELINE_DIR=$EPIPELINE_DIR"
 pprint_msg "EPIPELINE_SRC_DIR=$EPIPELINE_SRC_DIR"
 pprint_msg "PATH=$PATH"
