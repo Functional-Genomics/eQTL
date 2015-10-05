@@ -394,7 +394,7 @@ TARGETS3+=$(step1_dir)/data_consistent
 $(step1_dir)/data_consistent: $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix)
 	check_consistency $(dna_rna_mapfile) $(step1_dir)/Kpop.hdf5 $(expr_matrix) && touch $(step1_dir)/data_consistent
 
-$(step1_dir)/complete: $(step1_dir)/Kpop.hdf5 $(step1_dir)/data_consistent
+$(step1_dir)/complete: $(step1_dir)/data_consistent
 	touch $@
 
 ################################################################################
@@ -501,6 +501,10 @@ $(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 $(step3_dir)/step4.complete:  $(step3_dir)/complete $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
 	touch $@
 
+# $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
+#$(step3_dir)/step4.ok2start:
+#	eqtl_settings.py $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $()<pheno.filtered.hdf5> $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(step1_dir)/Kpop.hdf5 <covariates.hdf5> 
+#	touch $@
 TARGETS5+=$(step3_dir)/complete $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
 
 phony_targets+= setup setup_files
