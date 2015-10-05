@@ -20,6 +20,8 @@ def build_kpop(chrmatrix,Kpop,samples):
 		Kpop += chrmatrix
 	else:
 		Kpop += chrmatrix
+	#normalise Kpop
+	Kpop /= Kpop.diagonal().mean()
 	return Kpop,samples
 
 if __name__ == "__main__":
