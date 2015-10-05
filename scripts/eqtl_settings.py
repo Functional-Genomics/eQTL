@@ -1,6 +1,7 @@
 #!/usr/bin/env python 
 
 import sys,os 
+import eqtlsettings
 
 def usage():
 	print '''
@@ -9,23 +10,6 @@ This script creates a dictionary of parameters used for eQTL analysis.
 Usage:
 eqtl_settings.py <geno.hdf5> <pheno.filtered.hdf5> <correction_method> <correction_method.hdf5> <Kpop.hdf5> <covariates.hdf5> 
 '''
-
-def read_args(geno,pheno,correction_method,hdf5_correction,Kpop,covariates):
-	CFG = {}
-	#data files
-	CFG['data'] = {}
-	CFG['data']['geno'] = geno # chr1.hdf5
-	CFG['data']['pheno']  = pheno #pheno.filtered.hdf5
-	CFG['data']['kinship'] = Kpop # Kpop.hdf5
-	CFG['data']['covariates'] = covariates #covariates.hdf5 (TODO: script to get known covariates)
-	if correction_method == 'peer':
-		CFG['data']['correction'] = hdf5_correction # peer.hdf5 which contains residuals
-	elif correction_method == 'panama':
-		CFG['data']['correction'] = hdf5_correction # panama.hdf5 which contains Ktot
-	else:
-		CFG['data']['correction'] = hdf5_correction #none.hdf5 which contains Kpop (but maybe won't be used)
-	return CFG
-
 
 if __name__ == '__main__':
 	#the following lines are used only when the script is executed to check arguments. /
