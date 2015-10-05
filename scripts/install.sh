@@ -53,7 +53,7 @@ function check_dependencies {
     pprint_msg "$DEVEL_LIBRARIES_REQUIRED"
     # Binaries that should be available
     # make is required to...compile make
-    BINARIES="wget  git which make bzip2 unzip cmake pip"
+    BINARIES="wget  git which make bzip2 unzip cmake"
     pprint_msg "Checking dependencies..."
     for bin in $BINARIES; do
 	PATH2BIN=`which $bin 2> /dev/null`
@@ -69,19 +69,12 @@ function check_dependencies {
 	pprint_msg "ERROR: Unable to proceed"
 	exit 1
     fi
-
 }
 
 function download {
     URL=$1
     OFILE=$2
-#    if [ $OS == "linux" ]; then	    
-     wget  --no-check-certificate -c -nc -L "$URL" -O $OFILE
-#    else
-	# 
-#	curl $URL
-#    fi
-
+    wget  --no-check-certificate -c -nc -L "$URL" -O $OFILE
 }
 
 function get_fullpath {
@@ -223,10 +216,11 @@ function epipeline_install {
     mkdir -p  $EPIPELINE_DIR/scripts
     mkdir -p  $EPIPELINE_DIR/bin
     mkdir -p  $EPIPELINE_DIR/include
-    mkdir -p  $EPIPELINE_DIR/lib
+    mkdir -p  $EPIPELINE_DIR/lib/python
     cp -a $EPIPELINE_SRC_DIR/scripts/* $EPIPELINE_DIR/scripts
     #cp -a $EPIPELINE_SRC_DIR/bin/* $EPIPELINE_DIR/bin
     #fix_paths
+    cp $EPIPELINE_SRC_DIR/aux/python/* $EPIPELINE_DIR/lib/python
     pprint_msg "Installing epipeline...done."
 }
 
@@ -317,7 +311,7 @@ fi
 
 # install everything
 check_dependencies
-python_2_7_installed
+
 
 # generate the file with the environment variables
 cat <<EOF > $SETUP_FILE
@@ -328,6 +322,7 @@ export CFLAGS="-I\$EPIPELINE_DIR/include \$CFLAGS"
 export R_LIBS_USER=$EPIPELINE_DIR/Rlibs
 export CXXFLAGS="-I\$EPIPELINE_DIR/include -L\$IRAP_DIR/lib \$CXXFLAGS"
 export PYTHONUSERBASE=\$EPIPELINE_DIR/anaconda
+export PYTHONPATH=\$EPIPELINE_DIR/lib/python:\$PYTHONPATH
 EOF
 source $SETUP_FILE
 set -e 
@@ -335,6 +330,8 @@ epipeline_install
 
 make_install
 anaconda_install
+# echeck if python 2.7 is installed
+python_2_7_installed
 limix_install
 peer_install
 popd
