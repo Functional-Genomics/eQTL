@@ -7,8 +7,9 @@ import pdb
 import copy
 import warnings
 
-from eqtlsettings import read_args
-CFG,correction_method=read_args(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
+#from eqtlsettings import read_args
+
+#CFG,correction_method=read_args(data_argv[0], data_argv[1], data_argv[2], data_argv[3], data_argv[4], data_argv[5])
 
 
 class data():
