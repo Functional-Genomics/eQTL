@@ -483,12 +483,15 @@ TARGETS4+=$(All_CisQTL_JOBS)
 
 # $(1) = chr
 define make-cisqtl-rule-chr=
-$(step3_dir)/$(1)/$(n_folds)_%.hdf5:
-	cis_eqtl.py $(1) $$* $(n_folds) $$@.tmp && mv $$@.tmp $$@
+$(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1_dir)/plink/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(step1_dir)/Kpop.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+	eqtl_cis.py $(step1_dir)/plink/$(1)/chr$(1).hdf5  $(corr_method)  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(step1_dir)/Kpop.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
-# Claudia: are the following filenames ok?
+# 
 $(step3_dir)/$(1)/summary.hdf5: $(call CisQTL_JOBS_chr,$(1))
-	cis_eqtl_summary2.py $$(@D) $(n_folds) $$@.tmp && mv $$@.tmp $$@
+	$(file >$$@.lst.txt,$$^) && \
+	eqtl_summary.py $(step1_dir)/plink/$(1)/chr$(1).hdf5  $(corr_method)  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(step1_dir)/Kpop.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(n_folds) $$@.lst.txt $$* $$@.tmp && \
+	rm -f $$@.lst.txt && \
+	mv $$@.tmp $$@
 
 $(step3_dir)/$(1).hdf5: $(step3_dir)/$(1)/summary.hdf5
 	get_final_res.py $(step3_dir)/$(1)/summary.hdf5 $$@.tmp && mv $$@.tmp $$@
