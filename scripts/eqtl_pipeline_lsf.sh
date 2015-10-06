@@ -34,7 +34,6 @@ function submit_job {
     #########################################################
     # limit the number of parallel jobs by using lsf's groups    
     # TODO: define groups by stage: 
-    #    irap_qc, ...
     local GROUP=
     if [ "$LSF_GROUP-" != "-" ]; then
 	GROUP="-g $LSF_GROUP"
