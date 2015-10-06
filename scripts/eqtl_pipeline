@@ -314,7 +314,7 @@ all: step1 step2 step3	step4
 
 # TODO (Claudia)
 %.gtf.eqtl.csv: %.gtf
-	grep CDS $< | cut -f 1,2,3,4,5  > $@.tmp && mv $@.tmp $@
+	get_annotation.sh $<  $@.tmp && mv $@.tmp $@
 
 
 #################################################################################
