@@ -17,18 +17,32 @@ import pdb
 import time
 import h5py
 
+def usage():
+        print '''
+This script runs the eqtl analysis on a chunk of the gene expression matrix.
+
+Usage:
+
+eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <nfolds> <fold_j> <outfilename> '''
+
+if len(sys.argv[:1]) < 9:
+	sys.stderr.write('ERROR: missing parameters\n')
+	usage()
+	sys.exit(1)
+
+
+#populate dictionary with all the data needed for eqtl analysis
 import eqtl_settings
-CFG,correction_method= read_args(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
-import data as DATA
+CFG,correction_method = read_args(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
 
 #take nfold and j to name the out file for each j
 nfolds = int(sys.argv[7])
 fold_j = int(sys.argv[8])
 
-#name of the output hdf5 file
-fname  = '%d_%.3d.hdf5'%(nfolds,fold_j)
-#open the output hdf5 file
-fout = h5py.File(out_file,'w')
+#load data
+import data as DATA
+#open outfile 
+fout  = h5py.File(sys.argv[9],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 # load data 
 data  = DATA.data()
 #get kinship
