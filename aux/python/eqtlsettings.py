@@ -14,4 +14,4 @@ def read_args(geno,pheno,correction_method,hdf5_correction,Kpop,covariates):
 		CFG['data']['correction'] = hdf5_correction # panama.hdf5 which contains Ktot
 	else:
 		CFG['data']['correction'] = hdf5_correction #none.hdf5 which contains Kpop (but maybe won't be used)
-	return CFG
+	return CFG,correction_method
