@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 import sys
-import settings
 import scipy as SP
 import h5py
 import pdb
 import copy
 import warnings
 
-CFG,correction_method=settings.read_args(geno=sys.argv[1], pheno=sys.argv[2], correction_method=sys.argv[3], hdf5_correction=sys.argv[4], Kpop=sys.argv[5], covariates=sys.argv[6])
+from eqtlsettings import read_args
+CFG,correction_method=read_args(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
 
 
 class data():
@@ -33,7 +33,7 @@ class data():
 		rv = self.geneID[Iin]
 		return rv 
 
-	def getK(self,Isample=None,correction_method,normalize=False):
+	def getK(self,Isample=None,correction_method = correction_method,normalize=False):
 		"""
 		get Ktot/Kpop for sample specified in Isample
 		"""
@@ -60,7 +60,7 @@ class data():
 		#rv = SP.concatenate([rv,col],1)
 		return rv
 
-	def getGeneExpression(self,geneID,correction_method,standardize=False):
+	def getGeneExpression(self,geneID,correction_method = correction_method,standardize=False):
 		"""
 		Get gene expression levels
 		"""
