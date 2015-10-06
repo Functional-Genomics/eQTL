@@ -10,7 +10,7 @@ import os
 import pdb
 import glob
 import cPickle
-import eqtlsettings
+
 
 def usage():
 	print '''
@@ -19,6 +19,7 @@ Usage:
 
 eqtl_summary.py <chr1.hdf5> <pheno.filtered.hdf5> <correction_method> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <nfolds> <samples_list> <summary_filename> '''
 
+#maybe  __main__ is useless since this script will always be run as executable. 
 
 def getRelPos(pos,gene_pos):
 	if gene_pos[3]==1:
@@ -40,6 +41,7 @@ if __name__=='__main__':
 	samples_list = sys.argv[8]
 	summary = sys.argv[9]
 	#populate dictionary with data for eqtl
+	import eqtlsettings
 	CFG,correction_method = read_args(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
 	#load doata
 	import data as DATA	
