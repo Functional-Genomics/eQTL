@@ -57,14 +57,13 @@ if len(rnafiles) > len(header):
 
 #take indexes of mapfile RNA samples within gene expression matrix header 
 n=map(lambda x:header.index(x),rnafiles)
-#substitue RNA seq ids with DNA to sort samples in eqtl analysis
-GE.columns.values=mapfile[:,0]
 ####
 #insert index 0 in list to take also first column name
 n.insert(0,0)
 #grep only columns from the GEarray matching the RNA samples with a correspondent VCF analysis IDs.
 GEsliced=GE.take(n, axis=1)
-
+#susbstitute RNA samples ID with DNA samples ID
+GEsliced.columns=mapfile[:,0]
 #get shape of the matrix of genes
 annot=GEliced.shape[0]-1
 nsamples=GEsliced.shape[1]-1
