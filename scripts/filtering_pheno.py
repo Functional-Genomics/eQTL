@@ -63,12 +63,12 @@ vector=SP.sum((matrix>=threshold), axis=0)
 booleanvector=(vector>=samples_threshold)
 indexes=SP.where(booleanvector == True)[0]
 
-print "{1} genes reteined after filtering".format(len(indexes))
+print "{0} genes retained after filtering".format(len(indexes))
 
 #filter original matrix of gene expression
 filtered_matrix = matrix[:,indexes]
 matrix_shape=filtered_matrix.shape
-fltered_genes=SP.take(genesvector,indexes, axis=0)
+filtered_genes=SP.take(genesvector,indexes, axis=0)
 genes_shape=filtered_genes.shape
 filtered_chrom=SP.take(chrvector, indexes, axis=0)
 chrom_shape=filtered_chrom.shape
@@ -90,8 +90,11 @@ else:
 filtered_hd_dset=phenout.create_dataset('phenotype/matrix', matrix_shape, dtype="float64")
 filtered_hd_dset[...]=filtered_matrix
 #tranformed values
-filtered_hd_normalised=phenout.create_dataset('phenotype/Ytransformed'+ matrix_shape, dtype="float64")
+filtered_hd_normalised=phenout.create_dataset('phenotype/Ytransformed', matrix_shape, dtype="float64")
 filtered_hd_normalised[...]=Y
+#samples
+filtered_hd_samples=phenout.create_dataset('phenotype/row_header/sample_ID', samplesvector.shape, dtype="S100")
+filtered_hd_samples[...]=samplesvector 
 #genes
 filtered_dset1=phenout.create_dataset('phenotype/col_header/phenotype_ID', genes_shape, dtype="S100")
 filtered_dset1[...]=filtered_genes
