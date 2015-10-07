@@ -53,12 +53,12 @@ if __name__ == "__main__":
  	#populating Kpop matrix and vector of samples
 	samples = ''
 	Kpop = ''
-	samples_vector = ''
+	samples_vector = 0
 	for file in chr:
     		X=h5py.File(file,'r' ) #catch warning if file is corrupted
 		matrix = X['genotype/Kpop'][:]
 		Kpop,samples = build_kpop(matrix,Kpop,samples)
-		if samples_vector != '':
+		if samples_vector == 0:
 			samples_vector = X['genotype/row_header/sample_ID'][:] #get samples from chr file
 		X.close()
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 	Kpopfile.close()
 
 	#output samples list into hdf5 file
-	s=hdf5_samples.create_dataset('sample_ID', (samples_vector.shape,), dtype='S100')
+	s=hdf5_samples.create_dataset('sample_ID', samples_vector.shape, dtype='S100')
 	s[...]=samples_vector[:]
 	hdf5_samples.close()
 
