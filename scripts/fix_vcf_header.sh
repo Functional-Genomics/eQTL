@@ -11,7 +11,6 @@ EOF
 	
 }
 
-#no need to generate gz vcf in this step! TODO: change make file? """
 
 vcfin=$1
 vcfout=$2
@@ -35,9 +34,10 @@ if [ "$vcfout-" == "-" ]; then
 fi
 
 
-zcat $vcfin | grep '##' | sed 's/ //g' > $vcfout &&
-zcat $vcfin | grep -v '##' >> $vcfout
-
+#to be optimised
+zcat $vcfin | grep '##' | sed 's/ //g' > $vcfout.tmp &&
+zcat $vcfin | grep -v '##' >> $vcfout.tmp &&
+bgzip -c $vcfout.tmp > $vcfout
 
 exit 0
 

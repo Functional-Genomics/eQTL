@@ -8,7 +8,9 @@ def usage():
 
         print ''' This script builds the final genetic kinship matrix (Kpop.hdf5) by summing up all the chromosomal kinship matrices given.
 
-Usage: build_Kpop.py <Kpop.hdf5> <chr1.hdf5> [<chr2.hdf5> ... ]'''
+Usage: build_Kpop.py <Kpop.hdf5> <samples.hdf5> <chr1.hdf5> [<chr2.hdf5> ... ] '''
+
+#TODO: samples.hdf5 is a further argument of this script. This needs to be added to the make file.
 
 def build_kpop(chrmatrix,Kpop,samples):
 	if samples == '':
@@ -30,13 +32,13 @@ if __name__ == "__main__":
 		sys.stderr.write("ERROR: missing parameters\n")
                 usage()
 		sys.exit(1)
-	elif len(sys.argv[1:]) < 2 :
+	elif len(sys.argv[1:]) < 3 :
 		sys.stderr.write("ERROR: full set of parameters not provided \n")
 		usage()
 		sys.exit(1)
 
 	#arguments
-	chr = sys.argv[2:]
+	chr = sys.argv[3:]
 
 	#check if files exist first
 	for file in chr:
@@ -46,19 +48,30 @@ if __name__ == "__main__":
         
 	#open Kpop out file                
 	Kpopfile = h5py.File(sys.argv[1],'w')
- 	#populating Kpop matrix
+	#open samples file
+	hdf5_samples = h5py.File(sys.argv[2],'w')
+
+ 	#populating Kpop matrix and vector of samples
 	samples = ''
 	Kpop = ''
+	samples_vector = 0
 	for file in chr:
     		X=h5py.File(file,'r' ) #catch warning if file is corrupted
 		matrix = X['genotype/Kpop'][:]
 		Kpop,samples = build_kpop(matrix,Kpop,samples)
+		if samples_vector == 0:
+			samples_vector = X['genotype/row_header/sample_ID'][:] #get samples from chr file
 		X.close()
 
-	#output Kpop in a file
+	#output Kpop in hdf5 file
 	kinship=Kpopfile.create_dataset('Kpop',Kpop.shape,dtype="float64")
 	kinship[...]=Kpop[:]
 	Kpopfile.close()
+
+	#output samples list into hdf5 file
+	s=hdf5_samples.create_dataset('sample_ID', samples_vector.shape, dtype='S100')
+	s[...]=samples_vector[:]
+	hdf5_samples.close()
 
 	sys.exit(0)
 
