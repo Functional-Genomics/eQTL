@@ -47,12 +47,21 @@ except Exception as e:
         sys.stderr.write("ERROR: unable to load "+phenofile+" - "+str(e)+"\n")
         sys.exit(1)
 
-header = GE.colums.values.tolist()
+header = GE.columns.values.tolist()
 #header = map(lambda x:x.replace('"',''), header)
 rnafiles=mapfile[1:,1].tolist()
-n=map(lambda x:header.index(x),rnafiles)
-n.insert(0,0)
+#sanity check
+if len(rnafiles) > len(header):
+	sys.stderr.write("ERROR: inconsistency between number of samples in mapfile and gene expression matrix\n")
+	sys.exit(1)
 
+#take indexes of mapfile RNA samples within gene expression matrix header 
+n=map(lambda x:header.index(x),rnafiles)
+#substitue RNA seq ids with DNA to sort samples in eqtl analysis
+GE.columns.values=mapfile[:,0]
+####
+#insert index 0 in list to take also first column name
+n.insert(0,0)
 #grep only columns from the GEarray matching the RNA samples with a correspondent VCF analysis IDs.
 GEsliced=GE.take(n, axis=1)
 
