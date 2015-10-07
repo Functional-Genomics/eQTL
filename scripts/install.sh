@@ -196,6 +196,53 @@ function peer_install {
     pprint_msg "Installing PEER...done."
 }
 
+function vcftools_install {
+    pprint_msg "Installing vcftools..."
+    
+    VCFTOOLS_VERSION=0.1.14
+    VCFTOOLS_FILE=vcftools-$VCFTOOLS_VERSION.tar.gz
+    VCFTOOLS_URL=https://github.com/vcftools/vcftools/releases/download/v$VCFTOOLS_VERSION/$VCFTOOLS_FILE
+
+    download $VCFTOOLS_URL $VCFTOOLS_FILE
+    
+    tar xvzf $VCFTOOLS_FILE
+    pushd vcftools-${VCFTOOLS_VERSION}
+    ./configure prefix=$EPIPELINE_DIR
+    make -j $J prefix=$EPIPELINE_DIR
+    make prefix=$EPIPELINE_DIR install
+    popd
+    pprint_msg "Installing vcftools...done."
+}
+
+function bcftools_install {
+    
+    pprint_msg "Installing bcftools..."
+    BCFTOOLS_VERSION=1.2
+    BCFTOOLS_FILE=bcftools-$BCFTOOLS_VERSION.tar.bz2
+    BCFTOOLS_URL=https://github.com/samtools/bcftools/releases/download/$BCFTOOLS_VERSION/$BCFTOOLS_FILE
+    download $BCFTOOLS_URL $BCFTOOLS_FILE
+    tar xjvf $BCFTOOLS_FILE
+    pushd bcftools-${BCFTOOLS_VERSION}
+    sed -i -E "s|^prefix\s*=.*|prefix=$EPIPELINE_DIR|"  Makefile
+    make -j 2
+    make install
+    popd
+    pprint_msg "Installing bcftools...done."
+}
+
+function tabix_install {
+    pprint_msg "Installing tabix..."
+    TABIX_VERSION=0.2.6
+    TABIX_FILE=tabix-$TABIX_VERSION.tar.bz2
+    TABIX_URL=http://sourceforge.net/projects/samtools/files/tabix/$TABIX1_VERSION/$TABIX_FILE
+
+    download $TABIX_URL $TABIX_FILE
+    tar xvjf $TABIX_FILE
+    pushd tabix-${TABIX_VERSION}
+    make -j $J prefix=$EPIPELINE_DIR
+    cp tabix bgzip tabix.py $EPIPELINE_DIR/bin    
+    pprint_msg "Installing tabix...done."
+}
 function fix_paths {
     # TODO: FIX THIS PATH
     limix_path=$EPIPELINE_DIR/
@@ -305,6 +352,7 @@ pprint_msg "Cleaning up $TMP_DIR...done."
 
 # useful for debugging
 if [ "$install" == "software_install" ]; then
+    set -e
     ${SOFTWARE}_install
     exit 0
 fi
@@ -332,8 +380,12 @@ make_install
 anaconda_install
 # echeck if python 2.7 is installed
 python_2_7_installed
+set -e
 limix_install
 peer_install
+vcftools_install
+bcftools_install
+tabix_install
 popd
 exit 0
 
