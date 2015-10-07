@@ -10,6 +10,7 @@ def usage():
 
 Usage: build_Kpop.py <Kpop.hdf5> <samples.hdf5> <chr1.hdf5> [<chr2.hdf5> ... ] '''
 
+#TODO: samples.hdf5 is a further argument of this script. This needs to be added to the make file.
 
 def build_kpop(chrmatrix,Kpop,samples):
 	if samples == '':
