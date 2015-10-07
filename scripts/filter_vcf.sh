@@ -15,7 +15,7 @@ Options:
         -c    chromosome [INT; mandatory]
         -g    define minGQ [default=50]
         -d    define minDP [default=20]
-        -f    select only those variants that passed filters of the variant calling pipeline used (i.e. if PASS in FORMAT field) [default=true]
+        -f    retaining also variants without PASS in FORMAT field [default=true]
 	#-v   specify variant calling type [Sanger | Annai | ... ]
         #-p   select only those variants with >=0.95 probability of the most probable genotype [default=false]
 	-h    show this help message
