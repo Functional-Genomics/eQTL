@@ -10,7 +10,6 @@ def usage():
 
 Usage: build_Kpop.py <Kpop.hdf5> <samples.hdf5> <chr1.hdf5> [<chr2.hdf5> ... ] '''
 
-#TODO: samples.hdf5 is a further argument of this script. This needs to be added to the make file.
 
 def build_kpop(chrmatrix,Kpop,samples):
 	if samples == '':
@@ -45,7 +44,8 @@ if __name__ == "__main__":
 		if os.path.isfile(file) != True:
 			sys.stderr.write("ERROR: file "+file+" not found\n")
 			sys.exit(1)
-        
+
+        print "Opening input files..."
 	#open Kpop out file                
 	Kpopfile = h5py.File(sys.argv[1],'w')
 	#open samples file
@@ -56,6 +56,7 @@ if __name__ == "__main__":
 	Kpop = ''
 	samples_vector = 0
 	for file in chr:
+                print "."                                
     		X=h5py.File(file,'r' ) #catch warning if file is corrupted
 		matrix = X['genotype/Kpop'][:]
 		Kpop,samples = build_kpop(matrix,Kpop,samples)
@@ -63,15 +64,18 @@ if __name__ == "__main__":
 			samples_vector = X['genotype/row_header/sample_ID'][:] #get samples from chr file
 		X.close()
 
+        print "Creating kinship matrix..."
+                                
 	#output Kpop in hdf5 file
 	kinship=Kpopfile.create_dataset('Kpop',Kpop.shape,dtype="float64")
 	kinship[...]=Kpop[:]
 	Kpopfile.close()
-
+        print "Creating kinship matrix...done."
 	#output samples list into hdf5 file
+        print "Creating output file..."
 	s=hdf5_samples.create_dataset('sample_ID', samples_vector.shape, dtype='S100')
 	s[...]=samples_vector[:]
 	hdf5_samples.close()
-
+        print "Creating output file...done."
 	sys.exit(0)
 
