@@ -178,10 +178,12 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD rm_filter_all vcf_filter min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations
+def_vars=minGQ minRD rm_filter_all vcf_filter min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold
 peer_iterations?=100
 minGQ?=50
 minRD?=20
+# signal-to-noise ration threshold
+snr_threshold?=
 rm_filter_all?=true
 vcf_filter?=
 # vcf_filter="TP > 0.95 ....."
@@ -441,7 +443,7 @@ TARGETS3+= $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 $(step3_dir)/panama/panama.hdf5: $(step1_dir)/Kpop.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	mkdir -p $(@D) && \
 	cp $(step1_dir)/Kpop.hdf5 $@.tmp && \
-	runpanama.py  $@.tmp $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(hidden_k) $(expr_transform) &&\
+	runpanama.py  $@.tmp $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(hidden_k) $(snr_threshold) $(expr_transform) &&\
 	mv $@.tmp  $@
 
 $(step3_dir)/peer/peer.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
