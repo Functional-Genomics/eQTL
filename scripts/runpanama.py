@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
 import sys
-#sys.path.append('./../') #yes you're right this was useless ;-)
-#limix_folder='/panfs/nobackup/production/sds-pawg/ccalabre/germlinevcf/' according to the changes in the install.sh I should delete this lines
-#sys.path.insert(0,limix_folder)
 import scipy as sp
 import h5py
 # import LIMIX
-import limix.modules.panama as panama #here I'm afraid that the name of the modules changed in the meanwhile. Check the latest version of limix TODO: check
+# here I'm afraid that the name of the modules changed in the meanwhile. Check the latest version of limix TODO: check
+import limix.modules.panama as panama 
 
 def usage():
         print """
@@ -16,7 +14,7 @@ This module runs  the PANAMA model available within LIMIX, to calculate matrix o
 TODO: Add other methods to select genes from pheno matrix.
 
 Usage:
-runpanama.py <Kpop.hdf5> <pheno.filtered.hf5> <hidden_k> <snr_threshold> <fileout.hdf5> """ #TODO: add snr_threshold as param to make file!
+runpanama.py <Kpop.hdf5> <pheno.filtered.hf5> <hidden_k> <snr_threshold> <fileout.hdf5> """ 
 
 def standardise_kinship(matrix):
 	kinship /= sp.diag(matrix).mean()
@@ -86,5 +84,5 @@ if __name__ == '__main__':
 	dset[...]=Ktot[:]
 
 	fileout.close()
-
+	print "all done."
 	sys.exit(0)
