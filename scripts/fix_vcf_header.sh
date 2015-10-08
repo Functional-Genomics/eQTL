@@ -33,11 +33,14 @@ if [ "$vcfout-" == "-" ]; then
     exit 1
 fi
 
+named_pipe=.$vcfout.tmp
+mkfifo $named_pipe
 
 #to be optimised
-zcat $vcfin | grep '##' | sed 's/ //g' > $vcfout.tmp &&
-zcat $vcfin | grep -v '##' >> $vcfout.tmp &&
-bgzip -c $vcfout.tmp > $vcfout
+zcat $vcfin | grep '##' | sed 's/ //g' > $named_pipe &
+zcat $vcfin | grep -v '##' >> $named_pipe &
+bgzip -c $named.pipe > $vcfout
 
+rm -f $named_pipe
 exit 0
 
