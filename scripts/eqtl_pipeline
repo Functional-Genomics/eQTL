@@ -312,7 +312,7 @@ all: step1 step2 step3	step4
 	tabix -p $< || ( rm -f $@ && exit 1)
 
 %.vcf.tbi: %.vcf
-	tabix -p $<  
+	tabix -p $<  || ( rm -f $@ && exit 1)
 
 # TODO (Claudia)
 %.gtf.eqtl.csv: %.gtf
@@ -383,9 +383,9 @@ endef
 # Generate the rules per chr
 $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
 
-
+# todo add samples.hdf5???
 #build_Kpop.py outfile hdf5files....
-#build_Kpop.py kop.hdf5.tmp ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
+#build_Kpop.py kop.hdf5.tmp samples.hdf5 ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
 $(step1_dir)/Kpop.hdf5: $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
 	build_Kpop.py  $@.tmp $^ && \
 	mv $@.tmp $@
