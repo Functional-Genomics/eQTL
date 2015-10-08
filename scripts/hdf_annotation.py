@@ -5,10 +5,10 @@ import h5py
 import scipy as sp
 
 def usage():
-	print ''' This script loads annotations from csv file into hdf5 matrix with gene expression values.
+	print ''' This script loads annotations from tsv file into hdf5 matrix with gene expression values.
 
 Usage:
-hdf_annotation.py <annotation.csv> <pheno.hdf5> '''
+hdf_annotation.py <annotation.tsv> <pheno.hdf5> '''
 
 
 #check number of arguments

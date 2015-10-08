@@ -16,7 +16,7 @@ This script runs PEER (https://github.com/PMBio/peer/wiki) on a matrix of normal
 with N samples and G genes.
 
 Usage:
-runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5> #TODO:DELETE expr_transform from make file!
+runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5>
 
 TODO: implement covariates in the model. It's one line of code but I need to test it first. '''
 

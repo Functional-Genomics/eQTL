@@ -8,11 +8,11 @@ import h5py
 
 def usage():
 	print '''
-This script generates an hdf5 file with a matrix of N samples x K known covariates from a csv file. Row names = sample names are required in the csv file.
+This script generates an hdf5 file with a matrix of N samples x K known covariates from a tsv file. Row names = sample names are required in the tsv file.
 
 Usage:
 
-get_covariates.py <covariates.csv> <covariates.hdf5>
+get_covariates.py <covariates.tsv> <covariates.hdf5>
 '''
 
 
