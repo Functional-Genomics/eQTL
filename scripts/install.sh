@@ -197,6 +197,24 @@ function peer_install {
     pprint_msg "Installing PEER...done."
 }
 
+function plink_install {
+
+    pprint_msg "Installing plink..."
+    PLINK_VERSION=1.07
+    if [ "$OS" == "mac" ]; then
+	PLINK_FILE=plink-$PLINK_VERSION-mac-intel.zip	    	
+	echo "Complain with Claudia!!"
+	#exit 1
+	#http://pngu.mgh.harvard.edu/~purcell/plink/dist/plink-1.07-mac-intel.zip
+    else
+	PLINK_FILE=plink-$PLINK_VERSION-x86_64.zip
+    fi
+    PLINK_URL=http://pngu.mgh.harvard.edu/~purcell/plink/dist/$PLINK_FILE
+    download $PLINK_URL $PLINK_FILE
+    unzip $PLINK_FILE
+    cp `echo $PLINK_FILE|sed "s/.zip//"`/plink $EPIPELINE_DIR/bin/
+    pprint_msg "Installing plink...done"
+}
 function vcftools_install {
     pprint_msg "Installing vcftools..."
     
@@ -387,6 +405,7 @@ peer_install
 vcftools_install
 bcftools_install
 tabix_install
+plink_install
 popd
 exit 0
 
