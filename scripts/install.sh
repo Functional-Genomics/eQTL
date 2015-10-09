@@ -177,7 +177,7 @@ function peer_install {
     make install
     popd
     #
-    git clone git@github.com:PMBio/peer.git
+    git clone https://github.com/PMBio/peer.git
     #create a target directory for the build:
     mkdir -p peer/build
     pushd peer/build 
