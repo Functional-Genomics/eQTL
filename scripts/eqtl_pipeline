@@ -149,7 +149,7 @@ ifndef vcfs
 endif
 $(info *	vcfs=$(vcfs))
 #$(call file_exists,$(vcfs))
-$(foreach l,$(vcfs),$(call file_exists,$(l)))
+$(foreach l,$(vcfs),$(call file_exists,$(vcf_toplevel_dir)/$(l)))
 
 #
 ifndef cov_matrix
