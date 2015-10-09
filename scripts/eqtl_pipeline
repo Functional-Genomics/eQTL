@@ -384,7 +384,7 @@ $(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/
 	bcftools merge -l $$@.lst | bgzip -c > $$@.tmp && \
 	mv $$@.tmp $$@
 
-$(step1_dir)/$(1)/%.filter.vcf.gz: %.vcf.gz
+$(step1_dir)/$(1)/%.filter.vcf.gz: %.fixedheader.vcf.gz
 	filter_vcf.sh -i $$< -o $$@.tmp -c $(1) -g $(minGQ) -d $(minRD)  && mv $$@.tmp $$@
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
