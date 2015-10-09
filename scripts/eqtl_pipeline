@@ -139,6 +139,11 @@ $(call file_exists,$(dna_rna_mapfile))
 
 #************************
 # ?
+ifndef vcf_toplevel_dir
+$(call p_error,vcf_toplevel_dir not defined)
+endif
+$(info *	vcf_toplevel_dir=$(vcf_toplevel_dir))
+
 ifndef vcfs
  $(call p_error,missing argument vcfs)
 endif
@@ -369,8 +374,8 @@ FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
 fix_vcf_headers: $(FIXEDHEADER_VCFS) 
 	echo $(FIXEDHEADER_VCFS)
 
-%.fixedheader.vcf.gz: %.vcf.gz
-	fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
+$(name)/vcf/%.fixedheader.vcf.gz: $(vcf_toplevel_dir)/%.vcf.gz
+	mkdir -p $(@D) && fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
 
 
 # Rules to process each chr
@@ -384,7 +389,7 @@ $(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/
 	bcftools merge -l $$@.lst | bgzip -c > $$@.tmp && \
 	mv $$@.tmp $$@
 
-$(step1_dir)/$(1)/%.filter.vcf.gz: %.fixedheader.vcf.gz
+$(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
 	filter_vcf.sh -i $$< -o $$@.tmp -c $(1) -g $(minGQ) -d $(minRD)  && mv $$@.tmp $$@
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
