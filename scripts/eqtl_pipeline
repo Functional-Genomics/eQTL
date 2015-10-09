@@ -326,10 +326,10 @@ all: step1 step2 step3	step4
 
 # 
 %.vcf.gz.tbi: %.vcf.gz
-	tabix -p $< || ( rm -f $@ && exit 1)
+	tabix -p vcf $< || ( rm -f $@ && exit 1)
 
 %.vcf.tbi: %.vcf
-	tabix -p $<  || ( rm -f $@ && exit 1)
+	tabix -p vcf $<  || ( rm -f $@ && exit 1)
 
 %.gtf: %.gtf.gz
 	gunzip -c $< > $@.tmp && mv $@.tmp $@
