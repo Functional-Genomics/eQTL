@@ -446,7 +446,7 @@ step2: $(step2_dir)/complete
 
 
 $(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(expr_matrix)
-	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --tsv=$< && \
+	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
 	mv $@.tmp $@	
 
