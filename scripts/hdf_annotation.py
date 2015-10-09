@@ -23,7 +23,7 @@ annotation=sys.argv[1]
 phenofile=sys.argv[2]
 
 #check files exist
-if os.path.isfile(annotation) != True
+if os.path.isfile(annotation) != True:
 	sys.stderr.write("ERROR: file "+annotation+" not found\n")
 	sys.exit(1)
 elif os.path.isfile(phenofile) != True:
