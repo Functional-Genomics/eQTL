@@ -326,6 +326,8 @@ all: step1 step2 step3	step4
 %.vcf.tbi: %.vcf
 	tabix -p $<  || ( rm -f $@ && exit 1)
 
+%.gtf: %.gtf.gz
+	gunzip -c $< > $@.tmp && mv $@.tmp $@
 # 
 %.gtf.eqtl.tsv: %.gtf
 	get_annotation.sh $<  $@.tmp && mv $@.tmp $@
