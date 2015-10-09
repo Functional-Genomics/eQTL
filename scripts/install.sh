@@ -149,9 +149,6 @@ function limix_install {
 
 #####################################################################
 # Peer (https://github.com/PMBio/peer/wiki/Installation-instructions)
-
-    #####################################################################
-# Peer (https://github.com/PMBio/peer/wiki/Installation-instructions)
 #
 # peer Dependencies:
 #
@@ -179,7 +176,7 @@ function peer_install {
     make
     make install
     popd
-    #mkdir -p peer/build
+    mkdir -p peer/build
     git clone https://github.com/PMBio/peer.git
     pushd peer/build 
     if [ "$OS" == "mac" ]; then
