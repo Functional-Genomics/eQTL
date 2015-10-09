@@ -298,7 +298,7 @@ $(shell mkdir -p $(step1_dir) $(step2_dir) $(step3_dir))
 ###############
 # names of files
 cov_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).hdf5
-gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(gtf_file))
+gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
 expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
 kpop_file=$(step1_dir)/Kpop.hdf5
 samples_hdf5=$(step1_dir)/samples.hdf5
@@ -445,7 +445,7 @@ TARGETS1+=step2
 step2: $(step2_dir)/complete
 
 
-$(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(expr_matrix)
+$(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(expr_matrix) $(gtf_eqtl_tsv)
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
 	mv $@.tmp $@	
