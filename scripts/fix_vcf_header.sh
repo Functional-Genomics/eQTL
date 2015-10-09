@@ -33,7 +33,7 @@ if [ "$vcfout-" == "-" ]; then
     exit 1
 fi
 
-named_pipe=.$vcfout.tmp
+named_pipe=$vcfout.tmp.pipe
 mkfifo $named_pipe
 
 #to be optimised
