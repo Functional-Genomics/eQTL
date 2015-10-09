@@ -176,8 +176,8 @@ function peer_install {
     make
     make install
     popd
-    mkdir -p peer/build
     git clone https://github.com/PMBio/peer.git
+    mkdir -p peer/build
     pushd peer/build 
     if [ "$OS" == "mac" ]; then
 	#By default, peer is not built as an universal binary on OS X. 
