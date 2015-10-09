@@ -271,8 +271,7 @@ TARGETS4=
 
 
 # HASH
-# TODO: include all variables used in step 1
-step1_hash!=echo $(minGQ) $(minRD) |md5sum|cut -f1 -d' ' 
+step1_hash!=echo $(minGQ) $(minRD) $(max_missing) $(max) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d' '
 
 
@@ -280,7 +279,7 @@ ifeq ($(corr_method),peer)
 step3_hash!=echo $(step1_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
 else
 ifeq ($(corr_method),panama)
-step3_hash!=echo $(step1_hash) $(step2_hash)  $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform)|md5sum|cut -f1 -d' '
 else
 step3_hash!=echo $(step1_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
