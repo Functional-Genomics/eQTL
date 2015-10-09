@@ -148,9 +148,39 @@ function limix_install {
 }
 
 #####################################################################
-# Peer (https://github.com/PMBio/pee
-  r/wiki/Installation-instructions)
-    mkdir -p peer/build
+# Peer (https://github.com/PMBio/peer/wiki/Installation-instructions)
+
+    #####################################################################
+# Peer (https://github.com/PMBio/peer/wiki/Installation-instructions)
+#
+# peer Dependencies:
+#
+# For PYTHON package (used in the pipeline) of peer:
+#
+# Python 2.5 or later
+# scipy
+# numpy
+#
+# For FULL source package installation:
+#
+# CMake 2.8 or later
+# SWIG 2.0 or later
+#Install PEER from source (recommended)
+function peer_install {
+    pprint_msg "Installing PEER..."
+    # Install dependencies
+    SWIG_VERSION=3.0.7
+    SWIG_FILE=swig-$SWIG_VERSION.tar.gz
+    SWIG_URL=http://prdownloads.sourceforge.net/swig/$SWIG_FILE
+    download $SWIG_URL $SWIG_FILE
+    tar xzvf $SWIG_FILE
+    pushd swig-$SWIG_VERSION
+    ./configure --prefix $EPIPELINE_DIR
+    make
+    make install
+    popd
+    #mkdir -p peer/build
+    git clone https://github.com/PMBio/peer.git
     pushd peer/build 
     if [ "$OS" == "mac" ]; then
 	#By default, peer is not built as an universal binary on OS X. 
