@@ -398,7 +398,7 @@ $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
 $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1).merged.vcf.gz
 	mkdir -p $$(@D) &&
 	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --temp $$(@D) --stdout | \
-        vcftools --vcf - --plink --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $@
+        vcftools --vcf - --plink --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
 
 
 $(step1_dir)/plink/$(1)/plink_chr$(1).done: $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink
