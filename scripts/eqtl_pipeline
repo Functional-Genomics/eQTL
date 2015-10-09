@@ -385,8 +385,10 @@ define make-rules-for-chr=
 $(shell mkdir -p $(step1_dir)/$(1))
 
 $(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
-	$$(file > $$@.lst, $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
+	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
+	sed -i "s/^ //" $$@.lst && \
 	bcftools merge -l $$@.lst | bgzip -c > $$@.tmp && \
+	rm -f $$@.lst && \
 	mv $$@.tmp $$@
 
 $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
@@ -395,8 +397,8 @@ $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
 ##select MAC >=5, allow max missing sites in 20 percent of samples
 $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1).merged.vcf.gz
 	mkdir -p $$(@D) &&
-	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --out /dev/stdout | \
-        vcftools --vcf /dev/stdin --plink --out $$@.plink.tmp && mv $$@.tmp $$@ 
+	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --temp $(@D) --stdout | \
+        vcftools --vcf - --plink --out $$@.plink.tmp && mv $$@.tmp $$@ 
 
 
 $(step1_dir)/plink/$(1)/plink_chr$(1).done: $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink
