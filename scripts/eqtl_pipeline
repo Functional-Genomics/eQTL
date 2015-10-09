@@ -116,8 +116,6 @@ else
  $(info *	name=$(name))
 endif
 
-# cov_matrix?
-# 
 
 # expr_matrix (TSV File)
 ifndef expr_matrix
@@ -148,10 +146,15 @@ $(info *	vcfs=$(vcfs))
 #$(call file_exists,$(vcfs))
 $(foreach l,$(vcfs),$(call file_exists,$(l)))
 
-# TODO
-cov_matrix=
-
+#
+ifndef cov_matrix
+cov_matrix=none
+$(call p_error,cov_matrix not defined)
+endif
+$(call file_exists,$(cov_matrix))
+$(info *	cov_matrix=$(cov_matrix))
 # eqtl_pipeline vcfs=`ls mydir/*.vcf.gz`
+
 
 #********* 
 # GTF file?
@@ -263,7 +266,8 @@ TARGETS4=
 
 
 # HASH
-step1_hash!=echo $(minGQ) $(minRD) $(rm_filter_all) $(vcf_filter)|md5sum|cut -f1 -d' ' 
+# TODO: include all variables used in step 1
+step1_hash!=echo $(minGQ) $(minRD) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d' '
 
 
@@ -288,10 +292,9 @@ $(shell mkdir -p $(step1_dir) $(step2_dir) $(step3_dir))
 
 ###############
 # names of files
-
-cov_hdf5!=$(name)/$(basename $(cov_matrix)).hdf5
+cov_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).hdf5
 gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(gtf_file))
-expr_matrix_filename!=basename $(expr_matrix)
+expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
 kpop_file=$(step1_dir)/Kpop.hdf5
 samples_hdf5=$(step1_dir)/samples.hdf5
 
@@ -434,13 +437,13 @@ TARGETS1+=step2
 step2: $(step2_dir)/complete
 
 
-%.limix.hdf5: %.tsv
+$(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(expr_matrix)
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --tsv=$< && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
 	mv $@.tmp $@	
 
 
-$(step2_dir)/%.filtered.hdf5: $(name)/%.limix.hdf5 $(samples_hdf5) $(cov_hdf5)
+$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).limix.hdf5  $(samples_hdf5) $(cov_hdf5)
 	cp $< $@.tmp && \
 	filtering_pheno.py $< $(min_expr) $(min_perc_samples) $(expr_transform) $@.tmp && \
 	sort_ids.py $<.tmp $(cov_hdf5) $(samples_hdf5) &&\
