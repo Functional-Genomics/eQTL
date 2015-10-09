@@ -397,7 +397,7 @@ $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
 ##select MAC >=5, allow max missing sites in 20 percent of samples
 $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1).merged.vcf.gz
 	mkdir -p $$(@D) &&
-	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --temp $(@D) --stdout | \
+	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --temp $$(@D) --stdout | \
         vcftools --vcf - --plink --out $$@.plink.tmp && mv $$@.tmp $$@ 
 
 
