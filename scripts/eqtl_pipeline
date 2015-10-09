@@ -387,7 +387,7 @@ $(shell mkdir -p $(step1_dir)/$(1))
 $(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
 	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
 	sed -i "s/^ //" $$@.lst && \
-	bcftools merge -l $$@.lst | bgzip -c > $$@.tmp && \
+	bcftools merge -l $$@.lst --output-type z  $$@.tmp && \
 	rm -f $$@.lst && \
 	mv $$@.tmp $$@
 
