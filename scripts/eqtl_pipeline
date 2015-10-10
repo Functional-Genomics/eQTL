@@ -272,7 +272,7 @@ TARGETS4=
 
 
 # HASH
-step1_hash!=echo $(minGQ) $(minRD) $(max_missing) $(max) |md5sum|cut -f1 -d' ' 
+step1_hash!=echo $(minGQ) $(minRD) $(max_missing) $(max) $(vcf_filter_cmd) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d' '
 
 
