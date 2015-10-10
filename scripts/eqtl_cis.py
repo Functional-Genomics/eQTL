@@ -32,7 +32,7 @@ if len(sys.argv[1:]) < 9:
 
 
 #populate dictionary with all the data needed for eqtl analysis
-import eqtl_settings
+import eqtlsettings
 CFG,correction_method = read_args(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
 
 #take nfold and j to name the out file for each j
