@@ -3,6 +3,7 @@
 import sys
 import scipy as sp
 import h5py
+import os
 # import LIMIX
 # here I'm afraid that the name of the modules changed in the meanwhile. Check the latest version of limix TODO: check
 import limix.modules.panama as panama 
