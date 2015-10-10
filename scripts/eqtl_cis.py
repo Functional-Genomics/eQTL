@@ -25,7 +25,7 @@ Usage:
 
 eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <nfolds> <fold_j> <outfilename> '''
 
-if len(sys.argv[:1]) < 9:
+if len(sys.argv[1:]) < 9:
 	sys.stderr.write('ERROR: missing parameters\n')
 	usage()
 	sys.exit(1)
