@@ -65,7 +65,7 @@ GEsliced=GE.take(n, axis=1)
 #susbstitute RNA samples ID with DNA samples ID
 GEsliced.columns=mapfile[:,0]
 #get shape of the matrix of genes
-annot=GEliced.shape[0]-1
+annot=GEsliced.shape[0]-1
 nsamples=GEsliced.shape[1]-1
 print 'matrix with {0} genes and {1} samples'.format(annot,nsamples)
 
