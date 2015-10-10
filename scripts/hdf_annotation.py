@@ -32,26 +32,41 @@ elif os.path.isfile(phenofile) != True:
 
 #open files
 annotation = sp.loadtxt(annotation, delimiter='\t', dtype='S100')
-phenofile=h5py.File(phenofile) #appending mode
+pheno=h5py.File(phenofile) #appending mode
+
+#strip unwanted char from genes in annotation array
+annotation[:,3] = sp.char.replace(annotation[:,3], '"','')
 
 #take annotations for genes in gene matrix
-booleanvector=sp.in1d(annotation[:,3][:], phenofile['phenotype/col_header/phenotype_ID'][:].tolist()) #catch warnings if hdf5 dataset does not exist
+booleanvector=sp.in1d(annotation[:,3][:], pheno['phenotype/col_header/phenotype_ID'][:].tolist()) #catch warnings if hdf5 dataset does not exist
+#get shape
+shape=annotation[sp.where(booleanvector)[0]][:,0].shape
 #chrom
-dataset=phenofile.create_dataset('phenotype/chrom', (sum(booleanvector),), dtype='S10') #same here
-dataset[...]=annotation[sp.where(booleanvector)[0],0]
+dataset=pheno.create_dataset('phenotype/chrom', shape, dtype='S10') #same here
+dataset[...]=annotation[sp.where(booleanvector)[0]][:,0]
 #start
-dataset=phenofile.create_dataset('phenotype/start', (sum(booleanvector),), dtype='int64') #same here
-dataset[...]=annotation[sp.where(booleanvector)[0],1]
+start=(annotation[sp.where(booleanvector)[0]][:,1]).astype('int64')
+dataset=pheno.create_dataset('phenotype/start', shape, dtype='int64') #same here
+dataset[...]=start[:]
 #end
-dataset=phenofile.create_dataset('phenotype/end', (sum(booleanvector),), dtype='int64') #same here
-dataset[...]=annotation[sp.where(booleanvector)[0],2]
+end=(annotation[sp.where(booleanvector)[0]][:,2]).astype('int64')
+dataset=pheno.create_dataset('phenotype/end', shape, dtype='int64') #same here
+dataset[...]=end[:]
 
 #check keys (maybe useless)
-for i in phenofile.keys():
-	for x in phenofile[i].keys():
-		print x
+print 'check if {0} has 6 datasets: matrix, col_header, row_header, chrom, start, end'.format(phenofile)
+exp_keys=['matrix', 'col_header', 'row_header', 'chrom', 'start', 'end']
+keys=[]
+for i in pheno.keys():
+	for x in pheno[i].keys():
+		keys.append(x)
 
-phenofile.close()
+try:
+	n = map(lambda x:keys.index(x), exp_keys)
+	pheno.close()
+except:
+	pheno.close()
+	sys.stderr.write('ERROR: dataset missing in the '+phenofile+' file\n')
+	sys.exit(1)
 
-sys.exit(0)
 
