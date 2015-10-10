@@ -135,7 +135,7 @@ else
 endif
 $(call file_exists,$(dna_rna_mapfile))
 
-#./scripts/eqtl_pipeline  dna_rna_mapfile=/dev/null conf=t.conf name=aaaa expr_matrix=t.conf vcfs=t.conf
+
 
 #************************
 # ?
@@ -186,7 +186,7 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd
 peer_iterations?=100
 minGQ?=50
 minRD?=20
@@ -194,6 +194,7 @@ minRD?=20
 snr_threshold?=75
 # vcf_filter="TP > 0.95 ....."
 
+vcf_filter_cmd=annai_filter_vcf.sh
 
 min_expr?=1
 min_perc_samples?=0.5
@@ -391,7 +392,7 @@ $(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/
 	mv $$@.tmp $$@
 
 $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
-	filter_vcf.sh -i $$< -o $$@.tmp -c $(1) -g $(minGQ) -d $(minRD)  && mv $$@.tmp $$@
+	$(vcf_filter_cmd) -i $$< -o $$@.tmp -c $(1) -g $(minGQ) -d $(minRD)  && mv $$@.tmp $$@
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
 $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1).merged.vcf.gz
