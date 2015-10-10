@@ -454,7 +454,7 @@ $(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(name)/$(expr_matrix_filename)
 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).limix.hdf5  $(samples_hdf5) $(cov_hdf5)
 	cp $< $@.tmp && \
 	filtering_pheno.py $< $(min_expr) $(min_perc_samples) $(expr_transform) $@.tmp && \
-	sort_ids.py $<.tmp $(cov_hdf5) $(samples_hdf5) &&\
+	sort_ids.py $@.tmp $(cov_hdf5) $(samples_hdf5) &&\
 	mv $@.tmp $@
 
 $(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(name)/$(expr_matrix_filename).matched.tsv
