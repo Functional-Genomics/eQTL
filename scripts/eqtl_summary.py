@@ -101,7 +101,7 @@ if __name__=='__main__':
 				temp['pos'] = pos
 				temp['rs'] = fgene['rs'][[idx]]
 			except:
-                                pinfo "failed to process file"
+                                print "failed to process file"
 				pass
 
 			#append the temp table into the big table
