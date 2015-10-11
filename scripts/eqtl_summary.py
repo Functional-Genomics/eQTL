@@ -43,10 +43,10 @@ if __name__=='__main__':
 	#populate dictionary with data for eqtl
 	import eqtlsettings
 	import data as DATA	
-	CFG,correction_method = read_args(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
+	#CFG,correction_method = read_args(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
 	#load doata
 
-	data = DATA.data()
+	data = DATA.data(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
 	
 	#check if file with samples list exist
 	if os.path.isfile(samples_list) != True:
