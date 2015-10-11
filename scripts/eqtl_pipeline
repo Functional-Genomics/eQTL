@@ -298,6 +298,8 @@ $(shell mkdir -p $(step1_dir) $(step2_dir) $(step3_dir))
 ###############
 # names of files
 cov_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).hdf5
+cov_sorted_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).sorted.hdf5
+
 gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
 expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
 kpop_file=$(step1_dir)/Kpop.hdf5
@@ -339,7 +341,7 @@ all: step1 step2 step3	step4
 
 
 $(cov_hdf5): $(cov_matrix)
-	get_covariates.py $< $@.tmp && mv $@.tmp $@ && sleep 1
+	get_covariates.py $< $@.tmp && mv $@.tmp $@ 
 
 #################################################################################
 #
@@ -348,7 +350,7 @@ $(cov_hdf5): $(cov_matrix)
 step0: $(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
 
 $(name)/$(expr_matrix_filename).matched.tsv: $(dna_rna_mapfile) $(expr_matrix)
-	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ && sleep 1
+	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
 
 
 #################################################################################
@@ -448,14 +450,15 @@ step2: $(step2_dir)/complete
 $(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(name)/$(expr_matrix_filename).matched.tsv $(gtf_eqtl_tsv)
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
-	mv $@.tmp $@ && sleep 1
+	mv $@.tmp $@ 
 
 
-$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).limix.hdf5  $(samples_hdf5) $(cov_hdf5)
-	cp $< $@.tmp && \
+$(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).limix.hdf5  $(samples_hdf5) $(cov_hdf5)
+#	cp $< $@.tmp && 
+	cp $(cov_hdf5) $(cov_sorted_hdf5).tmp && \
 	filtering_pheno.py $< $(min_expr) $(min_perc_samples) $(expr_transform) $@.tmp && \
-	sort_ids.py $@.tmp $(cov_hdf5) $(samples_hdf5) &&\
-	mv $@.tmp $@
+	sort_ids.py $@.tmp $(cov_sorted_hdf5).tmp $(samples_hdf5) &&\
+	mv $@.tmp $@ && mv $(cov_sorted_hdf5).tmp $(cov_sorted_hdf5)
 
 $(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(name)/$(expr_matrix_filename).matched.tsv
 	touch $@
@@ -510,13 +513,13 @@ TARGETS4+=$(All_CisQTL_JOBS)
 
 # $(1) = chr
 define make-cisqtl-rule-chr=
-$(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1_dir)/plink/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_hdf5)
-	mkdir -p $$(@D) && eqtl_cis.py $(step1_dir)/plink/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
+$(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1_dir)/plink/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
+	mkdir -p $$(@D) && eqtl_cis.py $(step1_dir)/plink/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
 # 
-$(step3_dir)/$(1)/summary.hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+$(step3_dir)/$(1)/summary.hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$(file >$$@.lst.txt,$$^) \
-	eqtl_summary.py $(step1_dir)/plink/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
+	eqtl_summary.py $(step1_dir)/plink/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
 	rm -f $$@.lst.txt && \
 	mv $$@.tmp $$@
 
