@@ -36,7 +36,7 @@ if __name__=='__main__':
 		sys.exit(1)
 
 	#load data from that are just needed to import data module 
-	geno, pheno, correction_method, hdf_correction, Kpop, covariates = sys.argv[1:7]
+	geno, pheno, correction_method, hdf_correction, Kpop, covariates = sys.argv[1:6]
 	nfolds = int(sys.argv[7])
 	samples_list = sys.argv[8]
 	summary = sys.argv[9]
@@ -46,7 +46,7 @@ if __name__=='__main__':
 	#CFG,correction_method = read_args(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
 	#load doata
 
-	data = DATA.data(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
+	data = DATA.data(geno, kpop, pheno, covariates,  hdf_correction, Kpop, correction_method)
 	
 	#check if file with samples list exist
 	if os.path.isfile(samples_list) != True:
