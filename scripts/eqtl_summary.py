@@ -113,9 +113,11 @@ if __name__=='__main__':
 	for key in table.keys():
 		table[key] = SP.concatenate(table[key])
 
+        if len(table.keys())!=0:       
 	# add corrected qvalues also across genes
-	table['qv_all'] = FDR.qvalues(table['qv'])
-
+                table['qv_all'] = FDR.qvalues(table['qv'])
+        else:
+                print "Warning: no genes found"
 	summary = h5py.File(summary,'w')
 	smartDumpDictHdf5(table,summary)
 	summary.close()
