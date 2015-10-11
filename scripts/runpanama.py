@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-import sys, os
+import sys
 import scipy as sp
 import h5py
 import os
 # import LIMIX
 # here I'm afraid that the name of the modules changed in the meanwhile. Check the latest version of limix TODO: check
 import limix.modules.panama as panama 
+from limix.stats.pca import *
 
 def usage():
         print """
@@ -16,11 +17,6 @@ TODO: Add other methods to select genes from pheno matrix.
 
 Usage:
 runpanama.py <Kpop.hdf5> <pheno.filtered.hf5> <hidden_k> <snr_threshold> <fileout.hdf5> """ 
-
-def standardise_kinship(matrix):
-	kinship /= sp.diag(matrix).mean()
-	kinship += 1e-4 * sp.eye(kinship.shape[0])
-	return kinship
 
 def select_genes_on_SNR(phenotype, t):
 	#calculate the signal-to-noise ratio for each gene of the matrix
@@ -32,18 +28,6 @@ def select_genes_on_SNR(phenotype, t):
 	#take genes from phenotype matrix with SNR >= t
 	Y = sp.take(phenotype,index, axis=1)
 	return Y
-
-def panama(phenotype, Kpop, hidden_k):
-	#build cumulative distribution of variance explained by the selected genes
-	cum_var = panama.PC_varExplained(phenotype)
-	#train panama with user defined ranks
-	p = panama.PANAMA(Y=phenotype, Kpop = Kpop)	
-	p.train(rank=hidden_k)
-	# retrieve stuff
-	Kpanama = p.get_Kpanama()
-	Ktot    = p.get_Ktot()
-	vComp   = p.get_varianceComps()
-	return Kpanama,Ktot,vComp
 
 if __name__ == '__main__':
 
@@ -73,15 +57,26 @@ if __name__ == '__main__':
 	phenotype = pheno['phenotype/Ytransformed'][:] #catch warnings here
 	kinship = Kpop['Kpop'][:] #catch warnings here	
 	
-	#apply func
-	stdkinship = standardise_kinship(kinship)
+	#standardise kinship
+	kinship /= sp.diag(kinship).mean()
+	kinship += 1e-4 * sp.eye(kinship.shape[0])
+	
+	#select most variable genes
 	selected_phenotypes = select_genes_on_SNR(phenotype, snr_threshold)
 	print "{0} genes selected, featuring a signal-to-noise ratio >= {1} percentile".format(selected_phenotypes.shape[1],snr_threshold)
-	Kpanama,Ktot,vComp = panama(selected_phenotypes[:], stdkinship[:], hidden_k)
+
+	#apply panama
+	#cum_var = PC_varExplained(selected_phenotype)
+	p = panama.PANAMA(Y=selected_phenotypes[:], Kpop = kinship[:])
+	p.train(rank=hidden_k)
+	Kpanama = p.get_Kpanama()
+	Ktot = p.get_Ktot()
+	vComp = p.get_varianceComps()
 	print "Variance composition:\n{0}".format(vComp)
+
 	#writing into fileout	
 	Ktot_shape=Ktot[:].shape
-	dset=filout.create_dataset('Ktot', Ktot_shape, dtype='float64')
+	dset=fileout.create_dataset('Ktot', Ktot_shape, dtype='float64')
 	dset[...]=Ktot[:]
 
 	fileout.close()
