@@ -339,7 +339,7 @@ all: step1 step2 step3	step4
 
 
 $(cov_hdf5): $(cov_matrix)
-	get_covariates.py $< $@.tmp && mv $@.tmp $@
+	get_covariates.py $< $@.tmp && mv $@.tmp $@ && sleep 1
 
 #################################################################################
 #
@@ -448,7 +448,7 @@ step2: $(step2_dir)/complete
 $(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(name)/$(expr_matrix_filename).matched.tsv $(gtf_eqtl_tsv)
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
-	mv $@.tmp $@	
+	mv $@.tmp $@ && sleep 1
 
 
 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).limix.hdf5  $(samples_hdf5) $(cov_hdf5)
