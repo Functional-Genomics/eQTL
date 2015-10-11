@@ -511,7 +511,7 @@ TARGETS4+=$(All_CisQTL_JOBS)
 # $(1) = chr
 define make-cisqtl-rule-chr=
 $(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1_dir)/plink/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_hdf5)
-	mkdir -p $(@) && eqtl_cis.py $(step1_dir)/plink/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
+	mkdir -p $(@D) && eqtl_cis.py $(step1_dir)/plink/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
 # 
 $(step3_dir)/$(1)/summary.hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
