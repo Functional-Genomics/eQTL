@@ -7,25 +7,17 @@ import pdb
 import copy
 import warnings
 
-#from eqtlsettings import read_args
-
-#CFG,correction_method=read_args(data_argv[0], data_argv[1], data_argv[2], data_argv[3], data_argv[4], data_argv[5])
-
 
 class data():
-	def __init__(self):
-		self.load()
-
-	def load(self):
-		"""load data file:
-		cache_genotype: load genotypes fully into memory (False)
-		"""
-		self.g	= h5py.File(CFG['data']['geno'],'r') #import geno data
-		self.k = h5py.File(CFG['data']['kinship'],'r') # import kinship
-		self.p = h5py.File(CFG['data']['pheno'],'r') #import pheno data
-		self.c = h5py.File(CFG['data']['covariates'],'r') #import covariates matrix
-		self.correction = h5py.File(CFG['data']['correction'],'r') # import residuals from peer | Ktot from panama | Kpop iif no correction selected
+	def __init__(self,geno,kinship,pheno,cov,cor,cormethod):
+		"""load data file"""
+		self.g	= h5py.File(geno,'r') #import geno data
+		self.k = h5py.File(kinship,'r') # import kinship
+		self.p = h5py.File(pheno,'r') #import pheno data
+		self.c = h5py.File(cov,'r') #import covariates matrix
+		self.correction = h5py.File(cor,'r') # import residuals from peer | Ktot from panama | Kpop iif no correction selected
 		self.geneID = self.p['phenotype']['col_header']['phenotype_ID'][:] # ENSEMBL genes
+		self.corrmeth = cormethod #string [ peer | panama | none ]
 
 	def getGeneIDs(self):
 		""" get geneIDs """
@@ -34,15 +26,15 @@ class data():
 		rv = self.geneID[Iin]
 		return rv 
 
-	def getK(self,Isample=None,correction_method = correction_method,normalize=False):
+	def getK(self,Isample=None,normalize=False):
 		"""
 		get Ktot/Kpop for sample specified in Isample
 		"""
-		if correction_method == 'peer':
+		if self.corrmeth == 'peer':
 			RV = self.k['Kpop'][:]
 			if normalize:
 				RV /=RV.diagonal().mean()
-		elif correction_method == 'panama':
+		elif self.corrmeth == 'panama':
 			RV = self.correction['Ktot'][:]
 		else :
 			RV =self.k['Kpop'][:]
@@ -61,14 +53,14 @@ class data():
 		#rv = SP.concatenate([rv,col],1)
 		return rv
 
-	def getGeneExpression(self,geneID,correction_method = correction_method,standardize=False):
+	def getGeneExpression(self,geneID,standardize=False):
 		"""
 		Get gene expression levels
 		"""
 		idx = self.geneID==geneID
-		if correction_method == 'peer':
+		if self.corrmeth == 'peer':
 			Y = self.correction['phenotype'][:,idx]
-		elif correction_method == 'panama':
+		elif self.corrmeth  == 'panama':
 			Y = self.p['phenotype/Ytransformed'][:,idx]
 		else:
 			Y = self.p['phenotype/Ytransformed'][:,idx] #when none is selected
@@ -89,7 +81,7 @@ class data():
 		return rv
 		
 
-	def getGermlineExpr(self,geneID,cis_window=1000000.0,standardize=False,Is=None,debug=False):
+	def getGermlineExpr(self,geneID,cis_window=10000000,standardize=False,Is=None,debug=False):
 		"""
 		get genotypes, chrom, pos. TODO: cis window is not optional at the moment; TODO1: trans analysis is not optional! 
 		"""

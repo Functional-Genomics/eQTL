@@ -30,21 +30,23 @@ if len(sys.argv[1:]) < 9:
 	usage()
 	sys.exit(1)
 
+#read args
+geno,pheno,cm,cm_hdf5,kinship,cov_hdf5 = sys.argv[1:7]
 
 #populate dictionary with all the data needed for eqtl analysis
-from eqtlsettings import read_args as ra
-CFG,correction_method = ra(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf5_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
+#from eqtlsettings import read_args as ra
+#CFG,correction_method = ra(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf5_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
+
 
 #take nfold and j to name the out file for each j
 nfolds = int(sys.argv[7])
 fold_j = int(sys.argv[8])
 
-#load data
-import data as DATA
 #open outfile 
 fout  = h5py.File(sys.argv[9],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 # load data 
-data  = DATA.data()
+import data as DATA
+data  = DATA.data(geno,kinship,pheno,cov_hdf5,cm_hdf5,cm)
 #get kinship
 K  = data.getK(normalize=False) #at the moment normalisation is not optional. Kpop/Ktot will be always normalised
 #get number of samples
@@ -68,7 +70,7 @@ for gene in genes:
 	print ".. gene %s"%gene
 
 	#1. get geno and pheno data
-	Y = data.getGeneExpression(gene,correction_method = correction_method, standardize=False)
+	Y = data.getGeneExpression(gene,standardize=False)
 	try:
 	    Xc,geno_info = data.getGermlineExpr(gene,cis_window=1000000.0)
 	except:
