@@ -74,7 +74,8 @@ if __name__=='__main__':
 		try:
 			f = h5py.File(file,'r')
 		except:
-			print 'file corrupted'
+			print 'Oops: file corrupted'
+                        sys.exit(1)
 			continue
 
 		geneIDs = f.keys()
