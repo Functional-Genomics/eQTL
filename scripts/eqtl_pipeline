@@ -348,7 +348,7 @@ $(cov_hdf5): $(cov_matrix)
 step0: $(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
 
 $(name)/$(expr_matrix_filename).matched.tsv: $(dna_rna_mapfile) $(expr_matrix)
-	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
+	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ && sleep 1
 
 
 #################################################################################
