@@ -516,16 +516,15 @@ define make-cisqtl-rule-chr=
 $(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1_dir)/plink/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
 	mkdir -p $$(@D) && eqtl_cis.py $(step1_dir)/plink/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
-# 
-$(step3_dir)/$(1)/summary.hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+# $(step3_dir)/$(1)/summary.hdf5
+$(step3_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$$(file >$$@.lst.txt,$(call CisQTL_JOBS_chr,$(1))) \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst.txt && \
 	eqtl_summary.py $(step1_dir)/plink/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
 	rm -f $$@.lst.txt && \
 	mv $$@.tmp $$@
 
-$(step3_dir)/$(1).hdf5: $(step3_dir)/$(1)/summary.hdf5
-	get_final_res.py $(step3_dir)/$(1)/summary.hdf5 $$@.tmp && mv $$@.tmp $$@
+#	get_final_res.py $(step3_dir)/$(1)/summary.hdf5 $$@.tmp && mv $$@.tmp $$@
 
 endef
 
