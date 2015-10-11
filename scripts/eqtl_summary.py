@@ -74,7 +74,7 @@ if __name__=='__main__':
 		try:
 			f = h5py.File(file,'r')
 		except:
-			print 'Oops: file corrupted'
+			print 'Oops! failed to open file'
                         sys.exit(1)
 			continue
 
@@ -101,6 +101,7 @@ if __name__=='__main__':
 				temp['pos'] = pos
 				temp['rs'] = fgene['rs'][[idx]]
 			except:
+                                pinfo "failed to process file"
 				pass
 
 			#append the temp table into the big table
