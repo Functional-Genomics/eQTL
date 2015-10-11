@@ -46,7 +46,7 @@ if __name__=='__main__':
 	#CFG,correction_method = read_args(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
 	#load doata
 
-	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, Kpop, correction_method)
+	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, correction_method)
 	
 	#check if file with samples list exist
 	if os.path.isfile(samples_list) != True:
