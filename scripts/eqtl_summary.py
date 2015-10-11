@@ -54,7 +54,7 @@ if __name__=='__main__':
 		sys.exit(1)
 
 	#load file with samples list
-	fileslist = SP.loadtxt(samples_list) #TODO: these list of files needs to be produced before running this script in the make file
+	fileslist = SP.loadtxt(samples_list,dtype='str') #TODO: these list of files needs to be produced before running this script in the make file
 
 	#check if there are missing files according to nfolds		 
 	if len(fileslist) != nfolds:
