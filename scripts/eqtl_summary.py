@@ -30,7 +30,7 @@ def getRelPos(pos,gene_pos):
 
 if __name__=='__main__':
 
-	if len(sys.argv1[:]) < 9:
+	if len(sys.argv[1:]) < 9:
 		sys.stderr.write('ERROR: missing parameters\n')
 		usage()
 		sys.exit(1)
