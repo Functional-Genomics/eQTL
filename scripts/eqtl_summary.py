@@ -36,7 +36,7 @@ if __name__=='__main__':
 		sys.exit(1)
 
 	#load data from that are just needed to import data module 
-	geno, pheno, correction_method, hdf_correction, Kpop, covariates = sys.argv[1:6]
+	geno, pheno, correction_method, hdf_correction, Kpop, covariates = sys.argv[1:7]
 	nfolds = int(sys.argv[7])
 	samples_list = sys.argv[8]
 	summary = sys.argv[9]
