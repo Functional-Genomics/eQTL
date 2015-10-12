@@ -41,7 +41,6 @@ sample_id=samples['sample_ID'][:]
 try:
 	#check if ALL sample IDs in mapfile are in hdf5 files from chromosomes
 	n=map(lambda x:(sample_id.tolist()).index(x), DNA_id.tolist())
-	sys.exit(0)
 except:
 	#if not exit
 	sys.stderr.write('ERROR: inconsistency between samples.hdf5 and mapfile\n')
