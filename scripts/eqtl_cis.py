@@ -78,8 +78,13 @@ for gene in genes:
 	    print "...excluding gene %s %s" %(gene,e) 
 	    continue
 
+	#check if Kpop or Ktot contains Nan
+	booleanK=SP.isnan(K)
+	if True in booleanK:
+		lmm = QTL.test_lmm(Xc,Y,covs=cov)
+	else:
+		lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K)
 	# run the linear mixed model
-	lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K)
 	pv=lmm.getPv()
 	RV = {}
 	RV['pv'] = pv
