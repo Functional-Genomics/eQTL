@@ -42,9 +42,9 @@ while getopts ":i:o:c:g:d:fh" opt; do
                 i)
                         input=$OPTARG
                         ;;
-                o)
-                        output=$OPTARG
-                        ;;
+#                o)
+#                        output=$OPTARG
+#                        ;;
                 c)
                         chr=$OPTARG
                         ;;
@@ -82,11 +82,11 @@ then
 	exit 1
 fi
 
-if [ "$output-" == "-" ] 
-then
-	echo "ERROR: missing output file"
-	exit 1
-fi
+#if [ "$output-" == "-" ] 
+#then
+#	echo "ERROR: missing output file"
+#	exit 1
+#fi
 
 if [ "$chr-" == "-" ]
 then
@@ -94,25 +94,19 @@ then
         exit 1
 fi
 
-
+set -e
 if [ $usePass == true ]
 then
-	echo 'keeping only PASS variants according to the variant calling pipeline filters'
-
-	vcftools --gzvcf $input --minGQ $minGQ --minDP $minDP --recode --recode-INFO-all --remove-filtered-all --chr $chr --stdout | bgzip -c > $output &&
-
-	tabix -p vcf $output
-
-	echo 'Done'
+	echo 'keeping only PASS variants according to the variant calling pipeline filters' > /dev/stderr
+	vcftools --gzvcf $input --minGQ $minGQ --minDP $minDP --recode --recode-INFO-all --remove-filtered-all --chr $chr --stdout 
+#| bgzip -c > $output 
+	echo 'Done' > /dev/stderr
 
 else
-	echo 'retaining variants without PASS in FORMAT field'
-
-        vcftools --gzvcf $input --minGQ $minGQ --minDP $minDP --recode --recode-INFO-all --chr $chr --stdout | bgzip -c > $output &&
-
-        tabix -p vcf $output
-
-        echo 'Done'
+	echo 'retaining variants without PASS in FORMAT field' > /dev/stderr
+        vcftools --gzvcf $input --minGQ $minGQ --minDP $minDP --recode --recode-INFO-all --chr $chr --stdout
+#  > $output 
+        echo 'Done' > /dev/stderr
 
 fi
 
