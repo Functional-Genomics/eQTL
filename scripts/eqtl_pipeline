@@ -376,6 +376,7 @@ FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
 fix_vcf_headers: $(FIXEDHEADER_VCFS) 
 	echo $(FIXEDHEADER_VCFS)
 
+#bgzip
 $(name)/vcf/%.fixedheader.vcf.gz: $(vcf_toplevel_dir)/%.vcf.gz
 	mkdir -p $(@D) && fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
 
@@ -386,25 +387,27 @@ define make-rules-for-chr=
 
 $(shell mkdir -p $(step1_dir)/$(1))
 
-$(step1_dir)/$(1)/chr$(1).merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
+$(step1_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
 	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
 	sed -i "s/^ //" $$@.lst && \
 	bcftools merge -l $$@.lst --output-type z > $$@.tmp && \
 	rm -f $$@.lst && \
 	mv $$@.tmp $$@
 
+# bgzip
 $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
-	$(vcf_filter_cmd) -i $$< -o $$@.tmp -c $(1) -g $(minGQ) -d $(minRD)  && mv $$@.tmp $$@
+	$(vcf_filter_cmd) -i $$<  -c $(1) -g $(minGQ) -d $(minRD) | bgzip -c > $$@.tmp  && mv $$@.tmp $$@
+
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
-$(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1).merged.vcf.gz
+$(step1_dir)/plink/$(1)/chr$(1)_merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1)_merged.vcf.gz
 	mkdir -p $$(@D) &&
 	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --temp $$(@D) --stdout | \
-        vcftools --vcf - --plink --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
+        vcftools --vcf - --plink   --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
 
 
-$(step1_dir)/plink/$(1)/plink_chr$(1).done: $(step1_dir)/plink/$(1)/chr$(1).merged.vcf.gz.plink
-	plink --file $$< --make-bed --noweb --out $$(subst .done,,$$@) && touch $$@
+$(step1_dir)/plink/$(1)/plink_chr$(1).done: $(step1_dir)/plink/$(1)/chr$(1)_merged.vcf.gz.plink
+	plink --file $$< --make-bed --fam --recode --noweb --out $$(subst .done,,$$@) && touch $$@
 
 ##convert genotypes into hdf5 file using limix binaries
 ##echo 'convert plink files into hdf5 files using limix binaries'
