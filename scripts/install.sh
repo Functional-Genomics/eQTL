@@ -242,9 +242,30 @@ function bcftools_install {
     sed -i -E "s|^prefix\s*=.*|prefix=$EPIPELINE_DIR|"  Makefile
     make -j 2
     make install
+    cd htslib-*
+    make
+    cp bgzip tabix $EPIPELINE_DIR/bin
     popd
     pprint_msg "Installing bcftools...done."
 }
+
+function samtools_install {
+    
+    pprint_msg "Installing samtools 0.x/bcftools..."
+    SAMTOOLS_VERSION=0.1.18
+    SAMTOOLS_FILE=samtools-$SAMTOOLS_VERSION.tar.bz2
+    SAMTOOLS_URL=http://sourceforge.net/projects/samtools/files/samtools/$SAMTOOLS_VERSION/$SAMTOOLS_FILE
+
+    download $SAMTOOLS_URL $SAMTOOLS_FILE
+    tar xjvf $SAMTOOLS_FILE
+    pushd samtools-${SAMTOOLS_VERSION}
+    make -j 2
+    make -j 2 razip
+    cp samtools razip bcftools/vcfutils.pl bcftools/bcftools $EPIPELINE_DIR/bin
+    popd
+    pprint_msg "Installing samtools 0.x/bcftools...done."
+}
+
 
 function tabix_install {
     pprint_msg "Installing tabix..."
@@ -401,7 +422,8 @@ limix_install
 peer_install
 vcftools_install
 bcftools_install
-tabix_install
+#samtools_install
+#tabix_install
 plink_install
 popd
 exit 0
