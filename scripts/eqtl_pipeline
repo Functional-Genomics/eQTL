@@ -427,10 +427,12 @@ $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
 # todo add samples.hdf5???
 #build_Kpop.py outfile hdf5files....
 #build_Kpop.py kop.hdf5.tmp samples.hdf5 ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
-$(kpop_file) $(samples_hdf5): $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
-	build_Kpop.py $@.tmp $(samples_hdf5).tmp $^ && \
+#  $(samples_hdf5)
+$(kpop_file): $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
+	build_Kpop.py $(kpop_file).tmp $(samples_hdf5).tmp $^ && \
 	mv $(samples_hdf5).tmp $(samples_hdf5) &&\
-	mv $@.tmp $@
+	mv $(kpop_file).tmp $(kpop_file) 
+
 
 TARGETS2+=$(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
 TARGETS3+=$(step1_dir)/data_consistent
