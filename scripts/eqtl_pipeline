@@ -392,12 +392,12 @@ $(shell mkdir -p $(step1_dir)/$(1))
 
 $(step1_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
 	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
-	sed -i "s/^ //" $$@.lst && \
+	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst && \
 	bcftools merge -l $$@.lst --output-type z > $$@.tmp && \
 	rm -f $$@.lst && \
 	mv $$@.tmp $$@
 
-# bgzip
+# 
 $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
 	$(vcf_filter_cmd) -i $$<  -c $(1) -g $(minGQ) -d $(minRD) | bgzip -c > $$@.tmp  && mv $$@.tmp $$@
 
