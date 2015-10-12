@@ -15,14 +15,12 @@ Usage:
 get_covariates.py <covariates.tsv> <covariates.hdf5>
 '''
 
-
-csv,covout=sys.argv[1:]
-
 if len(sys.argv[1:]) < 2:
 	sys.stderr.write('ERROR: missing parameters\n')
 	usage()
 	sys.exit(1)
 
+csv,covout=sys.argv[1:]
 
 if os.path.isfile(csv) != True:
 	sys.stderr.write('ERROR: '+csv+' not found\n')
