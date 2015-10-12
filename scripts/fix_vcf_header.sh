@@ -39,6 +39,6 @@ set -e
 #to be optimised
 zcat $vcfin | grep '^##' | sed 's/ //g' > $named_pipe && zcat $vcfin | grep -v '^##' >> $named_pipe && bgzip -c $named_pipe > $vcfout
 
-#rm -f $named_pipe
+rm -f $named_pipe
 exit 0
 
