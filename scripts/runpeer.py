@@ -44,12 +44,24 @@ if __name__ == '__main__':
 		sys.exit(1)
 
 	pheno=h5py.File(pheno, 'r')
-	hidden_k = int(hidden_k)
-	n_iterations=int(n_iterations)
-	outfile=h5py.File(outfile,'w')
-	
+
 	#run peer
 	phenotype = pheno['phenotype/Ytransformed'][:] #catch warnings here
+	samples = phenotype.shape[0]
+	#exit if the number of hidden confounding factor selected is >=25% of samples used in the analysis!
+	threshold = (25.0*samples)/100
+        #select hidden confounding 
+	hidden_k = int(hidden_k)
+
+	if hidden_k > threshold:
+		sys.stderr.write('Number of hidden factors chosen is above the 25% of the number of samples\n. 
+			Please select a lower value\n\n')
+		sys.exit(1)
+			 
+	#iterations and outfile
+        n_iterations=int(n_iterations)
+        outfile=h5py.File(outfile,'w')
+	#apply PEER model
 	residuals = runpeer(phenotype,hidden_k,n_iterations)
 	#write within out file
 	dset=outfile.create_dataset('phenotype',residuals[:].shape, dtype='float64')
