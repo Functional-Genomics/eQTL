@@ -2,7 +2,7 @@
 ################################################################
 # simple wrapper to run a single instance of eqtl_pipeline in a
 # cluster with the lsf job scheduler
-DEBUG=1
+#DEBUG=1
 
 if [ "$MEM-" =  "-" ]; then
     MEM=12000
