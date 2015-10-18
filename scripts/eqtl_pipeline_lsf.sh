@@ -8,6 +8,11 @@ if [ "$MEM-" =  "-" ]; then
     MEM=12000
 fi
 
+if [ "$THREADS-" = "-" ]; then
+    THREADS=1
+fi
+
+
 function stop_job {
     if [ "$DEBUG-" == "1-" ]; then
 	echo "stop/suspend job $1"
@@ -96,6 +101,8 @@ if [ $? -eq 0 ]; then
     echo "All done - no need to submit jobs"
     echo 0
 fi
+echo "info: env variables passed to LSF - LSF_PARAMS QUEUE THREADS MEM LSF_GROUP"
+
 ARGS=$*
 
 RAND=`perl -e "print int(rand()*10);"`
