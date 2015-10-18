@@ -75,12 +75,6 @@ license=This pipeline is distributed  under the terms of the GNU General Public 
 ################################################################################
 # Default values
 ################################################################################
-# max. memory (in MB)
-def_max_mem=6000
-
-def_max_threads=1
-
-################################################################################
 # go...
 
 $(info *****************************************************)
@@ -212,14 +206,6 @@ mac?=20
 
 $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
 
-#********
-# Threads
-#********
-ifndef max_threads
- max_threads=$(def_max_threads)
-endif
-$(info *	max_threads=$(max_threads))
-
 
 ##############################
 # expression correction method
@@ -237,26 +223,9 @@ endif
 $(info *	corr_method=$(corr_method))
 #endif
 
-#
-# mem in MB
-ifndef max_mem
-max_mem=$(def_max_mem)
-endif
-# max memory in GB
-max_mem_gb:=$(shell expr $(max_mem) \/ 1000)
-
-# set memory (in bytes) to 65% of the max. memory available
-#ifndef SAMTOOLS_SORT_MEM
-# SAMTOOLS_SORT_MEM:=`expr $(max_mem) \* 1000000 \* 65 \/ 100`
-#endif
-
-
-# samtools 1.x
-ifndef SAMTOOLS_SORT_MEM
- SAMTOOLS_SORT_MEM:=$(shell bash -c "expr $(max_mem_gb) \* 75 \/ 100")G
-endif
 
 #
+TARGETS0=
 TARGETS1=
 TARGETS2=
 TARGETS3=
@@ -368,6 +337,7 @@ step0: $(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
 $(name)/$(expr_matrix_filename).matched.tsv: $(dna_rna_mapfile) $(expr_matrix)
 	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
 
+TARGETS0+=$(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
 
 #################################################################################
 # DNA
@@ -449,8 +419,9 @@ $(kpop_file): $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).h
 $(samples_hdf5): $(kpop_file)
 	$(call file_exists,$@) touch $(samples_hdf5)
 
+# one job per chr
 TARGETS2+=$(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
-TARGETS3+=$(step1_dir)/data_consistent
+TARGETS3+=$(step1_dir)/complete
 
 
 $(step1_dir)/data_consistent: $(dna_rna_mapfile) $(kpop_file)
@@ -560,24 +531,28 @@ $(step3_dir)/step4.complete:  $(step3_dir)/complete $(foreach chr,$(chromosomes)
 	$(call p_info,"Step 4 complete") touch $@
 
 
-TARGETS6+=$(step3_dir)/complete $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+TARGETS6+=$(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
 
 phony_targets+= setup setup_files
 
 ###################################################
+targets0:
+	$(info $(TARGETS0)) echo -n
+
 targets1:
-	$(info $(TARGETS1)) echo
+	$(info $(TARGETS1)) echo -n
+
 targets2:
-	$(info $(TARGETS2)) echo
+	$(info $(TARGETS2)) echo -n
 targets3:
-	$(info $(TARGETS3)) echo
+	$(info $(TARGETS3)) echo -n
 targets4:
-	$(info $(TARGETS4)) echo
+	$(info $(TARGETS4)) echo -n
 targets5:
-	$(info $(TARGETS5)) echo
+	$(info $(TARGETS5)) echo -n
 
 targets6:
-	$(info $(TARGETS6)) echo
+	$(info $(TARGETS6)) echo -n
 
 
 ###################################################
