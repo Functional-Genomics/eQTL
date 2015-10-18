@@ -2,7 +2,11 @@
 ################################################################
 # simple wrapper to run a single instance of eqtl_pipeline in a
 # cluster with the lsf job scheduler
-debug=1
+DEBUG=1
+
+if [ "$MEM-" =  "-" ]; then
+    MEM=12000
+fi
 
 function stop_job {
     if [ "$DEBUG-" == "1-" ]; then
@@ -40,11 +44,11 @@ function submit_job {
     fi
     #########################################################
     #-R  "span[ptile=$THREADS]"
-    local MAX_MEM=`get_maxmem $MEM`
+    local MAX_MEM=$MEM
     if [ "$WAIT_FOR_IDS-" != "-no" ]; then
-	$ECHO bsub $LSF_PARAMS -q $QUEUE -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "done($WAIT_FOR_IDS)"  -cwd `pwd` -o "`get_path2logfile`/$jobname-%J.out" -e "`get_path2logfile`/$jobname-%J.err" -J $jobname  $cmd2e max_threads=$THREADS  max_mem=$MEM
+	$ECHO bsub $LSF_PARAMS -q $QUEUE -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "done($WAIT_FOR_IDS)"  -cwd `pwd` -o "$jobname-%J.out" -e "$jobname-%J.err" -J $jobname  $cmd2e max_threads=$THREADS  max_mem=$MEM
     else
-	$ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"   -cwd `pwd` -o "`get_path2logfile`/$jobname-%J.out" -e "`get_path2logfile`/$jobname-%J.err" -J $jobname  $cmd2e max_threads=$THREADS   max_mem=$MEM	
+	$ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"   -cwd `pwd` -o "$jobname-%J.out" -e "$jobname-%J.err" -J $jobname  $cmd2e max_threads=$THREADS   max_mem=$MEM	
     fi
 }
 
