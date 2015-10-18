@@ -190,7 +190,7 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes
 peer_iterations?=100
 minGQ?=50
 minRD?=20
@@ -331,7 +331,7 @@ space:=$(empty) $(empty)#
 ################################################################################
 # Default target
 $(info ***************************************************************)
-all: step1 step2 step3	step4
+all: step0 step1 step2 step3	step4
 	@echo "All done!"
 
 ################################################################################
@@ -371,7 +371,7 @@ $(name)/$(expr_matrix_filename).matched.tsv: $(dna_rna_mapfile) $(expr_matrix)
 #################################################################################
 # DNA
 
-step1: $(step1_dir)/complete
+step1: step0 $(step1_dir)/complete
 # STEP1
 step1_a: tbi_files
 step1_b: fix_vcf_headers
@@ -395,6 +395,7 @@ fix_vcf_headers: $(FIXEDHEADER_VCFS)
 $(name)/vcf/%.fixedheader.vcf.gz: $(vcf_toplevel_dir)/%.vcf.gz
 	mkdir -p $(@D) && fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
 
+$(shell mkdir -p $(name)/vcf)
 
 # Rules to process each chr
 # chr=$(1) 
