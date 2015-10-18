@@ -566,17 +566,18 @@ phony_targets+= setup setup_files
 
 ###################################################
 targets1:
-	echo $(TARGETS1)
+	$(info $(TARGETS1)) echo
 targets2:
-	echo $(TARGETS2)
+	$(info $(TARGETS2)) echo
 targets3:
-	echo $(TARGETS3)
+	$(info $(TARGETS3)) echo
 targets4:
-	echo $(TARGETS4)
+	$(info $(TARGETS4)) echo
 targets5:
-	echo $(TARGETS5)
+	$(info $(TARGETS5)) echo
+
 targets6:
-	echo $(TARGETS6)
+	$(info $(TARGETS6)) echo
 
 
 ###################################################
