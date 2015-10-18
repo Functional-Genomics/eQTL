@@ -132,7 +132,7 @@ $(call file_exists,$(expr_matrix))
 ifndef dna_rna_mapfile
  $(call p_error, missing argument dna_rna_mapfile)
 else
- $(info *	name=$(dna_rna_mapfile))
+ $(info *	dna_rna_mapfile=$(dna_rna_mapfile))
 endif
 $(call file_exists,$(dna_rna_mapfile))
 
