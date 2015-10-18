@@ -117,9 +117,12 @@ submit_jobs eqtl4_$JOBNAME_SUF "eqtl3_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
 targets=`eqtl_pipeline $* targets5 | tail -n 1`
 submit_jobs eqtl5_$JOBNAME_SUF "eqtl4_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
 
+targets=`eqtl_pipeline $* targets6 | tail -n 1`
+submit_jobs eqtl6_$JOBNAME_SUF "eqtl4_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
+
 # final job
 targets=step4
-submit_job_get_email  eqtl6_$JOBNAME_SUF "eqtl5_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
+submit_job_get_email  eqtl7_$JOBNAME_SUF "eqtl6_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
 
 resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
