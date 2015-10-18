@@ -190,7 +190,7 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds
 peer_iterations?=100
 minGQ?=50
 minRD?=20
@@ -200,6 +200,7 @@ snr_threshold?=75
 
 vcf_filter_cmd=annai_filter_vcf.sh
 
+n_folds?=1000
 min_expr?=1
 min_perc_samples?=0.5
 #possible values: gaussian log none
@@ -516,7 +517,6 @@ $(step3_dir)/complete: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/
 step4: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
 # 
 #
-n_folds=1000
 
 #: $(step1_dir)/complete $(step2_dir)/complete $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(kpop_file) 
 #	cis_eqtl_run.py $(chr) $(step1_dir) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(kpop_file)y $(expr_transform) $(n_folds)
