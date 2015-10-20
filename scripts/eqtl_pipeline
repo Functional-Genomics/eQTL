@@ -335,6 +335,8 @@ all: step0 step1 step2 step3	step4
 $(cov_hdf5): $(cov_matrix)
 	get_covariates.py $< $@.tmp && mv $@.tmp $@ 
 
+%.tsv: %.tsv.gz
+	gunzip -c $< > $@.tmp && mv $@.tmp $@
 #################################################################################
 #
 # Step0,1 and 2 may be executed independently
@@ -569,6 +571,7 @@ targets6:
 ###################################################
 
 # get a matrix from a specific .hdf5 file
+# matrix/dataset kpop,ktot,phenotype
 $(step3_dir)/$(corr_method)/$(corr_method).expr.tsv: $(step3_dir)/$(corr_method)/$(corr_method).expr.hdf5
 	hdf52tsv $< "name of the matrix in hdf5?" > $@.tmp && mv $@.tmp $@
 
