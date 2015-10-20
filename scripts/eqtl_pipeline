@@ -193,8 +193,9 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold
 peer_iterations?=100
+fdr_threshold?=0.05
 minGQ?=50
 minRD?=20
 # signal-to-noise ration threshold
@@ -241,6 +242,7 @@ TARGETS3=
 TARGETS4=
 TARGETS5=
 TARGETS6=
+TARGETS7=
 
 #
 # ${name}
@@ -537,13 +539,16 @@ endef
 
 $(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 
+$(step3_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
 
-$(step3_dir)/step4.complete:  $(step3_dir)/complete $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+$(step3_dir)/step4.complete:  $(step3_dir)/complete $(step3_dir)/summary.tsv
 	$(call p_info,"Step 4 complete") touch $@
 
 
 TARGETS6+=$(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
 
+TARGETS7+=$(step3_dir)/step4.complete
 phony_targets+= setup setup_files
 
 ###################################################
@@ -564,6 +569,9 @@ targets5:
 
 targets6:
 	$(info $(TARGETS6)) echo -n
+
+targets7:
+	$(info $(TARGETS7)) echo -n
 
 
 ###################################################
