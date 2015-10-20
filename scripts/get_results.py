@@ -8,7 +8,7 @@ import glob
 
 def usage():
 	print '''
-This script generates a list of significant eqtls. The list contains the following fields:
+This script generates a list of significant eqtls based on fdr threshold. The list contains the following fields:
 
 1)GeneID
 2)Chr
@@ -49,7 +49,7 @@ if __name__ == '__main__':
 	try:
 		fdr = float(fdr)
 	except:
-		sys.stderr.write('ERROR: Please select integer of floating value for fdr.\n')
+		sys.stderr.write('ERROR: Please select integer of float value for fdr.\n')
 		sys.exit(1)
 
 	chr = sys.argv[3:]
@@ -65,8 +65,8 @@ if __name__ == '__main__':
 	for file in chr:
 		i = h5py.File(file,'r')
 		a = i['geneID'][:]
-		b = i['chrom'][:] #needs to be added to summary
-		c = i['pos'][:] #same here
+		b = i['chrom'][:]
+		c = i['pos'][:]
 		d = i['pv'][:]
 		e = i['qv_all'][:]
 		f = i['beta'][:]
