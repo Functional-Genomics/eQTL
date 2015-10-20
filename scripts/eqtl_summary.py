@@ -92,25 +92,27 @@ if __name__=='__main__':
 				temp['qv'] = fgene['qv'][:,idx]
 				temp['lambda'] = fgene['lambda'][:,0]
 				temp['beta'] = fgene['beta'][:,idx]
-
-				# position info
+				# position and chrom info
 				gene_pos = data.getGenePos(geneID)
 				pos = fgene['pos'][[idx]]
 				temp['gene_pos'] = gene_pos
-				temp['relpos'] = pos-gene_pos[1:].mean() 
+				temp['chrom'] = fgene['chrom'][[idx]]
+				#temp['relpos'] = pos-gene_pos[1:].mean() 
 				temp['pos'] = pos
-				temp['rs'] = fgene['rs'][[idx]]
+				#temp['rs'] = fgene['rs'][[idx]]
 			except:
-                                print "failed to process file"
+                                print "nothing in here"
 				pass
 
 			#append the temp table into the big table
 			for key in temp.keys():
 				smartAppend(table,key,temp[key])
+				#print table
 
 		f.close()
 
 	for key in table.keys():
+		#print key
 		table[key] = SP.concatenate(table[key])
 
         if len(table.keys())!=0:       
