@@ -574,18 +574,19 @@ targets6:
 # matrix/dataset kpop,ktot,phenotype
 # row/col are switched?
 $(step2_dir)/pheno.filtered.tsv: $(step2_dir)/pheno.filtered.hdf5
-	hdf5tsv $< "phenotype/Ytransformed" "/phenotype/col_header/phenotype_ID" "phenotype/row_header/sample_ID"   $@.tmp && mv $@.tmp $@
+	hdf5tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp && mv $@.tmp $@
 
-$(step3_dir)/none/none.expr.tsv: $(step3_dir)/none/none.hdf5
-	hdf5tsv $< "phenotype/Ytransformed" "/phenotype/col_header/phenotype_ID" "phenotype/row_header/sample_ID"   $@.tmp && mv $@.tmp $@
+$(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
+	hdf5tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"  $@.tmp && mv $@.tmp $@
 
-$(step3_dir)/peer/peer.expr.tsv: $(step3_dir)/peer/peer.hdf5
+$(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
 	hdf5tsv $< "Kpop" "-" "-"   $@.tmp && mv $@.tmp $@
 
-$(step3_dir)/$(corr_method)/$(corr_method).expr.tsv: $(step3_dir)/$(corr_method)/$(corr_method).expr.hdf5
-	hdf5tsv $< "phenotype" "/phenotype/matrix" "/phenotype/" > $@.tmp && mv $@.tmp $@
+$(step3_dir)/panama/panama.tsv: $(step3_dir)/peer/panama.hdf5
+	hdf5tsv $< "Kpop" "-" "-"   $@.tmp && mv $@.tmp $@
 
-%.expr.png: %.expr.tsv $(sample2class_file)
+
+%.expr.png: %.tsv $(sample2class_file)
 	generate_clustering --tsv $(step3_dir)/$(corr_method)/$(corr_method).expr.tsv -m $(sample2class_file) -o $@.tmp && mv $@.tmp $@
 
 
