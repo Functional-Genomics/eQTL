@@ -1,0 +1,54 @@
+#!/usr/bin/env Rscript
+#; -*- mode: R;-*-
+#######################################################################
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
+
+if (!require(rhdf5)) {
+  source("http://bioconductor.org/biocLite.R")
+  biocLite("rhdf5")
+}
+
+args <- commandArgs(trailingOnly=TRUE)
+
+if (length(args)!=5 ) {
+  print("Error: usage hdf52tsv file.hdf5 dataset rows cols out_file")
+  quit(status=1)
+}
+
+hdf5.file <- args[1]
+hdf5.dataset <- args[2]
+hdf5.rownames <- args[3]
+hdf5.colnames <- args[4]
+out.file <- args[5]
+
+# TODO: catch errors
+library(rhdf5)
+cat("Opening ",hdf5.file)
+h5ls(hdf5.file)
+
+# R transposes the matrix
+hdf5.df <- data.frame(t(h5read(hdf5.file,hdf5.dataset)))
+if(hdf5.rownames!="-" ) {
+  rownames(hdf5.df) <- h5read(hdf5.file,hdf5.rownames)
+}
+if(hdf5.colnames!="-" ) {
+  colnames(hdf5.df) <- h5read(hdf5.file,hdf5.colnames)
+}
+write.table(t(hdf5.df),file=out.file,quote=FALSE,sep="\t")
+H5close()
+cat("File ",out.file," created.\n")
+quit(status=0)
+
