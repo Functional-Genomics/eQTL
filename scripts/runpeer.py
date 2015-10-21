@@ -33,20 +33,22 @@ def runpeer(phenotype,K,iterations):
 if __name__ == '__main__':
 
 	if len(sys.argv[1:]) < 4:
-        	sys.stderr.write("ERROR: missing parameter\n")
-        	usage()
+		usage()
+        	sys.stderr.write("\nERROR: missing parameter\n")
         	sys.exit(1)
 
 	pheno,hidden_k,n_iterations,outfile = sys.argv[1:]
 	
 	if os.path.isfile(pheno) != True:
-		sys.stderr.write("ERROR: file "+pheno+" not found\n")
+		sys.stderr.write("\nERROR: file "+pheno+" not found\n")
 		sys.exit(1)
 
 	pheno=h5py.File(pheno, 'r')
 
 	#run peer
-	phenotype = pheno['phenotype/Ytransformed'][:] #catch warnings here
+	sample_ID = pheno['phenotype/row_header/sample_ID'][:] #get samples IDs; catch warnings here
+	gene_ID = pheno['phenotype/col_header/phenotype_ID'][:] #get genes IDs; catch warnings here
+	phenotype = pheno['phenotype/Ytransformed'][:] #get matrix of gene counts; catch warnings here
 	samples = phenotype.shape[0]
 	#exit if the number of hidden confounding factor selected is >=25% of samples used in the analysis!
 	threshold = (25.0*samples)/100
@@ -54,7 +56,7 @@ if __name__ == '__main__':
 	hidden_k = int(hidden_k)
 
 	if hidden_k > threshold:
-		sys.stderr.write('ERROR: Number of hidden factors chosen is above 25% of the number of samples. Please select a lower value.\n')
+		sys.stderr.write('\nERROR: Number of hidden factors chosen is above 25% of the number of samples. Please select a lower value.\n')
 		sys.exit(1)
 			 
 	#iterations and outfile
@@ -65,6 +67,10 @@ if __name__ == '__main__':
 	#write within out file
 	dset=outfile.create_dataset('phenotype',residuals[:].shape, dtype='float64')
 	dset[...]=residuals[:]
+	dset2=outfile.create_dataset('phenotype/row_header/sample_ID',sample_ID.shape,dtype='S1000')
+	dset2[...]=sample_ID
+	dset3=outfile.create_dataset('phenotype/col_header/phenotype_ID',gene_ID.shape,dtype='S1000')
+	dset3[...]=gene_ID
 
 	outfile.close()
 
