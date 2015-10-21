@@ -56,8 +56,8 @@ if __name__ == '__main__':
 	#read Kpop file
 	phenotype = pheno['phenotype/Ytransformed'][:] #catch warnings here
 	kinship = Kpop['Kpop'][:] #catch warnings here	
-	samples_rows = Kpop['Kpop/row_header/sample_ID'][:] #catch warnings here
-	samples_columns = Kpop['Kpop/col_header/sample_ID'][:] #catch warnings here 
+	samples_rows = Kpop['row_header/sample_ID'][:] #catch warnings here
+	samples_columns = Kpop['col_header/sample_ID'][:] #catch warnings here 
 	#standardise kinship
 	kinship /= sp.diag(kinship).mean()
 	kinship += 1e-4 * sp.eye(kinship.shape[0])
