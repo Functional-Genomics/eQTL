@@ -67,9 +67,9 @@ if __name__ == '__main__':
 	#write within out file
 	dset=outfile.create_dataset('phenotype',residuals[:].shape, dtype='float64')
 	dset[...]=residuals[:]
-	dset2=outfile.create_dataset('phenotype/row_header/sample_ID',sample_ID.shape,dtype='S1000')
+	dset2=outfile.create_dataset('row_header/sample_ID',sample_ID.shape,dtype='S1000')
 	dset2[...]=sample_ID
-	dset3=outfile.create_dataset('phenotype/col_header/phenotype_ID',gene_ID.shape,dtype='S1000')
+	dset3=outfile.create_dataset('col_header/phenotype_ID',gene_ID.shape,dtype='S1000')
 	dset3[...]=gene_ID
 
 	outfile.close()
