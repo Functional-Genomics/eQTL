@@ -79,9 +79,9 @@ if __name__ == '__main__':
 	Ktot_shape=Ktot[:].shape
 	dset=fileout.create_dataset('Ktot', Ktot_shape, dtype='float64')
 	dset[...]=Ktot[:]
-	dset1=fileout.create_dataset('Ktot/row_header/sample_ID', samples_rows.shape, dtype='S1000')
+	dset1=fileout.create_dataset('row_header/sample_ID', samples_rows.shape, dtype='S1000')
 	dset1[...]=samples_rows
-	dset2=fileout.create_dataset('Ktot/col_header/sample_ID', samples_columns.shape,dtype='S1000')
+	dset2=fileout.create_dataset('col_header/sample_ID', samples_columns.shape,dtype='S1000')
 	dset2[...]=samples_columns
 
 	fileout.close()
