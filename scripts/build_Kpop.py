@@ -28,12 +28,12 @@ def build_kpop(chrmatrix,Kpop,samples):
 if __name__ == "__main__":
 	#check arguments
         if len(sys.argv[1:]) == 0 :
-		sys.stderr.write("ERROR: missing parameters\n")
-                usage()
+		usage()
+		sys.stderr.write("\nERROR: missing parameters\n")
 		sys.exit(1)
 	elif len(sys.argv[1:]) < 3 :
-		sys.stderr.write("ERROR: full set of parameters not provided \n")
 		usage()
+		sys.stderr.write("\nERROR: full set of parameters not provided\n")
 		sys.exit(1)
 
 	#arguments
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 	#check if files exist first
 	for file in chr:
 		if os.path.isfile(file) != True:
-			sys.stderr.write("ERROR: file "+file+" not found\n")
+			sys.stderr.write("\nERROR: file "+file+" not found\n")
 			sys.exit(1)
 
         print "Opening input files..."
@@ -64,18 +64,21 @@ if __name__ == "__main__":
 			samples_vector = X['genotype/row_header/sample_ID'][:] #get samples from chr file
 		X.close()
 
-        print "Creating kinship matrix..."
-                                
+        #print "Creating kinship matrix..."
+	print "\nCreating output file...\n"                           
 	#output Kpop in hdf5 file
 	kinship=Kpopfile.create_dataset('Kpop',Kpop.shape,dtype="float64")
 	kinship[...]=Kpop[:]
-	Kpopfile.close()
-        print "Creating kinship matrix...done."
-	#output samples list into hdf5 file
-        print "Creating output file..."
-	s=hdf5_samples.create_dataset('sample_ID', samples_vector.shape, dtype='S100')
+	#output samples list into hdf5 file and also within Kpop file
+	s=hdf5_samples.create_dataset('sample_ID', samples_vector.shape, dtype='S1000')
 	s[...]=samples_vector[:]
 	hdf5_samples.close()
-        print "Creating output file...done."
+	s1=Kpopfile.create_dataset('Kpop/row_header/sample_ID',samples_vector.shape,dtype='S1000')
+	s1[...]=samples_vector[:]
+	s2=Kpopfile.create_dataset('Kpop/col_header/sample_ID',samples_vector.shape,dtype='S1000')
+	s2[...]=samples_vector[:]
+	Kpopfile.close()
+        print "\nCreating output file...done.\n"
+
 	sys.exit(0)
 
