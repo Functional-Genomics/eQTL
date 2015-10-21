@@ -72,9 +72,9 @@ if __name__ == "__main__":
 	#output samples list into hdf5 file and also within Kpop file
 	s=hdf5_samples.create_dataset('sample_ID', samples_vector.shape, dtype='S1000')
 	s[...]=samples_vector[:]
-	s1=Kpopfile.create_dataset('Kpop/row_header/sample_ID',samples_vector.shape,dtype='S1000')
+	s1=Kpopfile.create_dataset('row_header/sample_ID',samples_vector.shape,dtype='S1000')
 	s1[...]=samples_vector[:]
-	s2=Kpopfile.create_dataset('Kpop/col_header/sample_ID',samples_vector.shape,dtype='S1000')
+	s2=Kpopfile.create_dataset('col_header/sample_ID',samples_vector.shape,dtype='S1000')
 	s2[...]=samples_vector[:]
 	Kpopfile.close()
         hdf5_samples.close()
