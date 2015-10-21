@@ -33,17 +33,17 @@ if __name__ == '__main__':
 
 	sp.random.seed(0) #TODO: not sure why they got this in the code (is to set the same starting seed). Maybe for panama training. I have to check this.
 	if len(sys.argv[1:]) < 5:
-        	sys.stderr.write('ERROR: missing parameters\n')
-        	usage()
+		usage()
+        	sys.stderr.write('\nERROR: missing parameters\n')
         	sys.exit(1)
 
 	Kpop,pheno,hidden_k,snr_threshold,fileout = sys.argv[1:]
 
 	if os.path.isfile(Kpop) != True:
-	        sys.stderr.write('ERROR: '+Kpop+' not found\n')
+	        sys.stderr.write('\nERROR: '+Kpop+' not found\n')
 	        sys.exit(1)
 	elif os.path.isfile(pheno) != True:
-	        sys.stderr.write('ERROR: '+pheno+' not found\n')
+	        sys.stderr.write('\nERROR: '+pheno+' not found\n')
 	        sys.exit(1)
 
 	#arguments
@@ -53,17 +53,18 @@ if __name__ == '__main__':
 	snr_threshold = int(snr_threshold)
 	fileout = h5py.File(fileout, 'w')
 
-	#read matrix
+	#read Kpop file
 	phenotype = pheno['phenotype/Ytransformed'][:] #catch warnings here
 	kinship = Kpop['Kpop'][:] #catch warnings here	
-	
+	samples_rows = Kpop['Kpop/row_header/sample_ID'][:] #catch warnings here
+	samples_columns = Kpop['Kpop/col_header/sample_ID'][:] #catch warnings here 
 	#standardise kinship
 	kinship /= sp.diag(kinship).mean()
 	kinship += 1e-4 * sp.eye(kinship.shape[0])
 	
 	#select most variable genes
 	selected_phenotypes = select_genes_on_SNR(phenotype, snr_threshold)
-	print "{0} genes selected, featuring a signal-to-noise ratio >= {1} percentile".format(selected_phenotypes.shape[1],snr_threshold)
+	print "\n{0} genes selected, featuring a signal-to-noise ratio >= {1} percentile\n".format(selected_phenotypes.shape[1],snr_threshold)
 
 	#apply panama
 	#cum_var = PC_varExplained(selected_phenotype)
@@ -72,13 +73,18 @@ if __name__ == '__main__':
 	Kpanama = p.get_Kpanama()
 	Ktot = p.get_Ktot()
 	vComp = p.get_varianceComps()
-	print "Variance composition:\n{0}".format(vComp)
-
+	print "\nVariance composition:\n{0}".format(vComp)
+	print "\n Creating output file...\n"
 	#writing into fileout	
 	Ktot_shape=Ktot[:].shape
 	dset=fileout.create_dataset('Ktot', Ktot_shape, dtype='float64')
 	dset[...]=Ktot[:]
+	dset1=fileout.create_dataset('Ktot/row_header/sample_ID', samples_rows.shape, dtype='S1000')
+	dset1[...]=samples_rows
+	dset2=fileout.create_dataset('Ktot/col_header/sample_ID', samples_columns.shape,dtype='S1000')
+	dset2[...]=samples_columns
 
 	fileout.close()
-	print "all done."
+	print "\nCreating output file... done.\n"
+
 	sys.exit(0)
