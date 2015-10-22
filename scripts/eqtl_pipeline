@@ -75,7 +75,14 @@ license=This pipeline is distributed  under the terms of the GNU General Public 
 ################################################################################
 # Default values
 ################################################################################
-# go...
+maf=0.02
+define get_mac=
+$(shell bash -c "echo \($(words $(vcfs)) \* $(maf) \* 2 +1\)/1 | bc")
+endef
+
+
+################################################################################
+# go
 
 $(info *****************************************************)
 $(info * $(pname) $(version))
@@ -236,6 +243,7 @@ $(info *	corr_method=$(corr_method))
 #endif
 
 
+
 #
 TARGETS0=
 TARGETS1=
@@ -249,6 +257,7 @@ TARGETS7=
 #
 # ${name}
 #   |+-------------dna_[dna_filter_options_md5]
+#   |+-------------dna_[dna_filter_options_md5]/plink_[dna_filder_options_md5]
 #   |+-------------rna_[rna_filter_options_md5]
 #   |+-------------peer_[step3_md5]/
 #   |+-------------panama_[step3_md5]/
