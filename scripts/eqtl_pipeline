@@ -258,31 +258,34 @@ TARGETS7=
 
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(max_missing) $(mac) $(vcf_filter_cmd) |md5sum|cut -f1 -d' ' 
+step1a_hash!=echo $(step1_hash) $(vcfs) $(chromosomes) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d' '
 
 
 ifeq ($(corr_method),peer)
-step3_hash!=echo $(step1_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1a_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
 else
 ifeq ($(corr_method),panama)
-step3_hash!=echo $(step1_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1a_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform)|md5sum|cut -f1 -d' '
 else
-step3_hash!=echo $(step1_hash) $(step2_hash)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1a_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
 endif
 
 step1_dir:=$(name)/dna_$(step1_hash)
+step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
 step2_dir:=$(name)/rna_$(step2_hash)
 step3_dir:=$(name)/$(corr_method)_$(step3_hash)
 
 
 # create the folders
-$(shell mkdir -p $(step1_dir) $(step2_dir) $(step3_dir))
+$(shell mkdir -p $(step1_dir) $(step1a_dir) $(step2_dir) $(step3_dir))
 
 # print the folders
 $(info * )
 $(info * Output will be placed in $(name)/)
 $(info * DNA folder (step1_dir)=$(step1_dir))
+$(info * DNA folder - merged vcfs=$(step1a_dir))
 $(info * RNA folder (step2_dir)=$(step2_dir))
 $(info * QTL folder (step3_dir)=$(step3_dir))
 $(info * )
@@ -293,8 +296,8 @@ cov_sorted_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).sorted.hdf5
 
 gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
 expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
-kpop_file=$(step1_dir)/Kpop.hdf5
-samples_hdf5=$(step1_dir)/samples.hdf5
+kpop_file=$(step1a_dir)/Kpop.hdf5
+samples_hdf5=$(step1a_dir)/samples.hdf5
 
 ################################################################################
 # Make stuff
@@ -355,12 +358,12 @@ TARGETS0+=$(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
 #################################################################################
 # DNA
 
-step1: step0 $(step1_dir)/complete
+step1: step0 $(step1a_dir)/complete
 # STEP1
 step1_a: tbi_files
 step1_b: fix_vcf_headers
 step1_c: filter_vcfs
-step1_d: $(kpop_file) $(step1_dir)/data_consistent
+step1_d: $(kpop_file) $(step1a_dir)/data_consistent
 
 
 # required: .tbi for each vcf
@@ -386,8 +389,9 @@ $(shell mkdir -p $(name)/vcf)
 define make-rules-for-chr=
 
 $(shell mkdir -p $(step1_dir)/$(1))
+$(shell mkdir -p $(step1a_dir)/$(1))
 
-$(step1_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
+$(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
 	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst && \
 	bcftools merge -l $$@.lst --output-type z > $$@.tmp && \
@@ -400,18 +404,18 @@ $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
 
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
-$(step1_dir)/plink/$(1)/chr$(1)_merged.vcf.gz.plink: $(step1_dir)/$(1)/chr$(1)_merged.vcf.gz
+$(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz
 	mkdir -p $$(@D) &&
 	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --temp $$(@D) --stdout | \
         vcftools --vcf - --plink   --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
 
 
-$(step1_dir)/plink/$(1)/plink_chr$(1).done: $(step1_dir)/plink/$(1)/chr$(1)_merged.vcf.gz.plink
+$(step1a_dir)/$(1)/plink_chr$(1).done: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz.plink
 	mkdir -p $$(@D) && plink --file $$< --make-bed --fam --recode --noweb --out $$(subst .done,,$$@) && touch $$@
 
 ##convert genotypes into hdf5 file using limix binaries
 ##echo 'convert plink files into hdf5 files using limix binaries'
-$(step1_dir)/plink/$(1)/chr$(1).hdf5: $(step1_dir)/plink/$(1)/plink_chr$(1).done 
+$(step1a_dir)/$(1)/chr$(1).hdf5: $(step1a_dir)/$(1)/plink_chr$(1).done 
 	python $(LIMIX_BINARY)/limix_converter --outfile=$$@.tmp --plink=$$(subst .done,,$$<) && \
 	geno_preprocessing.py $$@.tmp && \
 	mv $$@.tmp $$@
@@ -423,7 +427,7 @@ $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
 
 # 
 # build_Kpop.py kop.hdf5.tmp samples.hdf5 ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
-$(kpop_file): $(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
+$(kpop_file): $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 	build_Kpop.py $(kpop_file).tmp $(samples_hdf5).tmp $^ && \
 	mv $(samples_hdf5).tmp $(samples_hdf5) &&\
 	mv $(kpop_file).tmp $(kpop_file) && \
@@ -433,15 +437,15 @@ $(samples_hdf5): $(kpop_file)
 	$(call file_exists,$@) touch $(samples_hdf5)
 
 # one job per chr
-TARGETS2+=$(foreach chr,$(chromosomes),$(step1_dir)/plink/$(chr)/chr$(chr).hdf5)
+TARGETS2+=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 TARGETS3+=$(step1_dir)/complete
 
 
-$(step1_dir)/data_consistent: $(dna_rna_mapfile) $(kpop_file)
+$(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(kpop_file)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1_dir)/data_consistent
 
-$(step1_dir)/complete: $(step1_dir)/data_consistent $(kpop_file) $(samples_hdf5)
+$(step1a_dir)/complete: $(step1_dir)/data_consistent $(kpop_file) $(samples_hdf5)
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
@@ -498,7 +502,7 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 $(step3_dir)/complete: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$(call p_info,"Step 3 complete") touch $@
 ################################################################################
-step4: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
+step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
 # 
 #
 
@@ -522,14 +526,14 @@ TARGETS5+=$(All_CisQTL_JOBS)
 
 # $(1) = chr
 define make-cisqtl-rule-chr=
-$(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1_dir)/plink/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
-	mkdir -p $$(@D) && eqtl_cis.py $(step1_dir)/plink/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
+$(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
+	mkdir -p $$(@D) && eqtl_cis.py $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
 # $(step3_dir)/$(1)/summary.hdf5
 $(step3_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$$(file >$$@.lst.txt,$(call CisQTL_JOBS_chr,$(1))) \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst.txt && \
-	eqtl_summary.py $(step1_dir)/plink/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
+	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
 	rm -f $$@.lst.txt && \
 	mv $$@.tmp $$@
 
