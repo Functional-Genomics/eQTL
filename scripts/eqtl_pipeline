@@ -193,7 +193,9 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name
+
+subfolder_name?=
 peer_iterations?=100
 fdr_threshold?=0.05
 minGQ?=50
@@ -272,10 +274,10 @@ step3_hash!=echo $(step1a_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
 endif
 
-step1_dir:=$(name)/dna_$(step1_hash)
+step1_dir:=$(name)/$(subfolder_name)dna_$(step1_hash)
 step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
-step2_dir:=$(name)/rna_$(step2_hash)
-step3_dir:=$(name)/$(corr_method)_$(step3_hash)
+step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
+step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
 
 
 # create the folders
@@ -348,7 +350,7 @@ $(cov_hdf5): $(cov_matrix)
 phony_targets+=step0 
 
 step0: $(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
-	$(call p_info,"Step 0 complete")
+#	$(call p_info,"Step 0 complete")
 
 $(name)/$(expr_matrix_filename).matched.tsv: $(dna_rna_mapfile) $(expr_matrix)
 	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
@@ -443,9 +445,9 @@ TARGETS3+=$(step1_dir)/complete
 
 $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(kpop_file)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
-	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1_dir)/data_consistent
+	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
-$(step1a_dir)/complete: $(step1_dir)/data_consistent $(kpop_file) $(samples_hdf5)
+$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(kpop_file) $(samples_hdf5)
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
@@ -506,10 +508,6 @@ step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step
 # 
 #
 
-#: $(step1_dir)/complete $(step2_dir)/complete $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(kpop_file) 
-#	cis_eqtl_run.py $(chr) $(step1_dir) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(kpop_file)y $(expr_transform) $(n_folds)
-# 
-#
 
 # foreach chr
 #   foreach fold_j in 1...nfolds
@@ -536,8 +534,6 @@ $(step3_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2
 	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
 	rm -f $$@.lst.txt && \
 	mv $$@.tmp $$@
-
-#	get_final_res.py $(step3_dir)/$(1)/summary.hdf5 $$@.tmp && mv $$@.tmp $$@
 
 endef
 
@@ -585,7 +581,7 @@ targets7:
 # get a matrix from a specific .hdf5 file
 # matrix/dataset kpop,ktot,phenotype
 # row/col are switched?
-$(step2_dir)/pheno.filtered.tsv: $(step2_dir)/pheno.filtered.hdf5
+$(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	hdf5tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp && mv $@.tmp $@
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
