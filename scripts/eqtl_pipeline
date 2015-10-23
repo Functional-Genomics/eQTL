@@ -598,7 +598,7 @@ $(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(step2_dir)/$(expr_matrix_fi
 	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp && mv $@.tmp $@
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
-	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"  $@.tmp && mv $@.tmp $@
+	hdf52tsv $< "Kpop" "/col_header/sample_ID" "/row_header/sample_ID"   $@.tmp && mv $@.tmp $@
 
 $(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
 	hdf52tsv $< "Kpop" "-" "-"   $@.tmp && mv $@.tmp $@
