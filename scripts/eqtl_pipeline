@@ -359,7 +359,7 @@ $(cov_hdf5): $(cov_matrix)
 # Step0,1 and 2 may be executed independently
 phony_targets+=step0 
 
-step0: $(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
+step0: $(cov_hdf5)
 #	$(call p_info,"Step 0 complete")
 
 
