@@ -485,7 +485,7 @@ $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_f
 	mv $@.tmp $@ 
 
 $(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-	$(call file_exists,$@) touch $@
+	if [ -e $@ ] ; then touch $@; fi
 
 $(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(matched_expr_matrix)
 	$(call p_info,"Step 2 complete") touch $@
