@@ -153,5 +153,5 @@ submit_jobs eqtl7_$JOBNAME_SUF "eqtl6_$JOBNAME_SUF*" eqtl_pipeline $ARGS
 targets=step4
 submit_job_get_email  eqtl8_$JOBNAME_SUF "eqtl7_$JOBNAME_SUF*" eqtl_pipeline $ARGS
 
-#resume_job "eqtl0_$JOBNAME_SUF"
+resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
