@@ -379,15 +379,17 @@ step1_d: $(kpop_file) $(matched_expr_matrix) $(step1a_dir)/data_consistent
 $(matched_expr_matrix): $(dna_rna_mapfile) $(expr_matrix)
 	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
 
+# fix spaces in header?
+FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
+
 # required: .tbi for each vcf
-TBI_FILES=$(foreach l,$(vcfs),$(vcf_toplevel_dir)/$(l).tbi)
+TBI_FILES=$(subst .vcf.gz,.vcf.gz.tbi,$(FIXEDHEADER_VCFS))
 tbi_files: $(TBI_FILES)
 
 TARGETS1+=$(TBI_FILES)
 
 
-# fix spaces in header?
-FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
+
 fix_vcf_headers: $(FIXEDHEADER_VCFS) 
 	echo $(FIXEDHEADER_VCFS)
 
