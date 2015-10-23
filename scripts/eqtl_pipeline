@@ -307,6 +307,7 @@ cov_sorted_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).sorted.hdf5
 
 gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
 expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
+matched_expr_matrix=$(step1a_dir)/$(expr_matrix_filename).matched.tsv
 kpop_file=$(step1a_dir)/Kpop.hdf5
 samples_hdf5=$(step1a_dir)/samples.hdf5
 
@@ -361,10 +362,9 @@ phony_targets+=step0
 step0: $(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
 #	$(call p_info,"Step 0 complete")
 
-$(name)/$(expr_matrix_filename).matched.tsv: $(dna_rna_mapfile) $(expr_matrix)
-	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
 
-TARGETS0+=$(name)/$(expr_matrix_filename).matched.tsv $(cov_hdf5)
+
+TARGETS0+=$(cov_hdf5)
 
 #################################################################################
 # DNA
@@ -374,8 +374,10 @@ step1: step0 $(step1a_dir)/complete
 step1_a: tbi_files
 step1_b: fix_vcf_headers
 step1_c: filter_vcfs
-step1_d: $(kpop_file) $(step1a_dir)/data_consistent
+step1_d: $(kpop_file) $(matched_expr_matrix) $(step1a_dir)/data_consistent
 
+$(matched_expr_matrix): $(dna_rna_mapfile) $(expr_matrix)
+	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
 
 # required: .tbi for each vcf
 TBI_FILES=$(foreach l,$(vcfs),$(l).tbi)
@@ -445,18 +447,18 @@ $(kpop_file): $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 	sleep 1 && touch $(samples_hdf5)
 
 $(samples_hdf5): $(kpop_file)
-	$(call file_exists,$@) touch $(samples_hdf5)
+	if [ -e $@ ] ; then touch $(samples_hdf5); fi
 
 # one job per chr
 TARGETS2+=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 TARGETS3+=$(step1_dir)/complete
 
 
-$(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(kpop_file)
+$(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
-$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(kpop_file) $(samples_hdf5)
+$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix)
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
@@ -469,7 +471,7 @@ TARGETS1+=step2
 step2: $(step2_dir)/complete
 
 
-$(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(name)/$(expr_matrix_filename).matched.tsv $(gtf_eqtl_tsv)
+$(step2_dir)/$(expr_matrix_filename).limix.hdf5: $(matched_expr_matrix) $(gtf_eqtl_tsv)
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
 	mv $@.tmp $@ 
@@ -485,7 +487,7 @@ $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_f
 $(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	$(call file_exists,$@) touch $@
 
-$(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(name)/$(expr_matrix_filename).matched.tsv
+$(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(matched_expr_matrix)
 	$(call p_info,"Step 2 complete") touch $@
 
 
@@ -510,7 +512,7 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 	cp $< $@.tmp && \
 	mv $@.tmp  $@
 
-$(step3_dir)/complete: $(step1_dir)/complete $(step2_dir)/complete $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+$(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$(call p_info,"Step 3 complete") touch $@
 ################################################################################
 step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
