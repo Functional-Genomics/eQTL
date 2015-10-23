@@ -380,7 +380,7 @@ $(matched_expr_matrix): $(dna_rna_mapfile) $(expr_matrix)
 	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
 
 # required: .tbi for each vcf
-TBI_FILES=$(foreach l,$(vcfs),$(l).tbi)
+TBI_FILES=$(foreach l,$(vcfs),$(vcf_toplevel_dir)/$(l).tbi)
 tbi_files: $(TBI_FILES)
 
 TARGETS1+=$(TBI_FILES)
