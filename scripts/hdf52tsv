@@ -53,8 +53,8 @@ if(hdf5.colnames!="-" ) {
   colnames(hdf5.df) <- cn
 }
 
-write.table(t(hdf5.df),file=out.file,row.names=F,quote=FALSE,sep="\t")
-H5close()
+write.table(hdf5.df,file=out.file,row.names=F,quote=FALSE,sep="\t")
+#h5close()
 cat("File ",out.file," created.\n")
 quit(status=0)
 
