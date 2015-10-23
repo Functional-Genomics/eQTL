@@ -56,9 +56,9 @@ function submit_job {
     #-R  "span[ptile=$THREADS]"
     local MAX_MEM=$MEM
     if [ "$waitforids-" != "-" ]; then
-	$ECHO bsub $LSF_PARAMS -q $QUEUE -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "done($waitforids)"  -cwd `pwd` -o "$jobname-%J.out" -e "$jobname-%J.err" -J $jobname  $cmd2e 
+	$ECHO bsub $LSF_PARAMS -q $QUEUE -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "done($waitforids)"  -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
     else
-	$ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"    -cwd `pwd` -o "$jobname-%J.out" -e "$jobname-%J.err" -J $jobname  $cmd2e 
+	$ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"    -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
     fi
 }
 
@@ -114,6 +114,7 @@ RAND=`perl -e "print int(rand()*10);"`
 DATE=`date "+%w%H%M%S"`
 JOBNAME_SUF="$DATE$RAND"
 
+LOGS_FOLDER=logs/$JOBNAME_SUF/
 # submit the jobs
 echo "step0 jobs..."
 submit_job "eqtl0_$JOBNAME_SUF" ""  eqtl_pipeline $ARGS step0
