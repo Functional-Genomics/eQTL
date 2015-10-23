@@ -56,7 +56,7 @@ function submit_job {
     #-R  "span[ptile=$THREADS]"
     local MAX_MEM=$MEM
     if [ "$waitforids-" != "-" ]; then
-	$ECHO bsub $LSF_PARAMS -q $QUEUE -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "done($waitforids)"  -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
+	$ECHO bsub $LSF_PARAMS -q $QUEUE -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "ended($waitforids)"  -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
     else
 	$ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"    -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
     fi
@@ -76,7 +76,7 @@ function submit_job_get_email {
     if [ "$LSF_GROUP-" != "-" ]; then
 	GROUP="-g $LSF_GROUP"
     fi
-    $ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]" -w "done($waitforids)"  -cwd `pwd` -J $jobname  $cmd2e
+    $ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]" -w "ended($waitforids)"  -cwd `pwd` -J $jobname  $cmd2e
 }
 
 
@@ -153,5 +153,5 @@ submit_jobs eqtl7_$JOBNAME_SUF "eqtl6_$JOBNAME_SUF*" eqtl_pipeline $ARGS
 targets=step4
 submit_job_get_email  eqtl8_$JOBNAME_SUF "eqtl7_$JOBNAME_SUF*" eqtl_pipeline $ARGS
 
-resume_job "eqtl0_$JOBNAME_SUF"
+#resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
