@@ -115,6 +115,7 @@ DATE=`date "+%w%H%M%S"`
 JOBNAME_SUF="$DATE$RAND"
 
 LOGS_FOLDER=logs/$JOBNAME_SUF/
+mkdir -p $LOGS_FOLDER
 # submit the jobs
 echo "step0 jobs..."
 submit_job "eqtl0_$JOBNAME_SUF" ""  eqtl_pipeline $ARGS step0
