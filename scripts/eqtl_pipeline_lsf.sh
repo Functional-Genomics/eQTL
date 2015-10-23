@@ -122,7 +122,7 @@ targets=`eqtl_pipeline $* targets1 | tail -n 1`
 submit_jobs eqtl1_$JOBNAME_SUF  "eqtl0_$JOBNAME_SUF" eqtl_pipeline $ARGS
 
 targets=`eqtl_pipeline $* targets2 | tail -n 1`
-submit_jobs eqtl2_$JOBNAME_SUF "eqtl_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
+submit_jobs eqtl2_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
 
 targets=`eqtl_pipeline $* targets3 | tail -n 1`
 submit_jobs eqtl3_$JOBNAME_SUF "eqtl2_$JOBNAME_SUF[*]" eqtl_pipeline $ARGS
