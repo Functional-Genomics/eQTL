@@ -593,16 +593,16 @@ targets7:
 # matrix/dataset kpop,ktot,phenotype
 # row/col are switched?
 $(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-	hdf5tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp && mv $@.tmp $@
+	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp && mv $@.tmp $@
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
-	hdf5tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"  $@.tmp && mv $@.tmp $@
+	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"  $@.tmp && mv $@.tmp $@
 
 $(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
-	hdf5tsv $< "Kpop" "-" "-"   $@.tmp && mv $@.tmp $@
+	hdf52tsv $< "Kpop" "-" "-"   $@.tmp && mv $@.tmp $@
 
 $(step3_dir)/panama/panama.tsv: $(step3_dir)/peer/panama.hdf5
-	hdf5tsv $< "Kpop" "-" "-"   $@.tmp && mv $@.tmp $@
+	hdf52tsv $< "Kpop" "-" "-"   $@.tmp && mv $@.tmp $@
 
 
 %.expr.png: %.tsv $(sample2class_file)

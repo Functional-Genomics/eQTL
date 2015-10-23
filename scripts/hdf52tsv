@@ -43,11 +43,17 @@ h5ls(hdf5.file)
 hdf5.df <- data.frame(t(h5read(hdf5.file,hdf5.dataset)))
 if(hdf5.rownames!="-" ) {
   rownames(hdf5.df) <- h5read(hdf5.file,hdf5.rownames)
+  hdf5.df <- cbind(rownames(hdf5.df),hdf5.df)
 }
 if(hdf5.colnames!="-" ) {
-  colnames(hdf5.df) <- h5read(hdf5.file,hdf5.colnames)
+  cn <- h5read(hdf5.file,hdf5.colnames)
+  if(hdf5.rownames!="-" ) {
+    cn <- append("Id",cn)
+  }
+  colnames(hdf5.df) <- cn
 }
-write.table(t(hdf5.df),file=out.file,quote=FALSE,sep="\t")
+
+write.table(t(hdf5.df),file=out.file,row.names=F,quote=FALSE,sep="\t")
 H5close()
 cat("File ",out.file," created.\n")
 quit(status=0)
