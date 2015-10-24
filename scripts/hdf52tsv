@@ -23,8 +23,8 @@ if (!require(rhdf5)) {
 
 args <- commandArgs(trailingOnly=TRUE)
 
-if (length(args)!=5 ) {
-  print("Error: usage hdf52tsv file.hdf5 dataset rows cols out_file")
+if (length(args)!=6 ) {
+  print("Error: usage hdf52tsv file.hdf5 dataset rows cols out_file transpose@{y,n}")
   quit(status=1)
 }
 
@@ -33,6 +33,7 @@ hdf5.dataset <- args[2]
 hdf5.rownames <- args[3]
 hdf5.colnames <- args[4]
 out.file <- args[5]
+out.transpose <- args[6]=="y"
 
 # TODO: catch errors
 library(rhdf5)
@@ -52,7 +53,18 @@ if(hdf5.colnames!="-" ) {
   }
   colnames(hdf5.df) <- cn
 }
-
+if ( out.transpose ) {
+  rn <- rownames(hdf5.df)
+  cn <- colnames(hdf5.df)
+  hdf5.df <- as.data.frame(t(hdf5.df))
+  if ( hdf5.colnames!="-" ) {
+    hdf5.df <- cbind(rownames(hdf5.df),hdf5.df)
+  }
+  if(hdf5.rownames!="-" ) {
+    colnames(hdf5.df) <- append("Id",rn)
+    hdf5.df <- hdf5.df[-1,]
+  }
+}
 write.table(hdf5.df,file=out.file,row.names=F,quote=FALSE,sep="\t")
 #h5close()
 cat("File ",out.file," created.\n")
