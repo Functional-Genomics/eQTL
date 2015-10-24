@@ -26,9 +26,6 @@ expr.file <- args[1]
 map.file <- args[2]
 out.file <- args[3]
 
-expr.file <- "test/test2_eqtl/none_62ef7d09aa749227d108092dc1fdf936/none/none.tsv"
-map.file <- "test/ex1/sample2class.tsv"
-out.file <- "a.png"
 # TODO: validate files
 
 #
@@ -74,11 +71,12 @@ rownames(map.df) <- map.df$V1
 samples2colour <- as.character(class2colour[map.df[samples2colour,"V2"]])
 names(samples2colour) <- as.character(map.df$V1)
 samples2colour
-suppressPackageStartupMessages(library("gplots"))
-if(!require(RColorBrewer)) {
+if(!require(gplots)) {
   source("http://bioconductor.org/biocLite.R")
   biocLite("gplots",suppressUpdates=T)
 }
+suppressPackageStartupMessages(library("gplots"))
+
 if ( has.genes) {
   data <- cor(expr.df,method="spearman")
 } else {
@@ -91,7 +89,6 @@ png(filename=out.file,width=900,height=900,res=150)
 
 heatmap.2(data,col=colors,scale="none",cexCol=0.8,cexRow=0.8,trace="none",keysize=1,ColSideColors= samples2colour[colnames(expr.df)],RowSideColors= samples2colour[rownames(expr.df)],srtCol=45)
 nrow(data)
-sample2colour
 dev.off()
 
 q(status=0)

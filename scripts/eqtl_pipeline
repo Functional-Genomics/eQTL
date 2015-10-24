@@ -504,7 +504,8 @@ $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_f
 $(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	if [ -e $@ ] ; then touch $@; fi
 
-$(step2_dir)/complete: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(matched_expr_matrix)
+# $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
+$(step2_dir)/complete:  $(matched_expr_matrix) $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
 	$(call p_info,"Step 2 complete") touch $@
 
 
@@ -529,7 +530,8 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 	cp $< $@.tmp && \
 	mv $@.tmp  $@
 
-$(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+#$(step3_dir)/$(corr_method)/$(corr_method).hdf5
+$(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete   $(step3_dir)/$(corr_method)/$(corr_method).clus.png
 	$(call p_info,"Step 3 complete") touch $@
 ################################################################################
 ifeq ($(eqtl_method),limix)
@@ -589,7 +591,7 @@ $(step3_dir)/$(eqtl_method)/summary.tsv: $(step3_dir)/$(corr_method)/$(corr_meth
 
 # FIX
 $(cov_sorted_hdf5).tsv: $(cov_sorted_hdf5)
-	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp
+	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"  n  $@.tmp
 
 $(step3_dir)/$(eqtl_method)/step4.complete:  $(step3_dir)/$(eqtl_method)/summary.tsv
 	$(call p_info,"Step 4 complete") touch $@
@@ -633,10 +635,10 @@ targets7:
 # matrix/dataset kpop,ktot,phenotype
 # row/col are switched?
 $(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp && mv $@.tmp $@
+	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"   $@.tmp y && mv $@.tmp $@
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
-	hdf52tsv $< "Kpop" "/row_header/sample_ID" "/col_header/sample_ID"  $@.tmp b && mv $@.tmp $@
+	hdf52tsv $< "Kpop" "/row_header/sample_ID" "/col_header/sample_ID" n  $@.tmp b && mv $@.tmp $@
 
 $(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
 	hdf52tsv $< "/phenotype" "/row_header/sample_ID" "/col_header/phenotype_ID" $@.tmp y && mv $@.tmp $@
@@ -645,12 +647,22 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 	hdf52tsv $< "Ktot" "/row_header/sample_ID" "/col_header/sample_ID" $@.tmp y && mv $@.tmp $@
 
 
-%.expr.png: %.tsv $(sample2class_file)
-	generate_clustering  $(step3_dir)/$(corr_method)/$(corr_method).expr.tsv $(sample2class_file) $@.tmp && mv $@.tmp $@
+%.clus.png: %.tsv $(sample2class_file)
+	generate_clustering  $(step3_dir)/$(corr_method)/$(corr_method).tsv $(sample2class_file) $@.tmp && mv $@.tmp $@
+
+# TODO: PCA
 
 
-plots: $(step3_dir)/$(corr_method)/$(corr_method).expr.png
+#########################################################################
+plots: $(step3_dir)/$(corr_method)/$(eqtl_method)/report/plots
 
+$(step3_dir)/$(corr_method)/$(eqtl_method)/report/plots:  $(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_clus.png $(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_corrected_clus.png
+
+$(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
+	mkdir -p $(@D) && cp $< $@
+
+$(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_corrected_clus.png: $(step3_dir)/$(corr_method)/$(corr_method).clus.png
+	mkdir -p $(@D) && cp $< $@
 ###################################################
 # FORCE the program to run even if files haven't changed
 FORCE:
