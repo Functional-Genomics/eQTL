@@ -1,0 +1,97 @@
+#!/usr/bin/env Rscript
+#; -*- mode: R;-*-
+#######################################################################
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
+args <- commandArgs(trailingOnly=TRUE)
+
+if (length(args)!=3 ) {
+  print("Error: usage generate_clustering expr.tsv sample2labels.tsv out_file")
+  quit(status=1)
+}
+
+expr.file <- args[1]
+map.file <- args[2]
+out.file <- args[3]
+
+expr.file <- "test/test2_eqtl/none_62ef7d09aa749227d108092dc1fdf936/none/none.tsv"
+map.file <- "test/ex1/sample2class.tsv"
+out.file <- "a.png"
+# TODO: validate files
+
+#
+expr.df <- read.table(expr.file,header = T,check.names=F,sep='\t')
+rownames(expr.df) <- expr.df[,1]
+rownames(expr.df)
+expr.df <- expr.df[,-1]
+cat(dim(expr.df))
+
+has.genes <- TRUE
+if ( sum(rownames(expr.df) != colnames(expr.df))==0 ) {
+  has.genes <- FALSE
+  cat("Squared matrix - assuming that rows/cols are samples.\n")
+}
+
+map.df <- read.table(map.file,header = F,check.names=F,sep='\t')
+# 1st column=sample
+# 2nd column=class/label
+if ( sum(!colnames(expr.df) %in% as.character(map.df$V1))!=0 ) {
+  cat("ERROR: some samples the in expr matrix were not found in ",map.file,"\n")
+  quit(status=1)
+}
+# subset the mapping
+map.df <- map.df[map.df$V1 %in% colnames(expr.df),]
+
+#
+map.df.labels <- unique(as.character(map.df$V2))
+map.df.labels
+
+# colors
+if(!require(RColorBrewer)) {
+  source("http://bioconductor.org/biocLite.R")
+  biocLite("RColorBrewer",suppressUpdates=T)
+}
+suppressPackageStartupMessages(library(RColorBrewer))
+getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+class2colour <- getPalette(length(map.df.labels))
+names(class2colour) <- map.df.labels
+
+samples2colour <- as.character(map.df$V1)
+
+rownames(map.df) <- map.df$V1
+samples2colour <- as.character(class2colour[map.df[samples2colour,"V2"]])
+names(samples2colour) <- as.character(map.df$V1)
+samples2colour
+suppressPackageStartupMessages(library("gplots"))
+if(!require(RColorBrewer)) {
+  source("http://bioconductor.org/biocLite.R")
+  biocLite("gplots",suppressUpdates=T)
+}
+if ( has.genes) {
+  data <- cor(expr.df,method="spearman")
+} else {
+  expr.df
+  data <- as.matrix(data.frame(expr.df))
+}
+ncolors <- nrow(data)*ncol(data)
+colors <- topo.colors(ncolors)
+png(filename=out.file,width=900,height=900,res=150)
+
+heatmap.2(data,col=colors,scale="none",cexCol=0.8,cexRow=0.8,trace="none",keysize=1,ColSideColors= samples2colour[colnames(expr.df)],RowSideColors= samples2colour[rownames(expr.df)],srtCol=45)
+nrow(data)
+sample2colour
+dev.off()
+
+q(status=0)

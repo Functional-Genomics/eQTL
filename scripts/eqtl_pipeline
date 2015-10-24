@@ -220,6 +220,7 @@ min_perc_samples?=0.5
 expr_transform?=none
 hidden_k?=10
 max_missing?=0.8
+eqtl_method?=limix
 
 mac?=20
 
@@ -240,6 +241,20 @@ endif
 
 #ifeq ($(corr_method),peer) 
 $(info *	corr_method=$(corr_method))
+#endif
+
+
+###############################
+#
+SUPPORTED_EQTL_METHODS=limix eqtl_matrix
+
+#corr_method expr_corr_method?
+ifeq (,$(filter $(eqtl_method),$(SUPPORTED_EQTL_METHODS)))
+$(error eqtl_method value $(eqtl_method) not supported)
+endif
+
+#ifeq ($(corr_method),peer) 
+$(info *	eqtl_method=$(eqtl_method))
 #endif
 
 
@@ -517,6 +532,7 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 $(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$(call p_info,"Step 3 complete") touch $@
 ################################################################################
+ifeq ($(eqtl_method),limix)
 step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
 # 
 #
@@ -562,6 +578,28 @@ $(step3_dir)/step4.complete:  $(step3_dir)/complete $(step3_dir)/summary.tsv
 TARGETS6+=$(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
 
 TARGETS7+=$(step3_dir)/step4.complete
+
+else
+#######################################################
+# WIP
+step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/$(eqtl_method)/step4.complete
+
+$(step3_dir)/$(eqtl_method)/summary.tsv: $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv
+	run_matrix_eqtl $(snp_matrix) $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv $(fdr_threshold) $@.tmp && mv $@.tmp
+
+# FIX
+$(cov_sorted_hdf5).tsv: $(cov_sorted_hdf5)
+	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"    $@.tmp
+
+$(step3_dir)/$(eqtl_method)/step4.complete:  $(step3_dir)/$(eqtl_method)/summary.tsv
+	$(call p_info,"Step 4 complete") touch $@
+
+TARGETS5+=
+TARGETS6+=
+TARGETS7+=
+
+endif
+
 phony_targets+= setup setup_files
 
 ###################################################
@@ -608,7 +646,7 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 
 %.expr.png: %.tsv $(sample2class_file)
-	generate_clustering --tsv $(step3_dir)/$(corr_method)/$(corr_method).expr.tsv -m $(sample2class_file) -o $@.tmp && mv $@.tmp $@
+	generate_clustering  $(step3_dir)/$(corr_method)/$(corr_method).expr.tsv $(sample2class_file) $@.tmp && mv $@.tmp $@
 
 
 plots: $(step3_dir)/$(corr_method)/$(corr_method).expr.png
