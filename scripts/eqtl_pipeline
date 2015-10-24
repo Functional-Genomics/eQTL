@@ -289,9 +289,6 @@ step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
 
 
-# create the folders
-$(shell mkdir -p $(step1_dir) $(step1a_dir) $(step2_dir) $(step3_dir))
-
 # print the folders
 $(info * )
 $(info * Output will be placed in $(name)/)
@@ -322,6 +319,9 @@ space:=$(empty) $(empty)#
 # AUXILIARY FUNCTIONS
 ################################################################################
 
+
+# create the folders
+$(foreach f,$(step1_dir) $(step1a_dir) $(step2_dir) $(step3_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
 
 
 ################################################################################
