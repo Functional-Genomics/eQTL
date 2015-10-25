@@ -659,13 +659,15 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 #########################################################################
 plots: $(step3_dir)/$(corr_method)/$(eqtl_method)/report/plots
 
+# Copy the plots and tsv file to the report folder
 $(step3_dir)/$(corr_method)/$(eqtl_method)/report/plots:  $(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_clus.png $(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_corrected_clus.png
 
-$(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
-	mkdir -p $(@D) && cp $< $@
+$(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.clus.png $(step2_dir)/$(expr_matrix_filename).filtered.tsv
+	mkdir -p $(@D) && cp $^ $@
 
-$(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_corrected_clus.png: $(step3_dir)/$(corr_method)/$(corr_method).clus.png
-	mkdir -p $(@D) && cp $< $@
+$(step3_dir)/$(corr_method)/$(eqtl_method)/report/expr_filtered_corrected_clus.png: $(step3_dir)/$(corr_method)/$(corr_method).clus.png $(step3_dir)/$(corr_method)/$(corr_method).tsv
+	mkdir -p $(@D) && cp $^ $@
+
 ###################################################
 # FORCE the program to run even if files haven't changed
 FORCE:
