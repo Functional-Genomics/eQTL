@@ -44,8 +44,8 @@ if ( sum(rownames(expr.df) != colnames(expr.df))==0 ) {
 map.df <- read.table(map.file,header = F,check.names=F,sep='\t')
 # 1st column=sample
 # 2nd column=class/label
-if ( sum(!colnames(expr.df) %in% as.character(map.df$V1))!=0 ) {
-  cat("ERROR: some samples the in expr matrix were not found in ",map.file,"\n")
+if ( length(rownames(expr.df))==length(colnames(expr.df)) && sum(rownames(expr.df)== colnames(expr.df)) ==0 ) {
+  cat("ERROR: some samples in expr matrix were not found in ",map.file,"\n")
   quit(status=1)
 }
 # subset the mapping
