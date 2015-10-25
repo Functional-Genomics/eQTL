@@ -440,7 +440,7 @@ $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz: $(step1a_dir)/$(1)/chr$(1)_merged
 
 $(step1a_dir)/$(1)/chr$(1).genotype.tsv: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz
 	vcftools --012 --gzvcf $$< --out $$@.tmp &&
-	generate_genotype_file $$@.tmp.012.indv $$@.tmp.012 $$@.tmp.012.pos  $$@tmp &&	
+	generate_genotype_file $$@.tmp.012.indv $$@.tmp.012 $$@.tmp.012.pos  $$@.tmp &&	\
 	mv $$@.tmp $$@
 
 
