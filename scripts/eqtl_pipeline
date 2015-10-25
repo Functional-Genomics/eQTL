@@ -430,17 +430,20 @@ $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)
 
 # 
 $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
-	mkdir -p $$(@D) && $(vcf_filter_cmd) -i $$<  -c $(1) -g $(minGQ) -d $(minRD) | bgzip -c > $$@.tmp  && mv $$@.tmp $$@
+	mkdir -p $$(@D) && $(vcf_filter_cmd) -i $$<  -c $(1) -g $$(minGQ) -d $$(minRD) | bgzip -c > $$@.tmp  && mv $$@.tmp $$@
 
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
-$(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz
-	mkdir -p $$(@D) &&
-	vcftools --gzvcf $$< --max-missing $(max_missing) --mac $(mac) --recode --recode-INFO-all --temp $$(@D) --stdout | \
-        vcftools --vcf - --plink   --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
+$(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz
+	mkdir -p $$(@D) && vcftools --gzvcf $$< --max-missing $$(max_missing) --mac $$(mac)  --temp $$(@D) --FILTER-summary --out $$@.tmp && \
+	mv $$@.tmp.FILTER.summary $$@.FILTER.summary && \
+	vcftools --gzvcf $$< --max-missing $$(max_missing) --mac $$(mac)  --temp $$(@D) --recode --recode-INFO-all --out $$@.tmp. && bgzip -c $$@.tmp.recode.vcf > $$@.tmp && mv $$@.tmp  $$@
+
+$(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz
+	mkdir -p $$(@D) && vcftools --gzvcf $$< --plink --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
 
 
-$(step1a_dir)/$(1)/plink_chr$(1).done: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz.plink
+$(step1a_dir)/$(1)/plink_chr$(1).done: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.plink
 	mkdir -p $$(@D) && plink --file $$< --make-bed --fam --recode --noweb --out $$(subst .done,,$$@) && touch $$@
 
 ##convert genotypes into hdf5 file using limix binaries
@@ -648,7 +651,7 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 
 %.clus.png: %.tsv $(sample2class_file)
-	generate_clustering  $(step3_dir)/$(corr_method)/$(corr_method).tsv $(sample2class_file) $@.tmp && mv $@.tmp $@
+	generate_clustering  $< $(sample2class_file) $@.tmp && mv $@.tmp $@
 
 # TODO: PCA
 

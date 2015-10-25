@@ -31,7 +31,7 @@ out.file <- args[3]
 #
 expr.df <- read.table(expr.file,header = T,check.names=F,sep='\t')
 rownames(expr.df) <- expr.df[,1]
-rownames(expr.df)
+#rownames(expr.df)
 expr.df <- expr.df[,-1]
 cat(dim(expr.df))
 
@@ -53,7 +53,7 @@ map.df <- map.df[map.df$V1 %in% colnames(expr.df),]
 
 #
 map.df.labels <- unique(as.character(map.df$V2))
-map.df.labels
+#map.df.labels
 
 # colors
 if(!require(RColorBrewer)) {
@@ -87,7 +87,7 @@ ncolors <- nrow(data)*ncol(data)
 colors <- topo.colors(ncolors)
 png(filename=out.file,width=900,height=900,res=150)
 
-heatmap.2(data,col=colors,scale="none",cexCol=0.8,cexRow=0.8,trace="none",keysize=1,ColSideColors= samples2colour[colnames(expr.df)],RowSideColors= samples2colour[rownames(expr.df)],srtCol=45)
+heatmap.2(data,col=colors,scale="none",cexCol=0.8,cexRow=0.8,trace="none",keysize=1,ColSideColors= samples2colour[colnames(expr.df)],srtCol=45)
 nrow(data)
 dev.off()
 
