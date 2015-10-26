@@ -604,6 +604,8 @@ $(foreach chr,$(chromosomes),$(eval $(call make-meqtl-rule-chr,$(chr))))
 
 # merge all files into one
 $(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).tsv)
+	head -n 1 $< > $@.tmp && \
+	tail -q -n +2 $^ >> $@.tmp && mv $@.tmp $@
 
 
 TARGETS5+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).tsv)
