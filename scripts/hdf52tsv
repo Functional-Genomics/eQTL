@@ -43,31 +43,19 @@ h5ls(hdf5.file)
 # R transposes the matrix
 hdf5.df <- data.frame(t(h5read(hdf5.file,hdf5.dataset)))
 if(hdf5.rownames!="-" ) {
-  rownames(hdf5.df) <- h5read(hdf5.file,hdf5.rownames)
-  hdf5.df <- cbind(rownames(hdf5.df),hdf5.df)
+  rn <- h5read(hdf5.file,hdf5.rownames)
+  hdf5.df <- cbind(rn,hdf5.df)
 }
 if(hdf5.colnames!="-" ) {
   cn <- h5read(hdf5.file,hdf5.colnames)
-  if(hdf5.rownames!="-" ) {
+  if ( hdf5.rownames!="-" ) {
     cn <- append("Id",cn)
   }
-  colnames(hdf5.df) <- cn
-} 
+  hdf5.df <- rbind(cn,hdf5.df)
+}
+
 if ( out.transpose ) {
-  rn <- rownames(hdf5.df)
-  cn <- colnames(hdf5.df)
   hdf5.df <- as.data.frame(t(hdf5.df))
-  ## if ( hdf5.colnames!="-" ) {
-  ##   hdf5.df <- cbind(rownames(hdf5.df),hdf5.df)
-  ## }
-  ## if(hdf5.rownames!="-" ) {
-  ##   print("AAAAAAAAAAAA")
-  ##   print(colnames(hdf5.df))
-  ##   print(rn)
-  ##   print(hdf5.df)
-  ##   colnames(hdf5.df) <- append("Id",rn)
-  ##   hdf5.df <- hdf5.df[-1,]
-  ## }
 }
 write.table(hdf5.df,file=out.file,row.names=F,col.names=F,quote=FALSE,sep="\t")
 #h5close()
