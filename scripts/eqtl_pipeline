@@ -597,11 +597,12 @@ define make-meqtl-rule-chr=
 
 # TODO: add gene info
 $(step3_dir)/$(eqtl_method)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
-	run_matrix_eqtl $$< $(step3_dir)/$(corr_method)/$(corr_method).tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
+	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step3_dir)/$(corr_method)/$(corr_method).tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
 endef
 
 $(foreach chr,$(chromosomes),$(eval $(call make-meqtl-rule-chr,$(chr))))
 
+# merge all files into one
 $(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).tsv)
 
 

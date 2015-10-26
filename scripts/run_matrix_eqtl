@@ -35,7 +35,7 @@ SNP_file_name <- args[1]
 expression_file_name <- args[2]
 covariates_file_name <- args[3]
 gene_file_name <- args[4]
-pvOutputThreshold <- args[5]
+pvOutputThreshold <- as.numeric(args[5])
 out.file <- args[6]
 
 #SNP_file_name <- "test/test2_eqtl/dna_241320ef0c0af7063933be1c2e47e38b/plink_d0049151b87e1aa6f9f9d3ab756cef6d/1/chr1.genotype.tsv"
@@ -103,7 +103,7 @@ me <- Matrix_eQTL_main(
 #  errorCovariance = errorCovariance,
 #pvalue.hist = "qqplot"
 # for debugging
-save.image(me,file=paste(out.file,".Rdata",sep=""))
+save.image(file=paste(out.file,".Rdata",sep=""))
 
 cat('Analysis done in: ', me$time.in.sec, ' seconds', '\n');
 cat('Detected local eQTLs:', '\n');
