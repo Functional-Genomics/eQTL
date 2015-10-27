@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
 import sys, os
-#sys.path.append('./../')
-# this is really necessary?
-#peer_path='/nfs/research/stegle/software/opt/peer/build/python' #add this to the install.sh script?
-#sys.path.insert(0,peer_path)
 import peer
 import h5py
 import scipy as sp
@@ -16,14 +12,18 @@ This script runs PEER (https://github.com/PMBio/peer/wiki) on a matrix of normal
 with N samples and G genes.
 
 Usage:
-runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5>
+runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5> <covariates_sorted.hdf5>
 
-TODO: implement covariates in the model. It's one line of code but I need to test it first. '''
+NB:<covariates_sorted_hdf5> is optional
+
+'''
 
 
-def runpeer(phenotype,K,iterations):
+def runpeer(phenotype,K,iterations,cov=None):
 	model=peer.PEER()
 	model.setPhenoMean(phenotype)
+	if cov is not None:
+		model.setCovariates(cov)
 	model.setNk(K)
 	model.setNmax_iterations(iterations)
 	model.update()
@@ -32,13 +32,26 @@ def runpeer(phenotype,K,iterations):
 
 if __name__ == '__main__':
 
+	cov_set=False
+
 	if len(sys.argv[1:]) < 4:
 		usage()
         	sys.stderr.write("\nERROR: missing parameter\n")
         	sys.exit(1)
-
-	pheno,hidden_k,n_iterations,outfile = sys.argv[1:]
 	
+	if len(sys.argv[1:]) == 4:
+		print '\nRunning PEER without known covariates in the model.\n'
+		pheno,hidden_k,n_iterations,outfile = sys.argv[1:]
+	elif len(sys.argv[1:]) == 5:
+		print '\nRunning PEER with known covariates in the model.\n'
+		pheno,hidden_k,n_iterations,outfile,covariates = sys.argv[1:]
+		if os.path.isfile(covariates) !=True:
+			sys.stderr.write('\nERROR: file'+covariates+' not found\n')
+			sys.exit(1)
+		cov=h5py.File(covariates,'r')
+		cov_matrix=cov['covariates'][:] #get matrix of covariates N x K. Catch warnings here
+		cov_set=True
+
 	if os.path.isfile(pheno) != True:
 		sys.stderr.write("\nERROR: file "+pheno+" not found\n")
 		sys.exit(1)
@@ -63,7 +76,10 @@ if __name__ == '__main__':
         n_iterations=int(n_iterations)
         outfile=h5py.File(outfile,'w')
 	#apply PEER model
-	residuals = runpeer(phenotype,hidden_k,n_iterations)
+	if cov_set==False:
+		residuals = runpeer(phenotype,hidden_k,n_iterations)
+	else:
+		residuals = runpeer(phenotype,hidden_k,n_iterations,cov=cov_matrix)
 	#write within out file
 	dset=outfile.create_dataset('phenotype',residuals[:].shape, dtype='float64')
 	dset[...]=residuals[:]
