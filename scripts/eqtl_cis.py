@@ -23,15 +23,18 @@ This script runs the eqtl analysis on a chunk of the gene expression matrix.
 
 Usage:
 
-eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <cis_window> <nfolds> <fold_j> <outfilename> '''
+eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <peer_cov> <cis_window> <nfolds> <fold_j> <outfilename> 
 
-if len(sys.argv[1:]) < 10:
+TODO: Add peer_cov boolean parameter and cis_window as option in the Make file!
+peer_cov values = false | true [default=false] '''
+
+if len(sys.argv[1:]) < 11:
 	usage()
 	sys.stderr.write('ERROR: missing parameters\n')
 	sys.exit(1)
 
 #read args
-geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,window = sys.argv[1:8]
+geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,peer_cov,window = sys.argv[1:9]
 window=float(window)
 #populate dictionary with all the data needed for eqtl analysis
 #from eqtlsettings import read_args as ra
@@ -39,8 +42,8 @@ window=float(window)
 
 
 #take nfold and j to name the out file for each j
-nfolds = int(sys.argv[8])
-fold_j = int(sys.argv[9])
+nfolds = int(sys.argv[9])
+fold_j = int(sys.argv[10])
 
 #open outfile 
 fout  = h5py.File(sys.argv[10],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
@@ -81,9 +84,16 @@ for gene in genes:
 	#check if Kpop or Ktot contains Nan
 	booleanK=SP.isnan(K)
 	if True in booleanK:
-		lmm = QTL.test_lmm(Xc,Y,covs=cov)
+		if peer_cov =='false': #if no covariates were used with peer then account for cov in the model
+			lmm = QTL.test_lmm(Xc,Y, covs=cov)
+		else:
+			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
 	else:
-		lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K)
+		if peer_cov =='false':
+			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
+		else:
+			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
+
 	# run the linear mixed model
 	pv=lmm.getPv()
 	RV = {}
