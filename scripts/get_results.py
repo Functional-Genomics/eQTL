@@ -24,7 +24,7 @@ Usage:
 get_results.py <fdr_threshold> <result.tsv> <1.hdf5> [<2.hdf5> ... ]
 '''
 
-def get_res(a,b,c,d,e,f,fdr):
+def get_res(a,b,c,d,e,f,g,fdr):
 	global genes,chromosome,position,pvalue,qvalue,beta
 	boolvector = (e<=fdr)
 	genes = a[boolvector]
@@ -33,9 +33,10 @@ def get_res(a,b,c,d,e,f,fdr):
 	position = c[boolvector]
 	position = position.astype(int)
 	pvalue = d[boolvector]
-	qvalue = e[boolvector]
-	beta =f[boolvector]
-	return genes,chromosome,position,pvalue,qvalue,beta
+	qvalue_local = e[boolvector]
+	qvalue_genes = f[boolvector]
+	beta =g[boolvector]
+	return genes,chromosome,position,pvalue,qvalue_local,qvalue_genes,beta
 
 if __name__ == '__main__':
 
@@ -60,7 +61,7 @@ if __name__ == '__main__':
 			sys.exit(1)
 
 	out = open(outfile,'w')
-	out.write('GeneID\tChrom\tPos\tPv\tQv\tBeta\n')
+	out.write('GeneID\tChrom\tPos\tPv\tQvLocal\tQvGlobal\tBeta\n')
 
 	for file in chr:
 		i = h5py.File(file,'r')
@@ -68,13 +69,14 @@ if __name__ == '__main__':
 		b = i['chrom'][:]
 		c = i['pos'][:]
 		d = i['pv'][:]
-		e = i['qv_all'][:]
-		f = i['beta'][:]
-		o = get_res(a,b,c,d,e,f,fdr)
+		e = i['qv'][:]
+		f = i['qv_all'][:]
+		g = i['beta'][:]
+		o = get_res(a,b,c,d,e,f,g,fdr)
 		if genes.shape[0] == 0:
 			print 'no significant result found for file {0}'.format(outfile)
 			pass
-		else:
+		else:	
 			#initialise an array with final results
 			finalarray = sp.arange(o[0].shape[0])
                 	finalarray = o[0]
