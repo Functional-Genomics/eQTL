@@ -83,14 +83,15 @@ class data():
 
 	def getGermlineExpr(self,geneID,standardize=False,Is=None,debug=False):
 		"""
-		get genotypes, chrom, pos. TODO: cis window is not optional at the moment; TODO1: trans analysis is not optional! 
+		get genotypes, chrom, pos. TODO1: change the code for trans analysis 
 		"""
+		w = self.window
 		genePos = self.getGenePos(geneID)
 		pos = self.g['genotype/col_header/pos'][:]
 		chrom = self.g['genotype/col_header/chrom'][:]
 		Icis  = (chrom==float(genePos[0]))
-		Icis *= (pos>float(genePos[1])-self.window)
-		Icis *= (pos<float(genePos[2])+self.window)
+		Icis *= (pos>float(genePos[1])-w)
+		Icis *= (pos<float(genePos[2])+w)
 		assert Icis.sum()>0, 'no cis intersection found'
 		X = self.g['genotype/matrix'][:,Icis]
 		info = {}
