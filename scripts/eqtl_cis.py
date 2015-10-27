@@ -32,7 +32,7 @@ if len(sys.argv[1:]) < 10:
 
 #read args
 geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,window = sys.argv[1:8]
-
+window=float(window)
 #populate dictionary with all the data needed for eqtl analysis
 #from eqtlsettings import read_args as ra
 #CFG,correction_method = ra(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf5_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
