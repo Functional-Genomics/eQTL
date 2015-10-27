@@ -23,15 +23,15 @@ This script runs the eqtl analysis on a chunk of the gene expression matrix.
 
 Usage:
 
-eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <nfolds> <fold_j> <outfilename> '''
+eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <cis_window> <nfolds> <fold_j> <outfilename> '''
 
-if len(sys.argv[1:]) < 9:
-	sys.stderr.write('ERROR: missing parameters\n')
+if len(sys.argv[1:]) < 10:
 	usage()
+	sys.stderr.write('ERROR: missing parameters\n')
 	sys.exit(1)
 
 #read args
-geno,pheno,cm,cm_hdf5,kinship,cov_hdf5 = sys.argv[1:7]
+geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,window = sys.argv[1:8]
 
 #populate dictionary with all the data needed for eqtl analysis
 #from eqtlsettings import read_args as ra
@@ -39,14 +39,14 @@ geno,pheno,cm,cm_hdf5,kinship,cov_hdf5 = sys.argv[1:7]
 
 
 #take nfold and j to name the out file for each j
-nfolds = int(sys.argv[7])
-fold_j = int(sys.argv[8])
+nfolds = int(sys.argv[8])
+fold_j = int(sys.argv[9])
 
 #open outfile 
-fout  = h5py.File(sys.argv[9],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
+fout  = h5py.File(sys.argv[10],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 # load data 
 import data as DATA
-data  = DATA.data(geno,kinship,pheno,cov_hdf5,cm_hdf5,cm)
+data  = DATA.data(geno,kinship,pheno,cov_hdf5,cm_hdf5,cm,window)
 #get kinship
 K  = data.getK(normalize=False) #at the moment normalisation is not optional. Kpop/Ktot will be always normalised
 #get number of samples
@@ -72,7 +72,7 @@ for gene in genes:
 	#1. get geno and pheno data
 	Y = data.getGeneExpression(gene,standardize=False)
 	try:
-	    Xc,geno_info = data.getGermlineExpr(gene,cis_window=1000000.0)
+	    Xc,geno_info = data.getGermlineExpr(gene)
 	except:
 	    e = sys.exc_info()[0]
 	    print "...excluding gene %s %s" %(gene,e) 
