@@ -14,7 +14,7 @@ with N samples and G genes.
 Usage:
 runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5> <covariates_sorted.hdf5>
 
-NB:<covariates_sorted_hdf5> is optional
+NB:<covariates_sorted_hdf5> is optional. TODO: change make file.
 
 '''
 
