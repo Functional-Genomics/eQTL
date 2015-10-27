@@ -9,7 +9,7 @@ import warnings
 
 
 class data():
-	def __init__(self,geno,kinship,pheno,cov,cor,cormethod):
+	def __init__(self,geno,kinship,pheno,cov,cor,cormethod,window):
 		"""load data file"""
 		self.g	= h5py.File(geno,'r') #import geno data
 		self.k = h5py.File(kinship,'r') # import kinship
@@ -18,7 +18,7 @@ class data():
 		self.correction = h5py.File(cor,'r') # import residuals from peer | Ktot from panama | Kpop iif no correction selected
 		self.geneID = self.p['phenotype']['col_header']['phenotype_ID'][:] # ENSEMBL genes
 		self.corrmeth = cormethod #string [ peer | panama | none ]
-
+		self.window = float(window) #float value with nt window
 	def getGeneIDs(self):
 		""" get geneIDs """
 		_chr = self.p['phenotype/chrom'][:] #upload vector of chr for each gene
@@ -81,7 +81,7 @@ class data():
 		return rv
 		
 
-	def getGermlineExpr(self,geneID,cis_window=10000000,standardize=False,Is=None,debug=False):
+	def getGermlineExpr(self,geneID,standardize=False,Is=None,debug=False):
 		"""
 		get genotypes, chrom, pos. TODO: cis window is not optional at the moment; TODO1: trans analysis is not optional! 
 		"""
@@ -89,8 +89,8 @@ class data():
 		pos = self.g['genotype/col_header/pos'][:]
 		chrom = self.g['genotype/col_header/chrom'][:]
 		Icis  = (chrom==float(genePos[0]))
-		Icis *= (pos>float(genePos[1])-cis_window)
-		Icis *= (pos<float(genePos[2])+cis_window)
+		Icis *= (pos>float(genePos[1])-self.window)
+		Icis *= (pos<float(genePos[2])+self.window)
 		assert Icis.sum()>0, 'no cis intersection found'
 		X = self.g['genotype/matrix'][:,Icis]
 		info = {}
