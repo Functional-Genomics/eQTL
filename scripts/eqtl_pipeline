@@ -709,7 +709,27 @@ $(report_dir)/vcf_filtering_sum.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(
 	echo "Chr $(chromosomes)" | sed -E "s/\s+/\n/g" > $@.tmp.col1 &&\
 	paste $@.tmp.col1 $@.tmp >$@ && rm -f $@.tmp $@.tmp.col1
 
+########
+# $(1) = chr  e.g, 1, 2, 3, ...
+define make-vcf-stats-for-chr=
 
+%.vcf.gz.chr$(1).vcf.summary: %.vcf.gz  %.vcf.gz.tbi
+	bcftools stats -r "$(1)" $$< > $$@.tmp && mv $$@.tmp $$@
+
+%.vcf.gz.chr$(1).snps: %.vcf.gz.chr$(1).summary
+	echo -n "$(1) " | tr " " "\t" > $$@.tmp  && grep SNPs $$< >> $$@.tmp && mv $$@.tmp $$@
+endef
+
+$(foreach chr,$(chromosomes),$(eval $(call make-vcf-stats-for-chr,$(chr))))
+
+%.vcf.gz.snps: $(foreach chr,$(chromosomes),%.vcf.gz.chr$(chr).snps)
+	mkdir -p $(@D) && \
+	echo "Chr $(chromosomes)" | sed -E "s/\s+/\n/g" > $@.tmp.col1 &&\
+	paste $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
+
+$(report_dir)/vcf_snps_0.tsv: $(foreach vcf,$(vcfs),$(name)/vcf/$(vcf).fixedheader.vcf.gz.snps)
+	echo $vcfs|tr " " "\n" > $@.tmp &&\
+	paste $^ >> $@.tmp && mv $@.tmp $@
 
 ###################################################
 # FORCE the program to run even if files haven't changed
