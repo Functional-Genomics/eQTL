@@ -565,10 +565,13 @@ endef
 #$(info $(All_CisQTL_JOBS))
 TARGETS5+=$(All_CisQTL_JOBS)
 
+limix_use_peer_covariates=n
+cis_window=1000000
+
 # $(1) = chr
 define make-cisqtl-rule-chr=
 $(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
-	mkdir -p $$(@D) && eqtl_cis.py $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
+	mkdir -p $$(@D) && eqtl_cis.py $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
 # $(step3_dir)/$(1)/summary.hdf5
 $(step3_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
