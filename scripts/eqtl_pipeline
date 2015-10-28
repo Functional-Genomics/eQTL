@@ -451,10 +451,10 @@ $(step1a_dir)/$(1)/chr$(1)_merged.filt.FILTER.summary: $(step1a_dir)/$(1)/chr$(1
 	vcftools --gzvcf $$< --max-missing $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp1 &&  \
 	vcftools --gzvcf $$< --mac $$(mac)  --temp $$(@D) --FILTER-summary --out $$@.tmp2 && \
 	vcftools --gzvcf $$< --mac $$(mac)  --max-missing $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp3 && \
-	head -n 1 $$@.tmp1.FILTER.summary  > $$@.tmp && \
-	tail -n 1 $$@.tmp1.FILTER.summary | sed "s/PASS/Missing/"  >> $$@.tmp && \
-	tail -n 1 $$@.tmp2.FILTER.summary | sed "s/PASS/Mac/" >> $$@.tmp && \
-	tail -n 1 $$@.tmp3.FILTER.summary | sed "s/PASS/Mac\&Missing/" >> $$@.tmp && \
+	head -n 1 $$@.tmp1.FILTER.summary   | cut -f 1,2> $$@.tmp && \
+	tail -n 1 $$@.tmp1.FILTER.summary | sed "s/PASS/Missing/" | cut -f 1,2 >> $$@.tmp && \
+	tail -n 1 $$@.tmp2.FILTER.summary | sed "s/PASS/Mac/" | cut -f 1,2 >> $$@.tmp && \
+	tail -n 1 $$@.tmp3.FILTER.summary | sed "s/PASS/Mac\&Missing/"  | cut -f 1,2 >> $$@.tmp && \
 	mv $$@.tmp $$@
 
 $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step1a_dir)/$(1)/chr$(1).genotype.tsv
@@ -688,7 +688,7 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 
 #########################################################################
-report: plots $(report_dir)/vcf_filtering_sum.tsv
+report: plots vcf_stats
 
 plots: $(report_dir)/plots
 
@@ -709,12 +709,6 @@ $(report_dir)/expr_filtered_corrected_pca.png: $(step3_dir)/$(corr_method)/$(cor
 
 ###################################################
 # filtering summary stats
-$(report_dir)/vcf_filtering_sum.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
-	mkdir -p $(@D) && \
-	head -n 1 $< > $@.tmp &&\
-	tail -q -n 1 $^ >> $@.tmp &&\
-	echo "Chr $(chromosomes)" | sed -E "s/\s+/\n/g" > $@.tmp.col1 &&\
-	paste $@.tmp.col1 $@.tmp >$@ && rm -f $@.tmp $@.tmp.col1
 
 ########
 # $(1) = chr  e.g, 1, 2, 3, ...
@@ -742,13 +736,23 @@ $(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)
 
 
 $(report_dir)/vcf_snps_0.tsv: $(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(vcf)).snps)
+	mkdir -p $(@D) && \
 	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
 	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
 
 #
 $(report_dir)/vcf_snps_1.tsv: $(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
+	mkdir -p $(@D) && \
 	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
 	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
+
+$(report_dir)/vcf_snps_2.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
+	mkdir -p $(@D) && \
+	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
+	mjoin $^ | tail -n +2 >> $@.tmp &&\
+	mv  $@.tmp $@
+
+vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv
 
 ###################################################
 # FORCE the program to run even if files haven't changed
