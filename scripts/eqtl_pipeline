@@ -549,7 +549,7 @@ $(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete   $(step3_di
 	$(call p_info,"Step 3 complete") touch $@
 ################################################################################
 ifeq ($(eqtl_method),limix)
-step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
+step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/$(eqtl_method)/step4.complete
 # 
 #
 
@@ -578,7 +578,7 @@ $(step3_dir)/$(eqtl_method)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).h
 $(step3_dir)/$(eqtl_method)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$$(file >$$@.lst.txt,$(call CisQTL_JOBS_chr,$(1))) \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst.txt && \
-	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
+	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window)  $(n_folds) $$@.lst.txt  $$@.tmp && \
 	rm -f $$@.lst.txt && \
 	mv $$@.tmp $$@
 
@@ -586,7 +586,7 @@ endef
 
 $(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 
-$(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+$(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).hdf5)
 	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
 
 
