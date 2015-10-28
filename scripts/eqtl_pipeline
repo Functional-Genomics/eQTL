@@ -733,15 +733,22 @@ $(foreach chr,$(chromosomes),$(eval $(call make-vcf-stats-for-chr,$(chr))))
 	mkdir -p $(@D) && \
 	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
 	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
+# vcf file was already split by chr
+$(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/%.vcf.gz.chr$(chr).snps)
+	mkdir -p $(@D) && \
+	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
+	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
+
+
 
 $(report_dir)/vcf_snps_0.tsv: $(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(vcf)).snps)
-	echo $(vcfs) |tr " " "\t" > $@.tmp &&\
-	mjoin  $^ >> $@.tmp && mv $@.tmp $@
+	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
+	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
 
 #
-$(report_dir)/vcf_snps_1.tsv: $(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(vcf)).snps)
-	echo $(vcfs) |tr " " "\t" > $@.tmp &&\
-	mjoin  $^ >> $@.tmp && mv $@.tmp $@
+$(report_dir)/vcf_snps_1.tsv: $(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
+	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
+	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
 
 ###################################################
 # FORCE the program to run even if files haven't changed
