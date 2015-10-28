@@ -200,13 +200,15 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates
 
 subfolder_name?=
 peer_iterations?=100
 fdr_threshold?=0.05
 minGQ?=50
 minRD?=20
+limix_use_peer_covariates?=n
+cis_window?=1000000
 # signal-to-noise ration threshold
 snr_threshold?=75
 # vcf_filter="TP > 0.95 ....."
@@ -565,8 +567,7 @@ endef
 #$(info $(All_CisQTL_JOBS))
 TARGETS5+=$(All_CisQTL_JOBS)
 
-limix_use_peer_covariates=n
-cis_window=1000000
+
 
 # $(1) = chr
 define make-cisqtl-rule-chr=
