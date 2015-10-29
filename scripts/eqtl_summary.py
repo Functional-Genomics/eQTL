@@ -36,17 +36,18 @@ if __name__=='__main__':
 		sys.exit(1)
 
 	#load data from that are just needed to import data module 
-	geno, pheno, correction_method, hdf_correction, Kpop, covariates = sys.argv[1:7]
-	nfolds = int(sys.argv[7])
-	samples_list = sys.argv[8]
-	summary = sys.argv[9]
+	geno, pheno, correction_method, hdf_correction, Kpop, covariates,window = sys.argv[1:8]
+        window=float(window)
+	nfolds = int(sys.argv[8])
+	samples_list = sys.argv[9]
+	summary = sys.argv[10]
 	#populate dictionary with data for eqtl
 	import eqtlsettings
 	import data as DATA	
 	#CFG,correction_method = read_args(geno, pheno, correction_method, hdf_correction, Kpop, covariates)
 	#load doata
 
-	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, correction_method)
+	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, correction_method,window)
 	
 	#check if file with samples list exist
 	if os.path.isfile(samples_list) != True:

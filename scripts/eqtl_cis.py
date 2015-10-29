@@ -25,8 +25,7 @@ Usage:
 
 eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <peer_cov> <cis_window> <nfolds> <fold_j> <outfilename> 
 
-TODO: Add peer_cov boolean parameter and cis_window as option in the Make file!
-peer_cov values = false | true [default=false] '''
+peer_cov values = n | y [default=y] '''
 
 if len(sys.argv[1:]) < 11:
 	usage()
@@ -46,7 +45,7 @@ nfolds = int(sys.argv[9])
 fold_j = int(sys.argv[10])
 
 #open outfile 
-fout  = h5py.File(sys.argv[10],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
+fout  = h5py.File(sys.argv[11],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 # load data 
 import data as DATA
 data  = DATA.data(geno,kinship,pheno,cov_hdf5,cm_hdf5,cm,window)
@@ -84,12 +83,12 @@ for gene in genes:
 	#check if Kpop or Ktot contains Nan
 	booleanK=SP.isnan(K)
 	if True in booleanK:
-		if peer_cov =='false': #if no covariates were used with peer then account for cov in the model
+		if peer_cov =='n': #if no covariates were used with peer then account for cov in the model
 			lmm = QTL.test_lmm(Xc,Y, covs=cov)
 		else:
 			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
 	else:
-		if peer_cov =='false':
+		if peer_cov =='y':
 			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
 		else:
 			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer

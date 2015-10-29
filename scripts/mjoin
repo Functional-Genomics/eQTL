@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+tmp_file=`mktemp`
+# TODO catch errors
+cat $1 > $tmp_file
+shift 1
+for  f in $* ; do 
+    join  $tmp_file $1 > $tmp_file.2
+    mv $tmp_file.2 $tmp_file
+done
+cat $tmp_file
+rm -f $tmp_file
+exit 0

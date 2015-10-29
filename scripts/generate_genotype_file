@@ -1,0 +1,54 @@
+#!/usr/bin/env Rscript
+#; -*- mode: R;-*-
+#######################################################################
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
+#######################################################################
+
+args <- commandArgs(trailingOnly=TRUE)
+
+if (length(args)!=4 ) {
+  cat("Error: usage generate_genotype_file indv 012.matrix pos out_file\n")
+  quit(status=1)
+}
+
+indv.file <- args[1]
+geno.file <- args[2]
+pos.file <- args[3]
+out.file <- args[4]
+
+# TODO: validate files
+
+#
+ind <- read.table(indv.file,header=F,check.names=F,sep="\t")
+indv <- as.character(ind[,1])
+cat("Found ",length(indv)," samples\n")
+
+geno <- t(as.data.frame(read.table(geno.file,header=F,check.names=F,sep="\t")))
+cat("Loaded genotype ",dim(geno),"\n")
+#head(geno)
+#tail(geno)
+
+snps.t <- read.table(pos.file,header=F,check.names=F,sep="\t")
+cat("SNPs table:",dim(snps.t),"\n")
+id <- paste(snps.t[,1],snps.t[,2],sep="_")
+print(head(id))
+cat("SNPs: ",length(id),"\n")
+
+# TODO: check if the dimensions are consistent
+colnames(geno) <- indv
+new <- cbind(id,geno)
+print(head(new))
+write.table(new,file=out.file,sep="\t",quote=F,row.names=F,col.names=T)
+
+q(status=0)

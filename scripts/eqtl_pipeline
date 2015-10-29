@@ -200,13 +200,15 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates
 
 subfolder_name?=
 peer_iterations?=100
 fdr_threshold?=0.05
 minGQ?=50
 minRD?=20
+limix_use_peer_covariates?=n
+cis_window?=1000000
 # signal-to-noise ration threshold
 snr_threshold?=75
 # vcf_filter="TP > 0.95 ....."
@@ -289,7 +291,7 @@ step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|m
 
 
 ifeq ($(corr_method),peer)
-step3_hash!=echo $(step1a_hash) $(step2_hash) $(peer_iterations) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1a_hash) $(step2_hash) $(peer_iterations) $(limix_use_peer_covariates) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
 else
 ifeq ($(corr_method),panama)
 step3_hash!=echo $(step1a_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform)|md5sum|cut -f1 -d' '
@@ -337,7 +339,7 @@ space:=$(empty) $(empty)#
 
 
 # create the folders
-$(foreach f,$(step1_dir) $(step1a_dir) $(step2_dir) $(step3_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
+$(foreach f,$(step1_dir) $(step1a_dir) $(step2_dir) $(step3_dir)/$(eqtl_method),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
 
 
 ################################################################################
@@ -445,8 +447,15 @@ $(step1a_dir)/$(1)/chr$(1).genotype.tsv: $(step1a_dir)/$(1)/chr$(1)_merged.filt.
 
 
 $(step1a_dir)/$(1)/chr$(1)_merged.filt.FILTER.summary: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz
-	mkdir -p $$(@D) && vcftools --gzvcf $$< --max-missing $$(max_missing) --mac $$(mac)  --temp $$(@D) --FILTER-summary --out $$@.tmp && \
-	mv $$@.tmp.FILTER.summary $$@
+	mkdir -p $$(@D) && \
+	vcftools --gzvcf $$< --max-missing $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp1 &&  \
+	vcftools --gzvcf $$< --mac $$(mac)  --temp $$(@D) --FILTER-summary --out $$@.tmp2 && \
+	vcftools --gzvcf $$< --mac $$(mac)  --max-missing $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp3 && \
+	head -n 1 $$@.tmp1.FILTER.summary   | cut -f 1,2> $$@.tmp && \
+	tail -n 1 $$@.tmp1.FILTER.summary | sed "s/PASS/Missing/" | cut -f 1,2 >> $$@.tmp && \
+	tail -n 1 $$@.tmp2.FILTER.summary | sed "s/PASS/Mac/" | cut -f 1,2 >> $$@.tmp && \
+	tail -n 1 $$@.tmp3.FILTER.summary | sed "s/PASS/Mac\&Missing/"  | cut -f 1,2 >> $$@.tmp && \
+	mv $$@.tmp $$@
 
 $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step1a_dir)/$(1)/chr$(1).genotype.tsv
 	mkdir -p $$(@D) && vcftools --gzvcf $$< --plink --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
@@ -487,7 +496,7 @@ $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
-$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) $(report_dir)/vcf_filtering_sum.tsv
+$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
@@ -532,9 +541,9 @@ $(step3_dir)/panama/panama.hdf5: $(kpop_file) $(step2_dir)/$(expr_matrix_filenam
 	runpanama.py  $(kpop_file) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(hidden_k) $(snr_threshold) $@.tmp &&\
 	mv $@.tmp  $@
 
-$(step3_dir)/peer/peer.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
+$(step3_dir)/peer/peer.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(if $(subst y,,$(limix_use_peer_covariates)),$(cov_sorted_hdf5))
 	mkdir -p $(@D) && \
-	runpeer.py $<  $(hidden_k) $(peer_iterations) $@.tmp && \
+	runpeer.py $<  $(hidden_k) $(peer_iterations)  $@.tmp $(if $(subst y,,$(limix_use_peer_covariates)),$(cov_sorted_hdf5)) && \
 	mv $@.tmp  $@
 
 $(step3_dir)/none/none.hdf5: $(kpop_file)
@@ -547,7 +556,7 @@ $(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete   $(step3_di
 	$(call p_info,"Step 3 complete") touch $@
 ################################################################################
 ifeq ($(eqtl_method),limix)
-step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete
+step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/$(eqtl_method)/step4.complete
 # 
 #
 
@@ -555,26 +564,28 @@ step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step
 # foreach chr
 #   foreach fold_j in 1...nfolds
 #     cis_eqtl.py $(chr) $(fold_j) $(nfolds) $(outname) -> chr/$nfolds_fold_j.hdf5
-All_CisQTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(step3_dir)/$(chr)/$(n_folds)_$(j).hdf5))
+All_CisQTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(step3_dir)/$(eqtl_method)/$(chr)/$(n_folds)_$(j).hdf5))
 
 # $(1)=chr
 define CisQTL_JOBS_chr=
-$(foreach j,$(shell seq $(n_folds)), $(step3_dir)/$(1)/$(n_folds)_$(j).hdf5)
+$(foreach j,$(shell seq $(n_folds)), $(step3_dir)/$(eqtl_method)/$(1)/$(n_folds)_$(j).hdf5)
 endef
 
 #$(info $(All_CisQTL_JOBS))
 TARGETS5+=$(All_CisQTL_JOBS)
 
+
+
 # $(1) = chr
 define make-cisqtl-rule-chr=
-$(step3_dir)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
-	mkdir -p $$(@D) && eqtl_cis.py $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
+$(step3_dir)/$(eqtl_method)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
+	mkdir -p $$(@D) && eqtl_cis.py $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
 # $(step3_dir)/$(1)/summary.hdf5
-$(step3_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+$(step3_dir)/$(eqtl_method)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$$(file >$$@.lst.txt,$(call CisQTL_JOBS_chr,$(1))) \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst.txt && \
-	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5)  $(n_folds) $$@.lst.txt  $$@.tmp && \
+	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window)  $(n_folds) $$@.lst.txt  $$@.tmp && \
 	rm -f $$@.lst.txt && \
 	mv $$@.tmp $$@
 
@@ -582,11 +593,11 @@ endef
 
 $(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 
-$(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+$(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).hdf5)
 	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
 
 
-TARGETS6+=$(foreach chr,$(chromosomes),$(step3_dir)/$(chr).hdf5)
+TARGETS6+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).hdf5)
 
 else
 #######################################################
@@ -677,7 +688,7 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 
 #########################################################################
-report: plots $(report_dir)/vcf_filtering_sum.tsv
+report: plots vcf_stats
 
 plots: $(report_dir)/plots
 
@@ -698,14 +709,50 @@ $(report_dir)/expr_filtered_corrected_pca.png: $(step3_dir)/$(corr_method)/$(cor
 
 ###################################################
 # filtering summary stats
-$(report_dir)/vcf_filtering_sum.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
+
+########
+# $(1) = chr  e.g, 1, 2, 3, ...
+define make-vcf-stats-for-chr=
+
+%.vcf.gz.chr$(1).summary: %.vcf.gz  %.vcf.gz.tbi
+	bcftools stats -r "$(1)" $$< > $$@.tmp && mv $$@.tmp $$@
+
+%.vcf.gz.chr$(1).snps: %.vcf.gz.chr$(1).summary
+	echo -n "$(1) " | tr " " "\t" > $$@.tmp  && grep "records:" $$< | head -n1 | cut -f 4 >> $$@.tmp && mv $$@.tmp $$@
+endef
+
+$(foreach chr,$(chromosomes),$(eval $(call make-vcf-stats-for-chr,$(chr))))
+
+%.vcf.gz.snps: $(foreach chr,$(chromosomes),%.vcf.gz.chr$(chr).snps)
 	mkdir -p $(@D) && \
-	head -n 1 $< > $@.tmp &&\
-	tail -q -n 1 $^ >> $@.tmp &&\
-	echo "Chr $(chromosomes)" | sed -E "s/\s+/\n/g" > $@.tmp.col1 &&\
-	paste $@.tmp.col1 $@.tmp >$@ && rm -f $@.tmp $@.tmp.col1
+	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
+	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
+# vcf file was already split by chr
+$(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/%.vcf.gz.chr$(chr).snps)
+	mkdir -p $(@D) && \
+	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
+	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
 
 
+
+$(report_dir)/vcf_snps_0.tsv: $(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(vcf)).snps)
+	mkdir -p $(@D) && \
+	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
+	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
+
+#
+$(report_dir)/vcf_snps_1.tsv: $(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
+	mkdir -p $(@D) && \
+	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
+	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
+
+$(report_dir)/vcf_snps_2.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
+	mkdir -p $(@D) && \
+	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
+	mjoin $^ | tail -n +2 >> $@.tmp &&\
+	mv  $@.tmp $@
+
+vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv
 
 ###################################################
 # FORCE the program to run even if files haven't changed
