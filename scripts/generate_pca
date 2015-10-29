@@ -93,6 +93,7 @@ xyplot(PC1 ~ PC2,data=as.data.frame(pca$x),
             cex=2,
             col=samples2colour[rownames(pca$x)],
             pch=16,
+       aspect=1,
             xlab=paste("PC2 (",round(pca.sum$importance["Proportion of Variance","PC2"],2)*100,"% of variance)",sep=""),
             ylab=paste("PC1 (",round(pca.sum$importance["Proportion of Variance","PC1"],2)*100,"% of variance)",sep=""),
             main = suppressWarnings(draw.key(key = list(
@@ -100,12 +101,14 @@ xyplot(PC1 ~ PC2,data=as.data.frame(pca$x),
                                                text = list(names(class2colour)),
                                                columns=3
                                                ))))
+help(xyplot)
 dev.off()
 png(filename=gsub(".png","_13.png",out.file),width=6000,height=600,res=150)
 xyplot(PC1 ~ PC3,data=as.data.frame(pca$x),
             cex=2,
             col=samples2colour[rownames(pca$x)],
             pch=16,
+              aspect=1,
             xlab=paste("PC3 (",round(pca.sum$importance["Proportion of Variance","PC3"],2)*100,"% of variance)",sep=""),
             ylab=paste("PC1 (",round(pca.sum$importance["Proportion of Variance","PC1"],2)*100,"% of variance)",sep=""),
             main = suppressWarnings(draw.key(key = list(
