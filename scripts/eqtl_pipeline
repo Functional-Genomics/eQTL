@@ -728,7 +728,7 @@ $(foreach chr,$(chromosomes),$(eval $(call make-vcf-stats-for-chr,$(chr))))
 	mkdir -p $(@D) && \
 	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
 	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
-# vcf file was already split by chr
+# vcf file was already split by chr 
 $(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/%.vcf.gz.chr$(chr).snps)
 	mkdir -p $(@D) && \
 	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
@@ -739,18 +739,18 @@ $(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)
 $(report_dir)/vcf_snps_0.tsv: $(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(vcf)).snps)
 	mkdir -p $(@D) && \
 	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
-	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
+	mjoin  $^ | tail -n +2 | tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
 #
 $(report_dir)/vcf_snps_1.tsv: $(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
 	mkdir -p $(@D) && \
 	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
-	mjoin  $^ | tail -n +2 >> $@.tmp  && mv $@.tmp $@
+	mjoin  $^ | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
 $(report_dir)/vcf_snps_2.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
 	mkdir -p $(@D) && \
 	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
-	mjoin $^ | tail -n +2 >> $@.tmp &&\
+	mjoin $^ | tail -n +2 |tr " " "\t">> $@.tmp &&\
 	mv  $@.tmp $@
 
 vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv
