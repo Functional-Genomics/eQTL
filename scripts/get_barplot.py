@@ -100,12 +100,13 @@ if __name__ == '__main__':
 
 	#rc('font', **font)  # pass in the font dict as kwargs
 	index = np.arange(n_groups)
+	index = np.concatenate((np.arange(1),index[1:]+0.1),axis=0)
 	bar_width = 0.2
 
 	opacity = 0.4
 	error_config = {'ecolor': '0.3'}
 
-	rects1 = plt.bar(index, tuple(M0), bar_width,
+	rects1 = plt.bar(index+0.2, tuple(M0), bar_width,
 			 alpha=opacity,
 			 color='b',
 			 yerr=tuple(S0),
@@ -137,6 +138,7 @@ if __name__ == '__main__':
 			 error_kw=error_config,
 			 label='Filter Missing Genotype + MAC')
 
+	plt.grid(True)
 	plt.xlabel('Chr', fontsize=10)
 	plt.ylabel('Variants', fontsize=10)
 	plt.tick_params(direction='out')
