@@ -406,6 +406,7 @@ tbi_files: $(TBI_FILES)
 
 TARGETS1+=$(TBI_FILES)
 
+filter_vcfs:  $(foreach chr,$(chromosomes),$(foreach l,$(vcfs),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,$(l))))
 
 
 fix_vcf_headers: $(FIXEDHEADER_VCFS) 
