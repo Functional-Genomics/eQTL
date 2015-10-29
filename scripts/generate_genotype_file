@@ -29,17 +29,27 @@ out.file <- args[4]
 
 # TODO: validate files
 
+safe.read.table <- function(file,...) {
+  t <- NULL
+  try(t <- read.table(file,...))
+  if( is.null(t) ) {
+    cat("ERROR: while reading ",file,"\n")
+    q(status=1)
+  }
+  return(t)
+}
 #
-ind <- read.table(indv.file,header=F,check.names=F,sep="\t")
+ind <- NULL
+ind <- safe.read.table(indv.file,header=F,check.names=F,sep="\t")
 indv <- as.character(ind[,1])
 cat("Found ",length(indv)," samples\n")
 
-geno <- t(as.data.frame(read.table(geno.file,header=F,check.names=F,sep="\t")))
+geno <- t(as.data.frame(safe.read.table(geno.file,header=F,check.names=F,sep="\t")))
 cat("Loaded genotype ",dim(geno),"\n")
 #head(geno)
 #tail(geno)
 
-snps.t <- read.table(pos.file,header=F,check.names=F,sep="\t")
+snps.t <- safe.read.table(pos.file,header=F,check.names=F,sep="\t")
 cat("SNPs table:",dim(snps.t),"\n")
 id <- paste(snps.t[,1],snps.t[,2],sep="_")
 print(head(id))
