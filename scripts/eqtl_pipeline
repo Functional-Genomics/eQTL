@@ -694,7 +694,7 @@ report: plots vcf_stats
 plots: $(report_dir)/plots
 
 # Copy the plots and tsv file to the report folder
-$(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png
+$(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png
 
 $(report_dir)/expr_filtered_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.clus.png $(step2_dir)/$(expr_matrix_filename).filtered.tsv
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
@@ -707,6 +707,7 @@ $(report_dir)/expr_filtered_corrected_clus.png: $(step3_dir)/$(corr_method)/$(co
 
 $(report_dir)/expr_filtered_corrected_pca.png: $(step3_dir)/$(corr_method)/$(corr_method).pca.png $(step3_dir)/$(corr_method)/$(corr_method).pca_13.png $(step3_dir)/$(corr_method)/$(corr_method).tsv
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
+
 
 ###################################################
 # filtering summary stats
@@ -753,7 +754,12 @@ $(report_dir)/vcf_snps_2.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$
 	mjoin $^ | tail -n +2 |tr " " "\t">> $@.tmp &&\
 	mv  $@.tmp $@
 
-vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv
+vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv 
+
+
+$(report_dir)/vcf_filtering.png: $(report_dir)/vcf_snps_0.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_2.tsv  
+	get_barplot.py $^ $@.tmp && mv $@.tmp $@
+
 
 ###################################################
 # FORCE the program to run even if files haven't changed
