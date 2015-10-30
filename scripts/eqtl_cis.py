@@ -88,7 +88,7 @@ for gene in genes:
 		else:
 			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
 	else:
-		if peer_cov =='y':
+		if peer_cov =='n': #if no cov where used with peer then
 			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
 		else:
 			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
