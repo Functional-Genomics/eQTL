@@ -138,7 +138,7 @@ if __name__ == '__main__':
 			 error_kw=error_config,
 			 label='Filter Missing Genotype + MAC')
 
-	plt.grid(True)
+	#plt.grid(True)
 	plt.xlabel('Chr', fontsize=10)
 	plt.ylabel('Variants', fontsize=10)
 	plt.tick_params(direction='out')
