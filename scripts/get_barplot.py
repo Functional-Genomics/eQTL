@@ -99,8 +99,8 @@ if __name__ == '__main__':
         #'size'   : '15'}
 
 	#rc('font', **font)  # pass in the font dict as kwargs
-	index = np.arange(n_groups)
-	index = np.concatenate((np.arange(1),index[1:]+0.1),axis=0)
+	#index = np.arange(n_groups)
+	index = np.arange(0, n_groups * 2, 2)
 	bar_width = 0.2
 
 	opacity = 0.4
