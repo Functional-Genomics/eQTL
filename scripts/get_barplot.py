@@ -99,7 +99,8 @@ if __name__ == '__main__':
         #'size'   : '15'}
 
 	#rc('font', **font)  # pass in the font dict as kwargs
-	index = np.arange(n_groups)
+	#index = np.arange(n_groups)
+	index = np.arange(0, n_groups * 2, 2)
 	bar_width = 0.2
 
 	opacity = 0.4
@@ -137,6 +138,7 @@ if __name__ == '__main__':
 			 error_kw=error_config,
 			 label='Filter Missing Genotype + MAC')
 
+	#plt.grid(True)
 	plt.xlabel('Chr', fontsize=10)
 	plt.ylabel('Variants', fontsize=10)
 	plt.tick_params(direction='out')
