@@ -25,7 +25,7 @@ Usage:
 
 eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <peer_cov> <cis_window> <nfolds> <fold_j> <outfilename> 
 
-peer_cov values = n | y [default=y] '''
+peer_cov values = n | y [default=n] '''
 
 if len(sys.argv[1:]) < 11:
 	usage()
