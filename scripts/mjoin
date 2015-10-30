@@ -5,7 +5,7 @@ tmp_file=`mktemp`
 cat $1 > $tmp_file
 shift 1
 for  f in $* ; do 
-    join  $tmp_file $1 > $tmp_file.2
+    join  $tmp_file $f > $tmp_file.2
     mv $tmp_file.2 $tmp_file
 done
 cat $tmp_file
