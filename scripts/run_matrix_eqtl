@@ -106,7 +106,7 @@ if ( cis_window == 0 ) {
     min.pv.by.genesnp = FALSE,
     noFDRsaveMemory = FALSE);
 } else {
-  if ( cis.window >0 ) {
+  if ( cis_window >0 ) {
   ## cis only
     me <- Matrix_eQTL_main(
       snps = snps,
