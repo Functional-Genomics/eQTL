@@ -99,14 +99,14 @@ if __name__ == '__main__':
         #'size'   : '15'}
 
 	#rc('font', **font)  # pass in the font dict as kwargs
-	index = np.arange(n_groups)
-	#index = np.arange(0, n_groups * 2, 2)
+	#index = np.arange(n_groups)
+	index = np.arange(0, n_groups * 2, 2)
 	bar_width = 0.2
 
 	opacity = 0.4
 	error_config = {'ecolor': '0.3'}
 
-	rects1 = plt.bar(index+0.2, tuple(M0), bar_width,
+	rects1 = plt.bar(index, tuple(M0), bar_width,
 			 alpha=opacity,
 			 color='b',
 			 yerr=tuple(S0),
