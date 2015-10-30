@@ -23,19 +23,22 @@ if (!require("MatrixEQTL")) {
 
 args <- commandArgs(trailingOnly=TRUE)
 
-if (length(args)!=6 ) {
-  print("Error: usage run_matrix_eqtl snp_file expr_file  cov_file gene_pos_file pv_threshold out.file")
+if (length(args)!=7 ) {
+  print("use cis_window of 0 to enable trans analysis")
+  print("Error: usage run_matrix_eqtl snp_file expr_file  cov_file gene_pos_file cis_window pv_threshold out.file")
   quit(status=1)
 }
 
 library("MatrixEQTL")
 
-useModel <- modelLINEAR; # modelANOVA or modelLINEAR or modelLINEAR_CROSS
+#useModel <- modelLINEAR; # modelANOVA or modelLINEAR or modelLINEAR_CROSS
+useModel <- modelANOVA; # modelANOVA or modelLINEAR or modelLINEAR_CROSS
 SNP_file_name <- args[1]
 expression_file_name <- args[2]
 covariates_file_name <- args[3]
 gene_file_name <- args[4]
-pvOutputThreshold <- as.numeric(args[5])
+cis_window <- as.numeric(args[5])
+pvOutputThreshold <- as.numeric(args[6])
 out.file <- args[6]
 
 #SNP_file_name <- "test/test2_eqtl/dna_241320ef0c0af7063933be1c2e47e38b/plink_d0049151b87e1aa6f9f9d3ab756cef6d/1/chr1.genotype.tsv"
@@ -84,36 +87,80 @@ genepos = read.table(gene_file_name, header = FALSE, stringsAsFactors = FALSE);
 # reorder the columns
 colnames(genepos) <- c("chr","s1","s2","geneid")
 genepos <- genepos[,c("geneid","chr","s1","s2")]
-cat("Read gene pos. file:",nrow(genepos),"\n")
+cat("Read gene pos. file:",nrow(genepos)," genes\n")
 
-me <- Matrix_eQTL_main(
-  snps = snps,
-  gene = gene,
-  cvrt = cvrt,
-  output_file_name = out.file,
-  pvOutputThreshold = pvOutputThreshold,
-  useModel = useModel,
-  snpspos = snpspos,
-  genepos = genepos,
-  verbose = TRUE,
-  cisDist=1000000,
-  pvalue.hist = TRUE,
-  min.pv.by.genesnp = FALSE,
-  noFDRsaveMemory = FALSE);
-#  errorCovariance = errorCovariance,
-#pvalue.hist = "qqplot"
-# for debugging
-save.image(file=paste(out.file,".Rdata",sep=""))
-
+if ( cis_window == 0 ) {
+  ## trans 
+  me <- Matrix_eQTL_main(
+    snps = snps,
+    gene = gene,
+    cvrt = cvrt,
+    output_file_name = out.file,
+    pvOutputThreshold = pvOutputThreshold,
+    useModel = useModel,
+    snpspos = snpspos,
+    genepos = genepos,
+    verbose = TRUE,
+    pvalue.hist = "qqplot",
+#    pvalue.hist = TRUE,
+    min.pv.by.genesnp = FALSE,
+    noFDRsaveMemory = FALSE);
+} else {
+  if ( cis.window >0 ) {
+  ## cis only
+    me <- Matrix_eQTL_main(
+      snps = snps,
+      gene = gene,
+      cvrt = cvrt,
+      output_file_name = paste(out.file,"_trans.tsv",sep=""),
+      pvOutputThreshold = 0,
+      output_file_name.cis = out.file,
+      pvOutputThreshold.cis = pvOutputThreshold,
+      useModel = useModel,
+      snpspos = snpspos,
+      genepos = genepos,
+      verbose = TRUE,
+      cisDist=cis_window,
+      pvalue.hist = "qqplot",
+      min.pv.by.genesnp = FALSE,
+      noFDRsaveMemory = FALSE);
+  } else {
+    ## cis and trans
+    me <- Matrix_eQTL_main(
+      snps = snps,
+      gene = gene,
+      cvrt = cvrt,
+      output_file_name = paste(out.file,"_trans.tsv",sep=""),
+      pvOutputThreshold = pvOutputThreshold,
+      output_file_name.cis = out.file,
+      pvOutputThreshold.cis = pvOutputThreshold,
+      useModel = useModel,
+      snpspos = snpspos,
+      genepos = genepos,
+      verbose = TRUE,
+      cisDist=cis_window*-1,
+      pvalue.hist = "qqplot",
+      min.pv.by.genesnp = FALSE,
+      noFDRsaveMemory = FALSE);    
+  }
+  
+}
 cat('Analysis done in: ', me$time.in.sec, ' seconds', '\n');
 cat('Detected local eQTLs:', '\n');
 show(me$cis$eqtls)
-cat('Detected distant eQTLs:', '\n');
-show(me$trans$eqtls)
+if ( cis_window <=0 ) {
+  cat('Detected distant eQTLs:', '\n');
+  show(me$trans$eqtls)
+}
+
+#  errorCovariance = errorCovariance,
+# for debugging
+save.image(file=paste(out.file,".Rdata",sep=""))
+
 
 
 ## Plot the Q-Q plot of local and distant p-values
-png(paste(out.file,".png",sep=""))
+png(paste(out.file,".png",sep=""),width=500,height=500)
 plot(me)
 dev.off()
 q(status=0)
