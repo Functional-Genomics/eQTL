@@ -604,13 +604,22 @@ else
 #######################################################
 # matrixEQTL
 
-# 1 - chr
-define make-meqtl-rule-chr=
 
-# TODO: add gene info
+# 1 - chr
+# TODO: generate a pos file
+ifeq ($(corr_method),none)
+define make-meqtl-rule-chr=
+$(step3_dir)/$(eqtl_method)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step2_dir)/$(expr_matrix_filename).filtered.tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
+	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step2_dir)/$(expr_matrix_filename).filtered.tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
+endef
+
+else
+
+define make-meqtl-rule-chr=
 $(step3_dir)/$(eqtl_method)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
 	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step3_dir)/$(corr_method)/$(corr_method).tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
 endef
+endif
 
 $(foreach chr,$(chromosomes),$(eval $(call make-meqtl-rule-chr,$(chr))))
 
