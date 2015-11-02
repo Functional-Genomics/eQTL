@@ -125,33 +125,9 @@ echo "set of jobs 1..."
 targets=`eqtl_pipeline $* targets1 | tail -n 1`
 submit_jobs eqtl1_$JOBNAME_SUF  "eqtl0_$JOBNAME_SUF" eqtl_pipeline $ARGS
 
-echo "set of jobs 2..."
-targets=`eqtl_pipeline $* targets2 | tail -n 1`
-submit_jobs eqtl2_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF*" eqtl_pipeline $ARGS
-
-echo "set of jobs 3..."
-targets=`eqtl_pipeline $* targets3 | tail -n 1`
-submit_jobs eqtl3_$JOBNAME_SUF "eqtl2_$JOBNAME_SUF*" eqtl_pipeline $ARGS
-
-echo "set of jobs 4..."
-targets=`eqtl_pipeline $* targets4 | tail -n 1`
-submit_jobs eqtl4_$JOBNAME_SUF "eqtl3_$JOBNAME_SUF*" eqtl_pipeline $ARGS
-
-echo "set of jobs 5..."
-targets=`eqtl_pipeline $* targets5 | tail -n 1`
-submit_jobs eqtl5_$JOBNAME_SUF "eqtl4_$JOBNAME_SUF*" eqtl_pipeline $ARGS
-
-echo "set of jobs 6..."
-targets=`eqtl_pipeline $* targets6 | tail -n 1`
-submit_jobs eqtl6_$JOBNAME_SUF "eqtl5_$JOBNAME_SUF*" eqtl_pipeline $ARGS
-
-echo "set of jobs 7..."
-targets=`eqtl_pipeline $* targets7 | tail -n 1`
-submit_jobs eqtl7_$JOBNAME_SUF "eqtl6_$JOBNAME_SUF*" eqtl_pipeline $ARGS
-
 # final job
-targets=step4
-submit_job_get_email  eqtl8_$JOBNAME_SUF "eqtl7_$JOBNAME_SUF*" eqtl_pipeline $ARGS
+targets=tbi_files
+submit_job_get_email  eqtl1f_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF*" eqtl_pipeline $ARGS
 
 resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
