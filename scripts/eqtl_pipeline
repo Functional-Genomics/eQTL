@@ -635,12 +635,12 @@ TARGETS6+=$(step3_dir)/$(eqtl_method)/summary.tsv
 
 endif
 
-step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/$(eqtl_method)/step4.complete
+step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/$(eqtl_method)/step4.complete report
 
 $(step3_dir)/$(eqtl_method)/step4.complete:  $(step3_dir)/$(eqtl_method)/summary.tsv
 	$(call p_info,"Step 4 complete") touch $@
 
-TARGETS7+=$(step3_dir)/step4.complete report
+TARGETS7+=$(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete report
 
 phony_targets+= setup setup_files
 
