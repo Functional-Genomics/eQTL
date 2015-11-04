@@ -508,7 +508,7 @@ $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
-$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats $(FILTERED_VCF_FILES) 
+$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats filter2 filter1
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
