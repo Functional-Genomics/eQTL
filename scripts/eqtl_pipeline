@@ -412,7 +412,7 @@ tbi_files: $(TBI_FILES)
 TARGETS1+=$(TBI_FILES)
 
 fix_vcf_headers: $(FIXEDHEADER_VCFS) 
-	echo $(FIXEDHEADER_VCFS)
+
 
 #bgzip
 $(name)/vcf/%.fixedheader.vcf.gz: $(vcf_toplevel_dir)/%.vcf.gz
