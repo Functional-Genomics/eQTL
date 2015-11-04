@@ -116,17 +116,30 @@ JOBNAME_SUF="$DATE$RAND"
 
 LOGS_FOLDER=logs/$JOBNAME_SUF/
 mkdir -p $LOGS_FOLDER
+
+echo "set of jobs 2 job sthat should be completed..."
+targets=`eqtl_pipeline $* targets2 | tail -n 1`
+for t in $targets; do
+    eqtl_pipeline $ARGS $t -n -q
+    if [ $? != 0 ]; then
+	echo "ERROR: $t is still not done!"
+	exit 1
+    fi
+done
+echo "set of jobs 1 completed."
 # submit the jobs
 echo "step0 jobs..."
 submit_job "eqtl0_$JOBNAME_SUF" ""  eqtl_pipeline $ARGS step0
 stop_job "eqtl0_$JOBNAME_SUF"
 
-echo "set of jobs 1..."
-targets=`eqtl_pipeline $* targets2 | tail -n 1`
-submit_jobs eqtl1_$JOBNAME_SUF  "eqtl0_$JOBNAME_SUF" eqtl_pipeline $ARGS
+echo "set of jobs 3..."
+targets=`eqtl_pipeline $* targets3 | tail -n 1`
+submit_jobs eqtl3_$JOBNAME_SUF "eqtl0_$JOBNAME_SUF*" eqtl_pipeline $ARGS
+
 
 # final job
-submit_job_get_email  eqtl1f_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF*" eqtl_pipeline $ARGS
+targets=filter_vcfs
+submit_job_get_email  eqtl3f_$JOBNAME_SUF "eqtl3_$JOBNAME_SUF*" eqtl_pipeline $ARGS
 
 resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
