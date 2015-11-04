@@ -117,15 +117,14 @@ JOBNAME_SUF="$DATE$RAND"
 LOGS_FOLDER=logs/$JOBNAME_SUF/
 mkdir -p $LOGS_FOLDER
 
-echo "set of jobs 2 job sthat should be completed..."
-targets=`eqtl_pipeline $* targets2 | tail -n 1`
-for t in $targets; do
-    eqtl_pipeline $ARGS $t -n -q
-    if [ $? != 0 ]; then
-	echo "ERROR: $t is still not done!"
-	exit 1
-    fi
-done
+echo "set of jobs 2 job that should be completed..."
+t=filter1
+eqtl_pipeline $ARGS $t -n -q
+if [ $? != 0 ]; then
+    echo "ERROR: $t is still not done!"
+    exit 1
+fi
+
 echo "set of jobs 1 completed."
 # submit the jobs
 echo "step0 jobs..."
