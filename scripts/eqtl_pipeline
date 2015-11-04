@@ -270,6 +270,8 @@ TARGETS4=
 TARGETS5=
 TARGETS6=
 TARGETS7=
+TARGETS8=
+TARGETS9=
 
 #
 # ${name}
@@ -397,17 +399,17 @@ step1_d: $(kpop_file) $(matched_expr_matrix) $(step1a_dir)/data_consistent
 $(matched_expr_matrix): $(dna_rna_mapfile) $(expr_matrix)
 	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
 
-# fix spaces in header?
+# Fix headers if necessary
 FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
+
+FILTERED_VCF_FILES=$(foreach chr,$(chromosomes),$(foreach l,$(vcfs),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,$(l))))
+filter_vcfs:  $(FILTERED_VCF_FILES)
 
 # required: .tbi for each vcf
 TBI_FILES=$(subst .vcf.gz,.vcf.gz.tbi,$(FIXEDHEADER_VCFS))
 tbi_files: $(TBI_FILES)
 
 TARGETS1+=$(TBI_FILES)
-
-filter_vcfs:  $(foreach chr,$(chromosomes),$(foreach l,$(vcfs),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,$(l))))
-
 
 fix_vcf_headers: $(FIXEDHEADER_VCFS) 
 	echo $(FIXEDHEADER_VCFS)
@@ -458,7 +460,7 @@ $(step1a_dir)/$(1)/chr$(1)_merged.filt.FILTER.summary: $(step1a_dir)/$(1)/chr$(1
 	tail -n 1 $$@.tmp3.FILTER.summary | sed "s/PASS/Mac\&Missing/"  | cut -f 1,2 >> $$@.tmp && \
 	mv $$@.tmp $$@
 
-$(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step1a_dir)/$(1)/chr$(1).genotype.tsv
+$(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz 
 	mkdir -p $$(@D) && vcftools --gzvcf $$< --plink --out $$@.tmp && mv $$@.tmp.ped $$@.ped &&  mv $$@.tmp.map $$@.map && touch $$@
 
 
@@ -489,8 +491,9 @@ $(samples_hdf5): $(kpop_file)
 	if [ -e $@ ] ; then touch $(samples_hdf5); fi
 
 # one job per chr
-TARGETS2+=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
-TARGETS3+=$(step1_dir)/complete
+TARGETS2+=$(FILTERED_VCF_FILES)
+TARGETS3+=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5) $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+TARGETS4+=$(step1_dir)/complete
 
 
 $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
@@ -503,8 +506,8 @@ $(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_
 ################################################################################
 # RNA
 
-#
-TARGETS1+=step2
+# step 2 need the kpop file
+TARGETS5+=step2
 
 
 step2: $(step2_dir)/complete
@@ -535,7 +538,7 @@ $(step2_dir)/complete:  $(matched_expr_matrix) $(step2_dir)/$(expr_matrix_filena
 # step3
 step3: $(step3_dir)/complete
 
-TARGETS4+= $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+TARGETS6+= $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 # kpop - ktot
 $(step3_dir)/panama/panama.hdf5: $(kpop_file) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	mkdir -p $(@D) && \
@@ -573,7 +576,7 @@ $(foreach j,$(shell seq $(n_folds)), $(step3_dir)/$(eqtl_method)/$(1)/$(n_folds)
 endef
 
 #$(info $(All_CisQTL_JOBS))
-TARGETS5+=$(All_CisQTL_JOBS)
+TARGETS7+=$(All_CisQTL_JOBS)
 
 
 
@@ -598,7 +601,7 @@ $(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_di
 	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
 
 
-TARGETS6+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).hdf5)
+TARGETS8+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).hdf5)
 
 else
 #######################################################
@@ -629,8 +632,8 @@ $(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_di
 	tail -q -n +2 $^ >> $@.tmp && mv $@.tmp $@
 
 
-TARGETS5+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).tsv)
-TARGETS6+=$(step3_dir)/$(eqtl_method)/summary.tsv
+TARGETS7+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).tsv)
+TARGETS8+=$(step3_dir)/$(eqtl_method)/summary.tsv
 
 
 endif
@@ -640,7 +643,7 @@ step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step
 $(step3_dir)/$(eqtl_method)/step4.complete:  $(step3_dir)/$(eqtl_method)/summary.tsv
 	$(call p_info,"Step 4 complete") touch $@
 
-TARGETS7+=$(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete report
+TARGETS9+=$(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete report
 
 phony_targets+= setup setup_files
 
@@ -665,6 +668,12 @@ targets6:
 
 targets7:
 	$(info $(TARGETS7)) echo -n
+
+targets8:
+	$(info $(TARGETS8)) echo -n
+
+targets9:
+	$(info $(TARGETS9)) echo -n
 
 
 ###################################################
