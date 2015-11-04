@@ -488,10 +488,10 @@ $(kpop_file): $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 $(samples_hdf5): $(kpop_file)
 	if [ -e $@ ] ; then touch $(samples_hdf5); fi
 
-$(step1_dir)/vcf/%.filter1.done: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,%.vcf.gz))	
-	touch $@
+$(step1_dir)/filter1/%.filter1.done: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,%.vcf.gz))	
+	mkdir -p $(@D) && touch $@
 
-FILTERED_VCF_FILES=$(foreach l,$(vcfs),$(step1_dir)/vcf/$(subst .vcf.gz,.filter1.done,$(l)))
+FILTERED_VCF_FILES=$(foreach l,$(vcfs),$(step1_dir)/filter1/$(subst .vcf.gz,.filter1.done,$(l)))
 FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5) $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
 #$(info $(FILTERED_VCF_FILES))
 filter_vcfs:  $(FILTERED_VCF_FILES)
@@ -508,7 +508,7 @@ $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
-$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats
+$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats $(FILTERED_VCF_FILES) 
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
