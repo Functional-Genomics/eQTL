@@ -488,10 +488,10 @@ $(kpop_file): $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 $(samples_hdf5): $(kpop_file)
 	if [ -e $@ ] ; then touch $(samples_hdf5); fi
 
-$(step1_dir)/%.filter1.done: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,%.vcf.gz))	
+$(step1_dir)/vcf/%.filter1.done: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,%.vcf.gz))	
 	touch $@
 
-FILTERED_VCF_FILES=$(foreach l,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter1.done,$(l)))
+FILTERED_VCF_FILES=$(foreach l,$(vcfs),$(step1_dir)/vcf/$(subst .vcf.gz,.filter1.done,$(l)))
 FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5) $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
 #$(info $(FILTERED_VCF_FILES))
 filter_vcfs:  $(FILTERED_VCF_FILES)
