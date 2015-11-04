@@ -402,8 +402,6 @@ $(matched_expr_matrix): $(dna_rna_mapfile) $(expr_matrix)
 # Fix headers if necessary
 FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
 
-FILTERED_VCF_FILES=$(foreach chr,$(chromosomes),$(foreach l,$(vcfs),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,$(l))))
-filter_vcfs:  $(FILTERED_VCF_FILES)
 
 # required: .tbi for each vcf
 TBI_FILES=$(subst .vcf.gz,.vcf.gz.tbi,$(FIXEDHEADER_VCFS))
@@ -490,9 +488,16 @@ $(kpop_file): $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 $(samples_hdf5): $(kpop_file)
 	if [ -e $@ ] ; then touch $(samples_hdf5); fi
 
+FILTERED_VCF_FILES=$(foreach chr,$(chromosomes),$(foreach l,$(vcfs),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,$(l))))
+FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5) $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+
+filter_vcfs:  $(FILTERED_VCF_FILES)
+filter1: filter_vcfs
+filter2: $(FILTERED_VCF_FILES2)
+
 # one job per chr
 TARGETS2+=$(FILTERED_VCF_FILES)
-TARGETS3+=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5) $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+TARGETS3+=$(FILTERED_VCF_FILES2)
 TARGETS4+=$(step1_dir)/complete
 
 
