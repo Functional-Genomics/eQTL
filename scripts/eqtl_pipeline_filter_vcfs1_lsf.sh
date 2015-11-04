@@ -106,6 +106,15 @@ if [ $? -eq 0 ]; then
     echo "All done - no need to submit jobs"
     echo 0
 fi
+
+echo "set of jobs 2 job that should be completed..."
+t=fix_vcf_headers
+eqtl_pipeline $ARGS $t -n -q
+if [ $? != 0 ]; then
+    echo "ERROR: $t is still not done!"
+    exit 1
+fi
+
 echo "info: env variables passed to LSF - LSF_PARAMS QUEUE THREADS MEM LSF_GROUP"
 
 ARGS=$*
