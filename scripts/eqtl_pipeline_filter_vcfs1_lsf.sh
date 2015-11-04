@@ -107,10 +107,10 @@ if [ $? -eq 0 ]; then
     echo 0
 fi
 
-echo "set of jobs 2 job that should be completed..."
+echo "set of jobs that should have been completed..."
 t=fix_vcf_headers
-eqtl_pipeline $ARGS $t -n -q
-if [ $? != 0 ]; then
+eqtl_pipeline $* $t -n -q
+if [ $? -ne 0 ]; then
     echo "ERROR: $t is still not done!"
     exit 1
 fi
