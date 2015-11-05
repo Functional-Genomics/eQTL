@@ -501,21 +501,24 @@ filter2: $(FILTERED_VCF_FILES2)
 # one job per chr
 TARGETS2+=$(FILTERED_VCF_FILES)
 TARGETS3+=$(FILTERED_VCF_FILES2)
-TARGETS4+=$(step1_dir)/complete  $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+
+STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats filter2 filter1   $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+TARGETS4+=$(STEP1_TARGETS)
 
 
 $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
-$(step1a_dir)/complete: $(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats filter2 filter1
+
+$(step1a_dir)/complete:  $(STEP1_TARGETS)
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
 # RNA
 
 # step 2 need the kpop file
-TARGETS5+=step2
+TARGETS5+=step1 step2
 
 
 step2: $(step2_dir)/complete
