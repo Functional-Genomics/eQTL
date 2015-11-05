@@ -136,7 +136,7 @@ submit_jobs eqtl1_$JOBNAME_SUF  "eqtl0_$JOBNAME_SUF" eqtl_pipeline $ARGS
 
 # final job
 targets=filter1
-submit_job_get_email  eqtl1f_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF*" eqtl_pipeline $ARGS $targets
+submit_job_get_email  eqtl1f_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF*" eqtl_pipeline $ARGS $targets -n -q
 
 resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
