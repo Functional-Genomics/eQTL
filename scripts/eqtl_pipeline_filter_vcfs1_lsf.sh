@@ -135,8 +135,8 @@ targets=`eqtl_pipeline $* targets2 | tail -n 1`
 submit_jobs eqtl1_$JOBNAME_SUF  "eqtl0_$JOBNAME_SUF" eqtl_pipeline $ARGS
 
 # final job
-targets=filter_vcfs
-submit_job_get_email  eqtl1f_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF*" eqtl_pipeline $ARGS
+targets=filter1
+submit_job_get_email  eqtl1f_$JOBNAME_SUF "eqtl1_$JOBNAME_SUF*" eqtl_pipeline $ARGS $targets
 
 resume_job "eqtl0_$JOBNAME_SUF"
 exit 0
