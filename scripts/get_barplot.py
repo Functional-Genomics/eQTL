@@ -3,9 +3,9 @@
 import sys,os
 import numpy as np
 import pandas as pd
-import matplotlib
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
-
 
 def usage():
 	print ''' 
