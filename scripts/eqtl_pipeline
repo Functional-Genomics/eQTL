@@ -492,7 +492,7 @@ $(step1_dir)/filter1/%.filter1.done: $(foreach chr,$(chromosomes),$(step1_dir)/$
 	mkdir -p $(@D) && touch $@
 
 FILTERED_VCF_FILES=$(foreach l,$(vcfs),$(step1_dir)/filter1/$(subst .vcf.gz,.filter1.done,$(l)))
-FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5) $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
 #$(info $(FILTERED_VCF_FILES))
 filter_vcfs:  $(FILTERED_VCF_FILES)
 filter1: filter_vcfs
@@ -501,7 +501,7 @@ filter2: $(FILTERED_VCF_FILES2)
 # one job per chr
 TARGETS2+=$(FILTERED_VCF_FILES)
 TARGETS3+=$(FILTERED_VCF_FILES2)
-TARGETS4+=$(step1_dir)/complete
+TARGETS4+=$(step1_dir)/complete  $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
 
 
 $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
