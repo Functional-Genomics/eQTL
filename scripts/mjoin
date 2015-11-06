@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 
 tmp_file=`mktemp`
-# TODO catch errors
-cat $1 > $tmp_file
-shift 1
-for  f in $* ; do 
+
+if [ "$1-" == "-stdin-" ]; then
+    # files should be separated by space or tab
+    IFS=" \t" read -a FILES
+else
+    FILES=("$@")
+fi
+echo Merging ${#FILES[@]} files into $tmp_file > /dev/stderr
+# exit if an error occurs
+set -e
+cat ${FILES[0]} > $tmp_file
+unset FILES[0]
+for  f in ${FILES[*]} ; do 
     join  $tmp_file $f > $tmp_file.2
     mv $tmp_file.2 $tmp_file
 done
