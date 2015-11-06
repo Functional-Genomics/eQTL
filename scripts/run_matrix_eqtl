@@ -168,7 +168,7 @@ save.image(file=paste(out.file,".Rdata",sep=""))
 
 ## Plot the Q-Q plot of local and distant p-values
 try(
-  png(paste(out.file,".png",sep=""),width=500,height=500)
+  png(paste(out.file,".png",sep=""),width=500,height=50)
   plot(me)
   dev.off()
 )

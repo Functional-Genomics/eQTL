@@ -306,7 +306,8 @@ step1_dir:=$(name)/dna_$(step1_hash)
 step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
-report_dir=$(step3_dir)/$(corr_method)/$(eqtl_method)/report
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)/
+report_dir=$(eqtl_dir)/report
 
 # print the folders
 $(info * )
@@ -314,7 +315,7 @@ $(info * Output will be placed in $(name)/)
 $(info * DNA folder (step1_dir)=$(step1_dir))
 $(info * DNA folder - merged vcfs=$(step1a_dir))
 $(info * RNA folder (step2_dir)=$(step2_dir))
-$(info * QTL folder (step3_dir)=$(step3_dir))
+$(info * QTL folder (step3_dir)=$(eqtl_dir))
 $(info * Report/plots folder =$(report_dir))
 $(info * )
 ###############
@@ -341,7 +342,7 @@ space:=$(empty) $(empty)#
 
 
 # create the folders
-$(foreach f,$(step1_dir) $(step1a_dir) $(step2_dir) $(step3_dir)/$(eqtl_method),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
+$(foreach f,$(step1_dir) $(step1a_dir) $(step2_dir) $(eqtl_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
 
 
 ################################################################################
@@ -571,7 +572,7 @@ $(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete   $(step3_di
 	$(call p_info,"Step 3 complete") touch $@
 ################################################################################
 ifeq ($(eqtl_method),limix)
-step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/$(eqtl_method)/step4.complete
+step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete
 # 
 #
 
@@ -579,11 +580,11 @@ step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step
 # foreach chr
 #   foreach fold_j in 1...nfolds
 #     cis_eqtl.py $(chr) $(fold_j) $(nfolds) $(outname) -> chr/$nfolds_fold_j.hdf5
-All_CisQTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(step3_dir)/$(eqtl_method)/$(chr)/$(n_folds)_$(j).hdf5))
+All_CisQTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(eqtl_dir)/$(chr)/$(n_folds)_$(j).hdf5))
 
 # $(1)=chr
 define CisQTL_JOBS_chr=
-$(foreach j,$(shell seq $(n_folds)), $(step3_dir)/$(eqtl_method)/$(1)/$(n_folds)_$(j).hdf5)
+$(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/$(1)/$(n_folds)_$(j).hdf5)
 endef
 
 #$(info $(All_CisQTL_JOBS))
@@ -593,11 +594,11 @@ TARGETS7+=$(All_CisQTL_JOBS)
 
 # $(1) = chr
 define make-cisqtl-rule-chr=
-$(step3_dir)/$(eqtl_method)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
+$(eqtl_dir)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
 	mkdir -p $$(@D) && eqtl_cis.py $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
 # $(step3_dir)/$(1)/summary.hdf5
-$(step3_dir)/$(eqtl_method)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+$(eqtl_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	$$(file >$$@.lst.txt,$(call CisQTL_JOBS_chr,$(1))) \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst.txt && \
 	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window)  $(n_folds) $$@.lst.txt  $$@.tmp && \
@@ -608,11 +609,11 @@ endef
 
 $(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 
-$(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).hdf5)
+$(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
 	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
 
 
-TARGETS8+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).hdf5)
+TARGETS8+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
 
 else
 #######################################################
@@ -623,14 +624,14 @@ else
 # TODO: generate a pos file
 ifeq ($(corr_method),none)
 define make-meqtl-rule-chr=
-$(step3_dir)/$(eqtl_method)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step2_dir)/$(expr_matrix_filename).filtered.tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
+$(eqtl_dir)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step2_dir)/$(expr_matrix_filename).filtered.tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
 	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step2_dir)/$(expr_matrix_filename).filtered.tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
 endef
 
 else
 
 define make-meqtl-rule-chr=
-$(step3_dir)/$(eqtl_method)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
+$(eqtl_dir)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
 	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step3_dir)/$(corr_method)/$(corr_method).tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
 endef
 endif
@@ -638,20 +639,20 @@ endif
 $(foreach chr,$(chromosomes),$(eval $(call make-meqtl-rule-chr,$(chr))))
 
 # merge all files into one
-$(step3_dir)/$(eqtl_method)/summary.tsv: $(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).tsv)
+$(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
 	head -n 1 $< > $@.tmp && \
 	tail -q -n +2 $^ >> $@.tmp && mv $@.tmp $@
 
 
-TARGETS7+=$(foreach chr,$(chromosomes),$(step3_dir)/$(eqtl_method)/$(chr).tsv)
-TARGETS8+=$(step3_dir)/$(eqtl_method)/summary.tsv
+TARGETS7+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
+TARGETS8+=$(eqtl_dir)/summary.tsv
 
 
 endif
 
-step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/$(eqtl_method)/step4.complete report
+step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete report
 
-$(step3_dir)/$(eqtl_method)/step4.complete:  $(step3_dir)/$(eqtl_method)/summary.tsv
+$(eqtl_dir)/step4.complete:  $(eqtl_dir)/summary.tsv
 	$(call p_info,"Step 4 complete") touch $@
 
 TARGETS9+=$(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete report
