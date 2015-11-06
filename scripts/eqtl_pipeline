@@ -742,7 +742,7 @@ VCF_STATS_0=$(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.g
 
 $(report_dir)/vcf_snps_0.tsv: $(VCF_STATS_0)
 	mkdir -p $(@D) && \
-	$(file > $$@.tmp,Chr $(vcfs)) \
+	$(file > $@.tmp,Chr $(vcfs)) \
 	sed -i "s/ /\t/g" $@.tmp && \
 	cut -f 2- $@.tmp | mjoin -stdin | tail -n +2 | tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
@@ -750,7 +750,7 @@ $(report_dir)/vcf_snps_0.tsv: $(VCF_STATS_0)
 VCF_STATS_1=$(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
 $(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	mkdir -p $(@D) && \
-	$(file > $$@.tmp,Chr $(vcfs)) \
+	$(file > $@.tmp,Chr $(vcfs)) \
 	sed -i "s/ /\t/g" $@.tmp && \
 	cut -f 2- $@.tmp | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
