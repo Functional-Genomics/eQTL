@@ -761,7 +761,7 @@ $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mjoin $^ | tail -n +2 |tr " " "\t">> $@.tmp &&\
 	mv  $@.tmp $@
 
-TARGETS4+=$(VCF_STATS_1) $(VCF_STATS_2) $(VCF_STATS_3)
+TARGETS4+=$(VCF_STATS_0) $(VCF_STATS_1) $(VCF_STATS_2)
 
 vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv 
 
