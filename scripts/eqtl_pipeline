@@ -742,17 +742,17 @@ VCF_STATS_0=$(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.g
 
 $(report_dir)/vcf_snps_0.tsv: $(VCF_STATS_0)
 	mkdir -p $(@D) && \
-	$(file > $@.tmp,Chr $(vcfs)) \
+	$(file > $@.tmp,Chr $(vcfs)) $(file > $@.tmp.lst,$^ ) \
 	sed -i "s/ /\t/g" $@.tmp && \
-	cut -f 2- $@.tmp | mjoin -stdin | tail -n +2 | tr " " "\t">> $@.tmp  && mv $@.tmp $@
+	cat $@.tmp.lst | mjoin -stdin | tail -n +2 | tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
 #
 VCF_STATS_1=$(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
 $(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	mkdir -p $(@D) && \
-	$(file > $@.tmp,Chr $(vcfs)) \
+	$(file > $@.tmp,Chr $(vcfs))  	$(file > $@.tmp.lst,$^ ) \
 	sed -i "s/ /\t/g" $@.tmp && \
-	cut -f 2- $@.tmp | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
+	cat $@.tmp.lst | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
 VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
 $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
