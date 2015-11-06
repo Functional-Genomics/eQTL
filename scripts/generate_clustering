@@ -83,7 +83,7 @@ if ( has.genes) {
   expr.df
   data <- as.matrix(data.frame(expr.df))
 }
-ncolors <- nrow(data)*ncol(data)
+ncolors <- max(nrow(data)*ncol(data),800)
 colors <- topo.colors(ncolors)
 png(filename=out.file,width=900,height=900,res=150)
 
