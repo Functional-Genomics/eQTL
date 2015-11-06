@@ -502,7 +502,7 @@ filter2: $(FILTERED_VCF_FILES2)
 TARGETS2+=$(FILTERED_VCF_FILES)
 TARGETS3+=$(FILTERED_VCF_FILES2)
 
-STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) vcf_stats filter2 filter1   $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
 TARGETS4+=$(STEP1_TARGETS)
 
 
@@ -511,7 +511,7 @@ $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
 
-$(step1a_dir)/complete:  $(STEP1_TARGETS)
+$(step1a_dir)/complete:  $(STEP1_TARGETS) vcf_stats
 	$(call p_info,"Step 1 complete") touch $@
 
 ################################################################################
@@ -760,6 +760,8 @@ $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
 	mjoin $^ | tail -n +2 |tr " " "\t">> $@.tmp &&\
 	mv  $@.tmp $@
+
+TARGETS4+=$(VCF_STATS_1) $(VCF_STATS_2) $(VCF_STATS_3)
 
 vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv 
 
