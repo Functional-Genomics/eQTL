@@ -659,33 +659,6 @@ TARGETS9+=$(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(s
 phony_targets+= setup setup_files
 
 ###################################################
-targets0:
-	$(info $(TARGETS0)) echo -n
-
-targets1:
-	$(info $(TARGETS1)) echo -n
-
-targets2:
-	$(info $(TARGETS2)) echo -n
-targets3:
-	$(info $(TARGETS3)) echo -n
-targets4:
-	$(info $(TARGETS4)) echo -n
-targets5:
-	$(info $(TARGETS5)) echo -n
-
-targets6:
-	$(info $(TARGETS6)) echo -n
-
-targets7:
-	$(info $(TARGETS7)) echo -n
-
-targets8:
-	$(info $(TARGETS8)) echo -n
-
-targets9:
-	$(info $(TARGETS9)) echo -n
-
 
 ###################################################
 # Reports/plots
@@ -765,19 +738,24 @@ $(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)
 	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
 
 
+VCF_STATS_0=$(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(vcf)).snps)
 
-$(report_dir)/vcf_snps_0.tsv: $(foreach vcf,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(vcf)).snps)
+$(report_dir)/vcf_snps_0.tsv: $(VCF_STATS_0)
 	mkdir -p $(@D) && \
-	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
-	mjoin  $^ | tail -n +2 | tr " " "\t">> $@.tmp  && mv $@.tmp $@
+	$(file > $$@.tmp,Chr $(vcfs)) \
+	sed -i "s/ /\t/g" $@.tmp && \
+	cut -f 2- $@.tmp | mjoin -stdin | tail -n +2 | tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
 #
-$(report_dir)/vcf_snps_1.tsv: $(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
+VCF_STATS_1=$(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
+$(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	mkdir -p $(@D) && \
-	echo Chr $(vcfs) |tr " " "\t" > $@.tmp &&\
-	mjoin  $^ | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
+	$(file > $$@.tmp,Chr $(vcfs)) \
+	sed -i "s/ /\t/g" $@.tmp && \
+	cut -f 2- $@.tmp | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
-$(report_dir)/vcf_snps_2.tsv: $(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
+VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
+$(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mkdir -p $(@D) && \
 	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
 	mjoin $^ | tail -n +2 |tr " " "\t">> $@.tmp &&\
@@ -788,6 +766,39 @@ vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_di
 
 $(report_dir)/vcf_filtering.png: $(report_dir)/vcf_snps_0.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_2.tsv  
 	get_barplot.py $^ $@.tmp && mv $@.tmp $@
+
+
+target_reports_vcfs1=$(VCF_STATS_0) $(VCF_STATS_1) $(VCF_STATS_2)
+
+report_targets1:
+	echo $(target_reports_vcfs1)
+###################################################
+targets0:
+	$(info $(TARGETS0)) echo -n
+
+targets1:
+	$(info $(TARGETS1)) echo -n
+
+targets2:
+	$(info $(TARGETS2)) echo -n
+targets3:
+	$(info $(TARGETS3)) echo -n
+targets4:
+	$(info $(TARGETS4)) echo -n
+targets5:
+	$(info $(TARGETS5)) echo -n
+
+targets6:
+	$(info $(TARGETS6)) echo -n
+
+targets7:
+	$(info $(TARGETS7)) echo -n
+
+targets8:
+	$(info $(TARGETS8)) echo -n
+
+targets9:
+	$(info $(TARGETS9)) echo -n
 
 
 ###################################################
