@@ -89,7 +89,7 @@ if sum(bv) == len(rnafiles):
 	phenofileout.close()
 	sys.exit(0)
 else:
-        print 'The following samples in the mapfile were not found in gene expression matrix:\n'
+        print 'The following samples in the mapfile were not found in the gene expression matrix:\n'
         notfound=rnafiles[~bv].tolist()
         s="\n".join(notfound)
         print s
