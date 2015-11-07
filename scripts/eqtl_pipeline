@@ -342,7 +342,7 @@ space:=$(empty) $(empty)#
 
 
 # create the folders
-$(foreach f,$(step1_dir) $(step1a_dir) $(step2_dir) $(eqtl_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
+$(foreach f,$(name)/vcf $(step1_dir) $(step1a_dir) $(step2_dir) $(eqtl_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
 
 
 ################################################################################
@@ -417,12 +417,10 @@ fix_vcf_headers: $(FIXEDHEADER_VCFS)
 $(name)/vcf/%.fixedheader.vcf.gz: $(vcf_toplevel_dir)/%.vcf.gz
 	mkdir -p $(@D) && fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
 
-$(shell mkdir -p $(name)/vcf)
-
 # Rules to process each chr
 # chr=$(1) 
 define make-rules-for-chr=
-
+# TODO: remove from here
 $(shell mkdir -p $(step1_dir)/$(1))
 $(shell mkdir -p $(step1a_dir)/$(1))
 
@@ -692,9 +690,14 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 
 #########################################################################
-report: plots vcf_stats
+report: plots vcf_stats $(report_dir)/settings.tsv
+
 
 plots: $(report_dir)/plots
+
+$(report_dir)/settings.tsv: $(conf) 
+	mkdir -p $(@D) &&\
+	( $(foreach v,$(def_vars), echo $v  $($v);)) | tr " " "\t" > $@.tmp && mv $@.tmp $@
 
 # Copy the plots and tsv file to the report folder
 $(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png
