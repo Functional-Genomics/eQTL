@@ -152,7 +152,7 @@ endif
 ifeq (1,$(words $(vcfs)))
 $(call p_error,insufficient number of VCF files (please provide two or more files))
 endif
-$(info *	vcfs=$(vcfs))
+$(info *	|vcfs|=$(words $(vcfs)))
 #$(call file_exists,$(vcfs))
 $(foreach l,$(vcfs),$(call file_exists,$(vcf_toplevel_dir)/$(l)))
 
