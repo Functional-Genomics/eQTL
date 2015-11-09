@@ -639,7 +639,7 @@ $(foreach chr,$(chromosomes),$(eval $(call make-meqtl-rule-chr,$(chr))))
 # merge all files into one
 $(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
 	head -n 1 $< > $@.tmp && \
-	tail -q -n +2 $^ >> $@.tmp && mv $@.tmp $@
+	tail -q -n +2 $^ | grep -v "No significant" >> $@.tmp && mv $@.tmp $@
 
 
 TARGETS7+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
