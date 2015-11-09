@@ -39,7 +39,7 @@ covariates_file_name <- args[3]
 gene_file_name <- args[4]
 cis_window <- as.numeric(args[5])
 pvOutputThreshold <- as.numeric(args[6])
-out.file <- args[6]
+out.file <- args[7]
 
 #SNP_file_name <- "test/test2_eqtl/dna_241320ef0c0af7063933be1c2e47e38b/plink_d0049151b87e1aa6f9f9d3ab756cef6d/1/chr1.genotype.tsv"
 #expression_file_name <- "test/test2_eqtl/rna_83450efdeb1cef73895f42811a9ca116/pheno.filtered.tsv"
