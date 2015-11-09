@@ -98,7 +98,7 @@ genepos <- genepos[genepos$geneid %in% rownames(gene),,drop=FALSE]
 cat("Read gene pos. file:",nrow(genepos)," genes\n")
 if ( cis_window == 0 ) {
   ## trans
-  pinfo("trans-eqtl mode")
+  cat("trans-eqtl mode\n")
   me <- Matrix_eQTL_main(
     snps = snps,
     gene = gene,
@@ -116,7 +116,7 @@ if ( cis_window == 0 ) {
 } else {
   if ( cis_window >0 ) {
     ## cis only
-    pinfo("cis-eqtl mode")
+    cat("cis-eqtl mode\n")
     me <- Matrix_eQTL_main(
       snps = snps,
       gene = gene,
@@ -135,7 +135,7 @@ if ( cis_window == 0 ) {
       noFDRsaveMemory = FALSE);
   } else {
     ## cis and trans
-    pinfo("cis/trans-eqtl mode")
+    cat("cis/trans-eqtl mode\n")
     me <- Matrix_eQTL_main(
       snps = snps,
       gene = gene,
