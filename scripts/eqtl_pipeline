@@ -540,7 +540,7 @@ $(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	if [ -e $@ ] ; then touch $@; fi
 
 # $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-$(step2_dir)/complete:  $(matched_expr_matrix) $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
+$(step2_dir)/complete:  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
 	$(call p_info,"Step 2 complete") touch $@
 
 
