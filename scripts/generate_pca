@@ -88,7 +88,7 @@ pca <- prcomp(data,center=TRUE,scale=TRUE)
 pca.sum <- summary(pca)
 print(pca)
 print(pca.sum)
-png(filename=out.file,width=600,height=600,res=150)
+png(filename=out.file,width=1600,height=1600,res=150)
 xyplot(PC1 ~ PC2,data=as.data.frame(pca$x),
             cex=2,
             col=samples2colour[rownames(pca$x)],
@@ -103,7 +103,7 @@ xyplot(PC1 ~ PC2,data=as.data.frame(pca$x),
                                                ))))
 help(xyplot)
 dev.off()
-png(filename=gsub(".png","_13.png",out.file),width=600,height=600,res=150)
+png(filename=gsub(".png","_13.png",out.file),width=1600,height=1600,res=150)
 xyplot(PC1 ~ PC3,data=as.data.frame(pca$x),
             cex=2,
             col=samples2colour[rownames(pca$x)],
