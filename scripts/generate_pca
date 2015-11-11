@@ -101,7 +101,7 @@ xyplot(PC1 ~ PC2,data=as.data.frame(pca$x),
                                                text = list(names(class2colour)),
                                                columns=3
                                                ))))
-help(xyplot)
+
 dev.off()
 png(filename=gsub(".png","_13.png",out.file),width=1600,height=1600,res=150)
 xyplot(PC1 ~ PC3,data=as.data.frame(pca$x),
