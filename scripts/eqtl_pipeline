@@ -428,6 +428,7 @@ $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)
 	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst && \
 	bcftools merge -l $$@.lst --output-type z > $$@.tmp && \
+	# bcftools merge -l $$@.lst --output-type z | zcat | sed -e 's/\t\.\/\.\t/\t0\/0\t/g' | bcftools filter -i 'FORMAT/GT!="0"' -S "." > $$@.tmp && 
 	rm -f $$@.lst && \
 	mv $$@.tmp $$@
 
