@@ -104,7 +104,7 @@ then
 
 else
 	echo 'retaining variants with and without PASS in FORMAT field' > /dev/stderr
-        vcftools --gzvcf $input --minGQ $minGQ --minDP $minDP --recode --recode-INFO-all --chr $chr --stdout | bcftools filter -i '%FILTER=="PASS"' -S "." $i | sed -e 's/\.\/\./-/g' >> ${input}.tmp
+        vcftools --gzvcf $input --minGQ $minGQ --minDP $minDP --recode --recode-INFO-all --chr $chr --stdout | bcftools filter -i '%FILTER=="PASS"' -S "." $i | sed -e 's/\.\/\./-/g'
 #  > $output 
         echo 'Done' > /dev/stderr
 
