@@ -200,7 +200,7 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates vcf_filter_pass
 
 subfolder_name?=
 peer_iterations?=100
@@ -211,6 +211,7 @@ limix_use_peer_covariates?=n
 cis_window?=1000000
 # signal-to-noise ration threshold
 snr_threshold?=75
+vcf_filter_pass?=y
 # vcf_filter="TP > 0.95 ....."
 
 vcf_filter_cmd=annai_filter_vcf.sh
@@ -228,7 +229,13 @@ mac?=20
 
 $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
 
-
+##############################
+# to filter or not to filter based on pass
+ifeq ($(vcf_filter_pass),y)
+vcf_filter_option=
+else
+vcf_filter_option=-f
+endif
 ##############################
 # expression correction method
 SUPPORTED_CORR_METHODS=peer panama
@@ -287,7 +294,7 @@ TARGETS9=
 
 
 # HASH
-step1_hash!=echo $(minGQ) $(minRD)  $(vcf_filter_cmd) |md5sum|cut -f1 -d' ' 
+step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) |md5sum|cut -f1 -d' ' 
 step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs) $(chromosomes) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(hidden_k)|md5sum|cut -f1 -d' '
 
@@ -427,14 +434,13 @@ $(shell mkdir -p $(step1a_dir)/$(1))
 $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
 	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst && \
-	bcftools merge -l $$@.lst --output-type z > $$@.tmp && \
-	# bcftools merge -l $$@.lst --output-type z | zcat | sed -e 's/\t\.\/\.\t/\t0\/0\t/g' | bcftools filter -i 'FORMAT/GT!="0"' -S "." > $$@.tmp && 
+	bcftools merge -l $$@.lst --output-type u | sed -e 's/\t\.\/\.\t/\t0\/0\t/g' | bcftools filter -i 'FORMAT/GT!="0"' -S "." --output-type z > $$@.tmp && \
 	rm -f $$@.lst && \
 	mv $$@.tmp $$@
 
 # 
 $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
-	mkdir -p $$(@D) && $(vcf_filter_cmd) -i $$<  -c $(1) -g $$(minGQ) -d $$(minRD) | bgzip -c > $$@.tmp  && mv $$@.tmp $$@
+	mkdir -p $$(@D) && $(vcf_filter_cmd) -i $$<  -c $(1) -g $$(minGQ) -d $$(minRD) $(vcf_filter_option) | bgzip -c > $$@.tmp  && mv $$@.tmp $$@
 
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
