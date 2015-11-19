@@ -211,7 +211,7 @@ limix_use_peer_covariates?=n
 cis_window?=1000000
 # signal-to-noise ration threshold
 snr_threshold?=75
-vcf_filter_pass?=y
+vcf_filter_pass?=n
 # vcf_filter="TP > 0.95 ....."
 
 vcf_filter_cmd=annai_filter_vcf.sh
