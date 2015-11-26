@@ -349,7 +349,7 @@ space:=$(empty) $(empty)#
 
 
 # create the folders
-$(foreach f,$(name)/vcf $(step1_dir) $(step1a_dir) $(step2_dir) $(eqtl_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
+$(foreach f,$(name)/vcf $(step1_dir) $(report_dir) $(step1a_dir) $(step2_dir) $(eqtl_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
 
 
 ################################################################################
@@ -759,6 +759,7 @@ $(report_dir)/vcf_snps_0.tsv: $(VCF_STATS_0)
 
 #
 VCF_STATS_1=$(foreach vcf,$(vcfs),$(step1_dir)/$(subst .vcf.gz,.filter.vcf.gz,$(vcf)).chr.snps)
+
 $(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	mkdir -p $(@D) && \
 	$(file > $@.tmp,Chr $(vcfs))  	$(file > $@.tmp.lst,$^ ) \
