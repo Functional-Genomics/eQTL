@@ -1,0 +1,20 @@
+################################################################################
+# Auxiliary functions
+################################################################################
+
+# Information messages
+define p_info=
+$(info $(shell date "+%H:%M:%S %d/%m/%Y * ") $(1))
+endef
+
+# Error messages
+define p_error=
+$(info $(shell date "+%H:%M:%S %d/%m/%Y") * ERROR: $(1)) && $(error Fatal error)
+endef
+
+# complain if a file does not exist and exit
+file_exists=$(if  $(realpath $(1)),,$(call p_error,$(1) not found))
+
+#  check if a variable  $(1) is defined - return the variable name if it is defined or empty otherwise
+is_defined=$(if $(subst undefined,,$(origin $(1))),$(1),)
+
