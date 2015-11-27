@@ -301,7 +301,9 @@ function epipeline_install {
     mkdir -p  $EPIPELINE_DIR/bin
     mkdir -p  $EPIPELINE_DIR/include
     mkdir -p  $EPIPELINE_DIR/lib/python
+    mkdir -p  $EPIPELINE_DIR/aux/mk
     cp -a $EPIPELINE_SRC_DIR/scripts/* $EPIPELINE_DIR/scripts
+    cp -a $EPIPELINE_SRC_DIR/aux/mk/* $EPIPELINE_DIR/aux/mk
     #cp -a $EPIPELINE_SRC_DIR/bin/* $EPIPELINE_DIR/bin
     #fix_paths
     cp $EPIPELINE_SRC_DIR/aux/python/* $EPIPELINE_DIR/lib/python
