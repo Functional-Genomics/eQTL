@@ -35,8 +35,11 @@ annotation = sp.loadtxt(annotation, delimiter='\t', dtype='S100')
 pheno=h5py.File(phenofile) #appending mode
 
 #number of genes in annotation
-
+# TODO: support annotation files in the form of chr start end feature name
+# change the msg to features (instead of genes)?
 print 'number of genes in annotation file {0}'.format(len(annotation))
+
+
 
 #strip unwanted char from genes in annotation array
 annotation[:,3] = sp.char.replace(annotation[:,3], '"','')
