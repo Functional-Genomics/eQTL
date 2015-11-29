@@ -1,0 +1,330 @@
+#!/bin/sh
+#; -*- mode: Makefile;-*-
+#the next line restarts using\
+exec make --warn-undefined-variables -Rf "$0"  ${1+"$@"} 
+# --trace
+# =========================================================
+# Copyright 2015
+#
+#
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# =========================================================
+###############################################################
+# disable deletion of temporary files
+.SECONDARY: 
+.ONESHELL:
+
+SHELL=bash
+##################
+# Setup some paths
+# path to script
+
+
+# Requires make 4.1 or above
+VERSION_OK=$(shell if [ `make --version|head -n 1 | cut -f3 -d\ ` \< 4.1 ]; then echo 0; else echo 1; fi )
+ifeq ($(VERSION_OK),0)
+ $(error make version needs to be 4.1 or above)
+endif
+
+script_path!=dirname "`which mqtl_pipeline`"
+
+################################################################################
+# load the different components
+include $(script_path)/../aux/mk/utils.mk
+
+################################################################################
+# Variables
+################################################################################
+
+################################################################################
+# Default values
+################################################################################
+
+$(info * )
+$(info * Required Parameters:)
+
+#***********************
+# Name of the experiment
+ifndef name
+ $(call p_error, missing argument name!)
+else
+ $(info *	name=$(name))
+endif
+
+
+# expr_matrix (TSV File)
+ifndef expr_matrix
+ $(call p_error, missing argument expr_matrix!)
+else
+ $(info *	expr_matrix=$(expr_matrix))
+endif
+$(call file_exists,$(expr_matrix))
+
+#columns-samples
+#rows-variants
+ifndef var_matrix
+ $(call p_error, missing argument var_matrix)
+else
+ $(info *	var_matrix=$(var_matrix))
+endif
+$(call file_exists,$(geno_matrix))
+
+
+# var\tchr\tstart\tend
+ifndef var_pos
+ $(call p_error, missing argument var_pos)
+else
+ $(info *	var_pos=$(var_pos))
+endif
+$(call file_exists,$(var_pos))
+
+
+# covariates
+ifndef cov_matrix
+cov_matrix=none
+$(call p_error,cov_matrix not defined)
+endif
+$(call file_exists,$(cov_matrix))
+$(info *	cov_matrix=$(cov_matrix))
+
+#*************
+# sample2class
+# file containing the mapping between samples and a class/label
+ifndef sample2class_file
+ $(error sample2class_file not defined)
+endif
+$(info *       sample2class_file  = $(sample2class_file))
+$(call file_exists,$(sample2class_file))
+
+# LIMIX binary folder
+LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
+
+#####################
+# Other Optional parameters
+#####################
+$(info * )
+$(info * Optional Parameters:)
+
+#
+def_vars=  min_expr min_perc_samples expr_transform hidden_k  peer_iterations snr_threshold   n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates 
+
+subfolder_name?=
+peer_iterations?=100
+fdr_threshold?=0.05
+limix_use_peer_covariates?=n
+cis_window?=1000000
+
+n_folds?=1000
+min_expr?=1
+min_perc_samples?=0.5
+#possible values: gaussian log none
+expr_transform?=none
+hidden_k?=10
+max_missing?=0.8
+eqtl_method?=limix
+
+$(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
+
+##############################
+# expression correction method
+SUPPORTED_CORR_METHODS=peer panama
+ifndef corr_method
+corr_method=none
+endif
+
+#corr_method expr_corr_method?
+ifeq (,$(filter $(corr_method),$(SUPPORTED_CORR_METHODS) none))
+$(error corr_method value $(corr_method) not supported)
+endif
+
+#ifeq ($(corr_method),peer) 
+$(info *	corr_method=$(corr_method))
+#endif
+
+
+###############################
+#
+SUPPORTED_EQTL_METHODS=matrix_eqtl
+
+#corr_method expr_corr_method?
+ifeq (,$(filter $(eqtl_method),$(SUPPORTED_EQTL_METHODS)))
+$(error eqtl_method value $(eqtl_method) not supported)
+endif
+
+#ifeq ($(corr_method),peer) 
+$(info *	eqtl_method=$(eqtl_method))
+#endif
+
+
+# ${name}
+#   |+-------------var_[var_options_md5]
+#   |+-------------rna_[rna_filter_options_md5]
+#   |+-------------peer_[step3_md5]/
+#   |+-------------panama_[step3_md5]/
+#   |+-------------none_[step3_md5]/
+
+
+# HASH
+step1_hash!=echo $(var_minfreq) |md5sum|cut -f1 -d' ' 
+step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -f1 -d' '
+
+
+ifeq ($(corr_method),peer)
+step3_hash!=echo $(step1_hash) $(step2_hash) $(peer_iterations) $(limix_use_peer_covariates) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
+else
+ifeq ($(corr_method),panama)
+step3_hash!=echo $(step1_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform)|md5sum|cut -f1 -d' '
+else
+step3_hash!=echo $(step1_hash) $(step2_hash)|md5sum|cut -f1 -d' '
+endif
+endif
+
+step1_dir:=$(name)/dna_$(step1_hash)
+step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
+step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
+step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)/
+report_dir=$(eqtl_dir)/report
+
+# print the folders
+$(info * )
+$(info * Output will be placed in $(name)/)
+$(info * Variant folder =$(step1_dir))
+$(info * RNA folder (step2_dir)=$(step2_dir))
+$(info * QTL folder (step3_dir)=$(eqtl_dir))
+$(info * Report/plots folder =$(report_dir))
+$(info * )
+###############
+# names of files
+cov_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).hdf5
+cov_sorted_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).sorted.hdf5
+
+gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
+expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
+var_matrix_filename=$(notdir $(basename $(var_matrix)))
+
+matched_expr_matrix=$(step1a_dir)/$(expr_matrix_filename).matched.tsv
+matched_var_matrix=$(step1a_dir)/$(var_matrix_filename).matched.tsv
+kpop_file=$(step1a_dir)/Kpop.hdf5
+
+
+################################################################################
+# Make stuff
+phony_targets=
+silent_targets= 
+
+empty:=
+space:=$(empty) $(empty)#
+################################################################################
+# AUXILIARY FUNCTIONS
+################################################################################
+
+
+# create the folders
+$(foreach f, $(step1_dir) $(report_dir) $(step1a_dir) $(step2_dir) $(eqtl_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
+
+
+################################################################################
+# Default target
+$(info ***************************************************************)
+all: step0 step1 step2 step3 step4 plots
+	@echo "All done!"
+
+################################################################################
+#
+
+$(cov_hdf5): $(cov_matrix)
+	get_covariates.py $< $@.tmp && mv $@.tmp $@ 
+
+################################################################################
+#
+# Step0,1 and 2 may be executed independently
+phony_targets+=step0 
+
+step0: $(cov_hdf5)
+#	$(call p_info,"Step 0 complete")
+
+TARGETS0+=$(cov_hdf5)
+
+################################################################################
+# validate the variant file
+step1:
+
+$(matched_expr_matrix): $(expr_matrix) $(var_matrix) 
+	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
+
+$(matched_var_matrix): $(var_matrix) $(expr_matrix)
+	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
+
+
+################################################################################
+# RNA
+# step 2 need the kpop file
+TARGETS5+=step1 step2
+include $(script_path)/../aux/mk/rna.mk
+
+################################################################################
+# step3
+include $(script_path)/../aux/mk/correction.mk
+
+################################################################################
+include $(script_path)/../aux/mk/eqtl.mk
+
+################################################################################
+# Reports/plots
+################################################################################
+
+include $(script_path)/../aux/mk/reports.mk
+
+###################################################
+targets0:
+	$(info $(TARGETS0)) echo -n
+
+targets1:
+	$(info $(TARGETS1)) echo -n
+
+targets2:
+	$(info $(TARGETS2)) echo -n
+targets3:
+	$(info $(TARGETS3)) echo -n
+targets4:
+	$(info $(TARGETS4)) echo -n
+targets5:
+	$(info $(TARGETS5)) echo -n
+
+targets6:
+	$(info $(TARGETS6)) echo -n
+
+targets7:
+	$(info $(TARGETS7)) echo -n
+
+targets8:
+	$(info $(TARGETS8)) echo -n
+
+targets9:
+	$(info $(TARGETS9)) echo -n
+
+
+###################################################
+# FORCE the program to run even if files haven't changed
+FORCE:
+
+
+#PHONY: performance improvement. Tell MAKE that those targets don't generate any files. 
+.PHONY:  $(phony_targets)
+.SILENT: $(silent_targets)
+
+###################################################
