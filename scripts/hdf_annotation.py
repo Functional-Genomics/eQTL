@@ -35,7 +35,7 @@ annotation = sp.loadtxt(annotation, delimiter='\t', dtype='S100')
 pheno=h5py.File(phenofile) #appending mode
 
 #number of genes in annotation
-# TODO: support annotation files in the form of chr start end feature name
+# TODO: support annotation files in the form of: feature chr start end
 # change the msg to features (instead of genes)?
 print 'number of genes in annotation file {0}'.format(len(annotation))
 
