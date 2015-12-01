@@ -245,11 +245,15 @@ TARGETS9=
 #	{1,2,...}
 #       1.hd5
 
-
+ifeq ($(shell test $(words $(vcfs)) -lt 300; echo $$?),0)
+vcfs2hash=$(vcfs)
+else
+vcfs2hash=$(words $(vcfs))
+endif
 
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) |md5sum|cut -f1 -d' ' 
-step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(words $(vcfs)) $(chromosomes) |md5sum|cut -f1 -d' ' 
+step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(chromosomes) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -f1 -d' '
 
 
