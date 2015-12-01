@@ -60,9 +60,9 @@ $(step1a_dir)/$(1)/chr$(1)_merged.filt.FILTER.summary: $(step1a_dir)/$(1)/chr$(1
 	vcftools --gzvcf $$< --mac $$(mac)  --temp $$(@D) --FILTER-summary --out $$@.tmp2 && \
 	vcftools --gzvcf $$< --mac $$(mac)  --max-missing $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp3 && \
 	head -n 1 $$@.tmp1.FILTER.summary   | cut -f 1,2> $$@.tmp && \
-	grep "PASS" $$@.tmp1.FILTER.summary | sed "s/PASS/Missing/" | cut -f 1,2 >> $$@.tmp && \
-	grep "PASS" $$@.tmp2.FILTER.summary | sed "s/PASS/Mac/" | cut -f 1,2 >> $$@.tmp && \
-	grep "PASS" $$@.tmp3.FILTER.summary | sed "s/PASS/Mac\&Missing/"  | cut -f 1,2 >> $$@.tmp && \
+	sum_tsv_col.sh $$@.tmp1.FILTER.summary 2 Missing  >> $$@.tmp && \
+	sum_tsv_col.sh $$@.tmp2.FILTER.summary 2 Mac  >> $$@.tmp && \
+	sum_tsv_col.sh $$@.tmp3.FILTER.summary 2 "Mac\&Missing"  >> $$@.tmp && \
 	mv $$@.tmp $$@
 
 $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.plink: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz 
