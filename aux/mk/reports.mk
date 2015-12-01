@@ -98,7 +98,7 @@ VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FI
 $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mkdir -p $(@D) && \
 	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
-	mjoin $^ | tail -n +2 |sed -E "s/\s+/\t/g">> $@.tmp &&\
+	mjoin $^ | tail -n +2 |sed -E "s/\s+/\t/g;s/\s$//">> $@.tmp &&\
 	mv  $@.tmp $@
 
 TARGETS4+=$(VCF_STATS_0) $(VCF_STATS_1) $(VCF_STATS_2)
