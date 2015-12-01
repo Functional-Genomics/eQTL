@@ -284,6 +284,7 @@ $(info * )
 cov_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).hdf5
 cov_sorted_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).sorted.hdf5
 
+override expr_matrix:=$(subst .gz,,$(expr_matrix))
 gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
 expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
 matched_expr_matrix=$(step1a_dir)/$(expr_matrix_filename).matched.tsv
