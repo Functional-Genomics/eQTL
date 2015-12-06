@@ -63,7 +63,7 @@ cat("SNPs: ",length(id),"\n")
 # TODO: check if the dimensions are consistent
 colnames(geno) <- indv
 new <- cbind(id,geno)
-print(head(new))
+#print(head(new))
 write.table(new,file=out.file,sep="\t",quote=F,row.names=F,col.names=T)
 
 q(status=0)
