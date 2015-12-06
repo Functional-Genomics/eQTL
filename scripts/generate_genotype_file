@@ -28,10 +28,15 @@ pos.file <- args[3]
 out.file <- args[4]
 
 # TODO: validate files
+if (!require(data.table)) {
+  source("http://bioconductor.org/biocLite.R")
+  biocLite("data.table")
+}
+library(data.table)
 
 safe.read.table <- function(file,...) {
   t <- NULL
-  try(t <- read.table(file,...))
+  try(t <- fread(file,data.table=FALSE,showProgress=TRUE,...))
   if( is.null(t) ) {
     cat("ERROR: while reading ",file,"\n")
     q(status=1)
