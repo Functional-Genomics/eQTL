@@ -30,6 +30,9 @@ report: plots vcf_stats $(report_dir)/settings.tsv
 
 plots: $(report_dir)/plots
 
+print_report_dir:
+	echo $(report_dir)
+
 $(report_dir)/settings.tsv: $(conf) 
 	mkdir -p $(@D) &&\
 	( $(foreach v,$(settings_vars), echo $v  $($v);)) | tr " " "\t" > $@.tmp && mv $@.tmp $@
