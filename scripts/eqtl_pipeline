@@ -146,6 +146,7 @@ chromosomes?=1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 
+
 #####################
 # Other Optional parameters
 #####################
@@ -155,6 +156,7 @@ $(info * Optional Parameters:)
 
 #
 def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates vcf_filter_pass
+
 
 subfolder_name?=
 peer_iterations?=100
@@ -182,6 +184,8 @@ eqtl_method?=limix
 mac?=20
 
 $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
+
+settings_vars=$(def_vars) sample2class_file cov_matrix dna_rna_mapfile expr_matrix corr_method
 
 ##############################
 # to filter or not to filter based on pass
