@@ -89,15 +89,23 @@ class data():
 		genePos = self.getGenePos(geneID)
 		pos = self.g['genotype/col_header/pos'][:]
 		chrom = self.g['genotype/col_header/chrom'][:]
-		Icis  = (chrom==float(genePos[0]))
-		Icis *= (pos>float(genePos[1])-w)
-		Icis *= (pos<float(genePos[2])+w)
-		assert Icis.sum()>0, 'no cis intersection found'
-		X = self.g['genotype/matrix'][:,Icis]
-		info = {}
-		for key in self.g['genotype/col_header'].keys():
-			info[key] = self.g['genotype/col_header'][key][:][Icis] 
-		return X, info
+		if w == 0:
+			#pairwise comparison of each gene with all the SNPs
+			X = self.g['genotype/matrix'][:]
+			info = {}
+			for key in self.g['genotype/col_header'].keys():
+				info[key] = self.g['genotype/col_header'][key][:]
+			return X, info
+		else:
+			Icis  = (chrom==float(genePos[0])) # force comparison on the same chromosome of the gene
+			Icis *= (pos>float(genePos[1])-w) # select downstream cis SNPs
+			Icis *= (pos<float(genePos[2])+w) # select upstream cis SNPs
+			assert Icis.sum()>0, 'no cis intersection found'
+			X = self.g['genotype/matrix'][:,Icis]
+			info = {}
+			for key in self.g['genotype/col_header'].keys():
+				info[key] = self.g['genotype/col_header'][key][:][Icis] 
+			return X, info
 
 
 
