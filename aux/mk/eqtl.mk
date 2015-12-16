@@ -1,32 +1,35 @@
 ifeq ($(eqtl_method),limix)
 step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete
-# 
-#
 
+ifeq ($(cis_window),0)
+$(info trans-EQTL mode)
+eqtl_cmd1=eqtl_trans.py
+else
+$(info cis-EQTL mode)
+eqtl_cmd1=eqtl_cis.py
+endif
 
 # foreach chr
-#   foreach fold_j in 1...nfolds
-#     cis_eqtl.py $(chr) $(fold_j) $(nfolds) $(outname) -> chr/$nfolds_fold_j.hdf5
-All_CisQTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(eqtl_dir)/$(chr)/$(n_folds)_$(j).hdf5))
+All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(eqtl_dir)/$(chr)/$(n_folds)_$(j).hdf5))
 
 # $(1)=chr
-define CisQTL_JOBS_chr=
+define QTL_JOBS_chr=
 $(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/$(1)/$(n_folds)_$(j).hdf5)
 endef
 
-#$(info $(All_CisQTL_JOBS))
-TARGETS7+=$(All_CisQTL_JOBS)
+#$(info $(All_QTL_JOBS))
+TARGETS7+=$(All_QTL_JOBS)
 
 
 
 # $(1) = chr
-define make-cisqtl-rule-chr=
+define make-qtl-rule-chr=
 $(eqtl_dir)/$(1)/$(n_folds)_%.hdf5: $(step1a_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
-	mkdir -p $$(@D) && eqtl_cis.py $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
+	mkdir -p $$(@D) && $(eqtl_cmd1) $(step1a_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
 # $(step3_dir)/$(1)/summary.hdf5
-$(eqtl_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
-	$$(file >$$@.lst.txt,$(call CisQTL_JOBS_chr,$(1))) \
+$(eqtl_dir)/$(1).hdf5: $(call QTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+	$$(file >$$@.lst.txt,$(call QTL_JOBS_chr,$(1))) \
 	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst.txt && \
 	eqtl_summary.py $(step1a_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window)  $(n_folds) $$@.lst.txt  $$@.tmp && \
 	rm -f $$@.lst.txt && \
@@ -34,9 +37,15 @@ $(eqtl_dir)/$(1).hdf5: $(call CisQTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_
 
 endef
 
-$(foreach chr,$(chromosomes),$(eval $(call make-cisqtl-rule-chr,$(chr))))
 
-$(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
+$(foreach chr,$(chromosomes),$(eval $(call make-qtl-rule-chr,$(chr))))
+
+$(eqtl_dir)/summary.hdf5: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
+	$(file >$@.lst.txt,$^) \
+	eqtl_aggregate.py $@.tmp $(cis_window) $@.lst.txt && \
+	mv $@.tmp $@ && rm -f $@.lst.txt
+
+$(eqtl_dir)/summary.tsv: $(eqtl_dir)/summary.hdf5
 	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
 
 
