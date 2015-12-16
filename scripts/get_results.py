@@ -62,7 +62,7 @@ if __name__ == '__main__':
 		sys.exit(1)
 
 	out = open(outfile,'w')
-	out.write('GeneID\tChrom\tPos\tPv\tQvLocal\tQvGlobal\tBeta\tLambda\tLambda_perm\n')
+	out.write('geneID\tchrom\tpos\tpv\tqv\tqv_all\tbeta\tlambda\tlambda_perm\n')
 
 
 	i = h5py.File(file,'r')
@@ -73,10 +73,12 @@ if __name__ == '__main__':
 	e = i['qv'][:]
 	f = i['qv_all'][:]
 	g = i['beta'][:]
-	if len(i['lambda'][:].shape)==2:
-		l=i['lambda'][:][0]
-		lp=i['lambda_perm'][:][0]
-	else:
+	window = i['window'][0]
+
+	if window == 0: # is trans
+		l=i['lambda'][:][0] # TODO: check why this applies only to trans
+		lp=i['lambda_perm'][:][0] 
+	else: #is cis
 		l=i['lambda'][:]
 		lp=i['lambda_perm'][:]
 
