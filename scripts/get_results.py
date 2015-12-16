@@ -21,11 +21,10 @@ This script generates a list of significant eqtls based on fdr threshold. The li
 
 Usage:
 
-get_results.py <fdr_threshold> <result.tsv> <1.hdf5> [<2.hdf5> ... ]
-'''
+get_results.py <fdr_threshold> <result.tsv> <final_res.hdf5>'''
 
-def get_res(a,b,c,d,e,f,g,fdr):
-	global genes,chromosome,position,pvalue,qvalue,beta
+def get_res(a,b,c,d,e,f,g,fdr,l,lp):
+	global genes,chromosome,position,pvalue,qvalue,beta,gen_control,gen_control_perm
 	boolvector = (e<=fdr)
 	genes = a[boolvector]
 	chromosome = b[boolvector]
@@ -36,7 +35,9 @@ def get_res(a,b,c,d,e,f,g,fdr):
 	qvalue_local = e[boolvector]
 	qvalue_genes = f[boolvector]
 	beta =g[boolvector]
-	return genes,chromosome,position,pvalue,qvalue_local,qvalue_genes,beta
+	gen_control=l[boolvector]
+	gen_control_perm=lp[boolvector]
+	return genes,chromosome,position,pvalue,qvalue_local,qvalue_genes,beta,gen_control,gen_control_perm
 
 if __name__ == '__main__':
 
@@ -53,38 +54,45 @@ if __name__ == '__main__':
 		sys.stderr.write('ERROR: Please select integer of float value for fdr.\n')
 		sys.exit(1)
 
-	chr = sys.argv[3:]
+	file = sys.argv[3]
 
-	for file in chr:
-		if os.path.isfile(file)!=True:
-			sys.stderr.write('ERROR: file '+file+' not found\n')
-			sys.exit(1)
+	
+	if os.path.isfile(file)!=True:
+		sys.stderr.write('ERROR: file '+file+' not found\n')
+		sys.exit(1)
 
 	out = open(outfile,'w')
-	out.write('GeneID\tChrom\tPos\tPv\tQvLocal\tQvGlobal\tBeta\n')
+	out.write('GeneID\tChrom\tPos\tPv\tQvLocal\tQvGlobal\tBeta\tLambda\tLambda_perm\n')
 
-	for file in chr:
-		i = h5py.File(file,'r')
-		a = i['geneID'][:]
-		b = i['chrom'][:]
-		c = i['pos'][:]
-		d = i['pv'][:]
-		e = i['qv'][:]
-		f = i['qv_all'][:]
-		g = i['beta'][:]
-		o = get_res(a,b,c,d,e,f,g,fdr)
-		if genes.shape[0] == 0:
-			print 'no significant result found for file {0}'.format(outfile)
-			pass
-		else:	
-			#initialise an array with final results
-			finalarray = sp.arange(o[0].shape[0])
-                	finalarray = o[0]
-			for res in o[1:]:
-				finalarray = sp.column_stack((finalarray,res))
-			for line in finalarray:
-				r = '\t'.join(line)
-				out.write(r+'\n')
+
+	i = h5py.File(file,'r')
+	a = i['geneID'][:]
+	b = i['chrom'][:]
+	c = i['pos'][:]
+	d = i['pv'][:]
+	e = i['qv'][:]
+	f = i['qv_all'][:]
+	g = i['beta'][:]
+	if len(i['lambda'][:].shape)==2:
+		l=i['lambda'][:][0]
+		lp=i['lambda_perm'][:][0]
+	else:
+		l=i['lambda'][:]
+		lp=i['lambda_perm'][:]
+
+	o = get_res(a,b,c,d,e,f,g,fdr,l,lp)
+	if genes.shape[0] == 0:
+		print 'no significant result found for file {0}'.format(outfile)
+		pass
+	else:	
+		#initialise an array with final results
+		finalarray = sp.arange(o[0].shape[0])
+		finalarray = o[0]
+		for res in o[1:]:
+			finalarray = sp.column_stack((finalarray,res))
+		for line in finalarray:
+			r = '\t'.join(line)
+			out.write(r+'\n')
 
 	out.close()
 	sys.exit(0)
