@@ -124,7 +124,7 @@ if __name__=='__main__':
 		f.close()
 
 	for key in table.keys():
-		print key
+		#print key
 		try: 
 			table[key] = SP.concatenate(table[key])
 		except:
