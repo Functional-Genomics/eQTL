@@ -107,8 +107,11 @@ if __name__=='__main__':
 					pos = fgene['pos'][[idx]]
 					temp['gene_pos'] = gene_pos
 					temp['chrom'] = fgene['chrom'][[idx]]
+					temp['pos'] = pos
 				else: # window is 0 therefore is trans analysis
 					temp['pv'] = fgene['pv'][:]
+					temp['pv_perm'] = fgene['pv_perm'][:]
+					temp['beta'] = fgene['beta'][:]
 			except:
                                 print "nothing in here"
 				pass
