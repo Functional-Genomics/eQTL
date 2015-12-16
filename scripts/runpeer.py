@@ -12,7 +12,7 @@ This script runs PEER (https://github.com/PMBio/peer/wiki) on a matrix of normal
 with N samples and G genes.
 
 Usage:
-runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5> <covariates_sorted.hdf5>
+runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5> <peer_factors.hdf5>  <covariates_sorted.hdf5>
 
 NB:<covariates_sorted_hdf5> is optional. TODO: change make file.
 
@@ -28,23 +28,24 @@ def runpeer(phenotype,K,iterations,cov=None):
 	model.setNmax_iterations(iterations)
 	model.update()
 	residuals=model.getResiduals()
-	return residuals
+	factors=model.getX()
+	return residuals,factors
 
 if __name__ == '__main__':
 
 	cov_set=False
 
-	if len(sys.argv[1:]) < 4:
+	if len(sys.argv[1:]) < 5:
 		usage()
         	sys.stderr.write("\nERROR: missing parameter\n")
         	sys.exit(1)
 	
-	if len(sys.argv[1:]) == 4:
+	if len(sys.argv[1:]) == 5:
 		print '\nRunning PEER without known covariates in the model.\n'
-		pheno,hidden_k,n_iterations,outfile = sys.argv[1:]
-	elif len(sys.argv[1:]) == 5:
+		pheno,hidden_k,n_iterations,outresiduals,outfactors = sys.argv[1:]
+	elif len(sys.argv[1:]) == 6:
 		print '\nRunning PEER with known covariates in the model.\n'
-		pheno,hidden_k,n_iterations,outfile,covariates = sys.argv[1:]
+		pheno,hidden_k,n_iterations,outresiduals,outfactors,covariates = sys.argv[1:]
 		if os.path.isfile(covariates) !=True:
 			sys.stderr.write('\nERROR: file'+covariates+' not found\n')
 			sys.exit(1)
@@ -74,20 +75,27 @@ if __name__ == '__main__':
 			 
 	#iterations and outfile
         n_iterations=int(n_iterations)
-        outfile=h5py.File(outfile,'w')
+        outresiduals=h5py.File(outresiduals,'w')
+	outfactors=h5py.File(outfactors,'w')
+
 	#apply PEER model
 	if cov_set==False:
-		residuals = runpeer(phenotype,hidden_k,n_iterations)
+		residuals,factors = runpeer(phenotype,hidden_k,n_iterations)
 	else:
-		residuals = runpeer(phenotype,hidden_k,n_iterations,cov=cov_matrix)
-	#write within out file
-	dset=outfile.create_dataset('phenotype',residuals[:].shape, dtype='float64')
+		residuals,factors = runpeer(phenotype,hidden_k,n_iterations,cov=cov_matrix)
+	#write within out files
+	dset=outresiduals.create_dataset('phenotype',residuals[:].shape, dtype='float64')
 	dset[...]=residuals[:]
-	dset2=outfile.create_dataset('row_header/sample_ID',sample_ID.shape,dtype='S1000')
+	dset_factors=outfactors.create_dataset('factors',factors[:].shape,dtype='float64')
+	dset_factors[...]=factors[:]
+	dset2=outresiduals.create_dataset('row_header/sample_ID',sample_ID.shape,dtype='S1000')
 	dset2[...]=sample_ID
-	dset3=outfile.create_dataset('col_header/phenotype_ID',gene_ID.shape,dtype='S1000')
+	dset2=outfactors.create_dataset('row_header/sample_ID',sample_ID.shape,dtype='S1000')
+	dset2[...]=sample_ID
+	dset3=outresiduals.create_dataset('col_header/phenotype_ID',gene_ID.shape,dtype='S1000')
 	dset3[...]=gene_ID
 
-	outfile.close()
 
+	outresiduals.close()
+	outfactors.close()
 	sys.exit(0)
