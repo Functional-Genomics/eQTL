@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import fileinput
-#import sys, os
+import sys, os
 
 def usage():
 	print ''' 
