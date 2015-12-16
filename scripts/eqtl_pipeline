@@ -163,7 +163,7 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates vcf_filter_pass
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd
 
 
 subfolder_name?=
@@ -178,7 +178,8 @@ snr_threshold?=75
 vcf_filter_pass?=n
 # vcf_filter="TP > 0.95 ....."
 
-vcf_filter_cmd=annai_filter_vcf.sh
+vcf_filter_cmd?=annai_filter_vcf.sh
+fix_vcf_cmd?=fix_vcf_header.sh
 
 n_folds?=1000
 min_expr?=1
@@ -264,7 +265,7 @@ vcfs2hash=$(words $(vcfs))
 endif
 
 # HASH
-step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) |md5sum|cut -f1 -d' ' 
+step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) $(fix_vcf_cmd) |md5sum|cut -f1 -d' ' 
 step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(chromosomes) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -f1 -d' '
 
