@@ -23,21 +23,29 @@ Usage:
 
 get_results.py <fdr_threshold> <result.tsv> <final_res.hdf5>'''
 
-def get_res(a,b,c,d,e,f,g,fdr,l,lp):
-	global genes,chromosome,position,pvalue,qvalue,beta,gen_control,gen_control_perm
+def get_res(a,b,c,d,e,f,fdr,l,lp):
+	global genes,chromosome,position,qvalue,qvalue_genes,beta,gen_control,gen_control_perm
 	boolvector = (e<=fdr)
 	genes = a[boolvector]
 	chromosome = b[boolvector]
 	chromosome = chromosome.astype(int)
 	position = c[boolvector]
 	position = position.astype(int)
-	pvalue = d[boolvector]
-	qvalue_local = e[boolvector]
-	qvalue_genes = f[boolvector]
-	beta =g[boolvector]
+	qvalue = d[boolvector]
+	qvalue_genes = e[boolvector]
+	beta =f[boolvector]
 	gen_control=l[boolvector]
 	gen_control_perm=lp[boolvector]
-	return genes,chromosome,position,pvalue,qvalue_local,qvalue_genes,beta,gen_control,gen_control_perm
+	return genes,chromosome,position,qvalue,qvalue_genes,beta,gen_control,gen_control_perm
+
+def check_numpy_df(hdf5file,key):
+	try:
+		hdf5file[key][:]
+		o=0
+	except:
+		o=1
+	return o
+
 
 if __name__ == '__main__':
 
@@ -61,28 +69,44 @@ if __name__ == '__main__':
 		sys.stderr.write('ERROR: file '+file+' not found\n')
 		sys.exit(1)
 
+	#open tsv file
 	out = open(outfile,'w')
-	out.write('geneID\tchrom\tpos\tpv\tqv\tqv_all\tbeta\tlambda\tlambda_perm\n')
 
-
+	#open hdf5 file with final results
 	i = h5py.File(file,'r')
-	a = i['geneID'][:]
-	b = i['chrom'][:]
-	c = i['pos'][:]
-	d = i['pv'][:]
-	e = i['qv'][:]
-	f = i['qv_all'][:]
-	g = i['beta'][:]
-	window = i['window'][0]
+
+	#check if file is non-empty
+	if i.keys() == [] : #file is empty:
+		std.error.write('ERROR: file '+file+' is empty\n')
+		sys.exit(1)
+	
+	name_keys=['geneID','chrom','pos','qv','qv_all','beta','lambda','lambda_perm','window']
+	
+	#check if file has all the expected keys
+	for key in name_keys:
+		o=check_numpy_df(i,key)
+		if o == 1:
+			std.error.write('ERROR: key '+key+' is not present in file '+file+'\n')
+			sys.exit(1)
+
+	#if everything passed numpy array check
+
+	a = i[name_keys[0]][:] #geneID
+	b = i[name_keys[1]][:] #chrom
+	c = i[name_keys[2]][:] #pos
+	d = i[name_keys[3]][:] #qv
+	e = i[name_keys[4]][:] #qv_all
+	f = i[name_keys[5]][:] #beta
+	window = i[name_keys[-1]][0] #window
 
 	if window == 0: # is trans
-		l=i['lambda'][:][0] # TODO: check why this applies only to trans
-		lp=i['lambda_perm'][:][0] 
+		l=i[name_keys[6]][:][0] # TODO: check why this applies only to trans
+		lp=i[name_keys[7]][:][0] 
 	else: #is cis
-		l=i['lambda'][:]
-		lp=i['lambda_perm'][:]
+		l=i[name_keys[6]][:]
+		lp=i[name_keys[7]][:]
 
-	o = get_res(a,b,c,d,e,f,g,fdr,l,lp)
+	o = get_res(a,b,c,d,e,f,fdr,l,lp)
 	if genes.shape[0] == 0:
 		print 'no significant result found for file {0}'.format(outfile)
 		pass
@@ -92,6 +116,7 @@ if __name__ == '__main__':
 		finalarray = o[0]
 		for res in o[1:]:
 			finalarray = sp.column_stack((finalarray,res))
+		out.write('\t'.join(name_keys[:-1])+'\n')
 		for line in finalarray:
 			r = '\t'.join(line)
 			out.write(r+'\n')
