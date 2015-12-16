@@ -163,7 +163,7 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations
 
 
 subfolder_name?=
@@ -181,6 +181,7 @@ vcf_filter_pass?=n
 vcf_filter_cmd?=annai_filter_vcf.sh
 fix_vcf_cmd?=fix_vcf_header.sh
 
+n_permutations?=1
 n_folds?=1000
 min_expr?=1
 min_perc_samples?=0.5
@@ -274,7 +275,7 @@ ifeq ($(corr_method),peer)
 step3_hash!=echo $(step1a_hash) $(step2_hash) $(peer_iterations) $(limix_use_peer_covariates) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
 else
 ifeq ($(corr_method),panama)
-step3_hash!=echo $(step1a_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1a_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform) |md5sum|cut -f1 -d' '
 else
 step3_hash!=echo $(step1a_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
@@ -284,7 +285,7 @@ step1_dir:=$(name)/dna_$(step1_hash)
 step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
-eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)/
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)/
 report_dir=$(eqtl_dir)/report
 
 # print the folders

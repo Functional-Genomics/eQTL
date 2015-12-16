@@ -80,7 +80,7 @@ ifndef var_matrix
 else
  $(info *	var_matrix=$(var_matrix))
 endif
-$(call file_exists,$(geno_matrix))
+$(call file_exists,$(var_matrix))
 
 
 # var\tchr\tstart\tend
@@ -112,6 +112,10 @@ $(call file_exists,$(sample2class_file))
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 
+
+#dummy vars
+vcfs=
+chromosomes=
 #####################
 # Other Optional parameters
 #####################

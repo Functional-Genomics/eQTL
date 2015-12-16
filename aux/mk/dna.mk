@@ -23,7 +23,7 @@ fix_vcf_headers: $(FIXEDHEADER_VCFS)
 
 #bgzip
 $(name)/vcf/%.fixedheader.vcf.gz: $(vcf_toplevel_dir)/%.vcf.gz
-	mkdir -p $(@D) && fix_vcf_header.sh $< $@.tmp && mv $@.tmp $@
+	mkdir -p $(@D) && $(fix_vcf_cmd) $< $@.tmp && mv $@.tmp $@
 
 # Rules to process each chr
 # chr=$(1) 

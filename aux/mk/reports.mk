@@ -18,10 +18,10 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 
 %.clus.png: %.tsv $(sample2class_file)
-	generate_clustering  $< $(sample2class_file) $@.tmp && mv $@.tmp $@
+	generate_clustering  $< $(sample2class_file) $@.tmp $(class2colours_file) && mv $@.tmp $@
 
-%.pca.png %.pca_13.png: %.tsv $(sample2class_file)
-	generate_pca  $< $(sample2class_file) $@ > $@.txt 
+%.pca.png %.pca_13.png %.pca_23.png: %.tsv $(sample2class_file)
+	generate_pca  $< $(sample2class_file) $@ $(class2colours_file)> $@.txt 
 
 
 #########################################################################

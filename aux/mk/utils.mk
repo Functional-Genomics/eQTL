@@ -69,3 +69,18 @@ ifdef conf
 else
  $(call p_error,Configuration file missing)
 endif
+
+
+
+
+#
+TARGETS0=
+TARGETS1=
+TARGETS2=
+TARGETS3=
+TARGETS4=
+TARGETS5=
+TARGETS6=
+TARGETS7=
+TARGETS8=
+TARGETS9=
