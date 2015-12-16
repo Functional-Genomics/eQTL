@@ -16,7 +16,7 @@ This script generates a final hdf5 file aggregating all the chr.hdf5 files. It c
 
 Usage:
 
-eqtl_aggregate.py <summary.hdf5> <window>  <1.hdf5> [<2.hdf5> ... ]
+eqtl_aggregate.py <out.summary.cis.hdf5> <window> <chr.lst>
 '''
 if __name__ == '__main__':
 
@@ -28,24 +28,29 @@ if __name__ == '__main__':
 	outfile,window = sys.argv[1:3]
 	window = float(window)
 
-	chr = sys.argv[3:]
+	chr = sp.loadtxt(sys.argv[3],delimiter='\t',dtype='S1000')
 
 	for file in chr:
-		if os.path.isfile(file)!=True:
+		if os.path.isfile(file) != True:
 			sys.stderr.write('ERROR: file '+file+' not found\n')
 			sys.exit(1)
+
+	if type(window) != (int) and  type(window) != (float):
+		sys.stderr.write('\nERROR: Please use integer or float for window\n')
+		usage()
+		sys.exit(1)
 
 	out = h5py.File(outfile,'w')
 	#open a dictionary
 	table = {}
 	for file in chr:
+		temp = {}
 		i = h5py.File(file,'r')
 		if i.keys() == []: #the file is empty
 			print 'file {0} is empty\n'.format(i)
 			pass
 		else:
 			if window != 0 : # is cis:
-				temp = {}
 				temp['geneID'] =i['geneID'][:]
 				temp['chrom'] = i['chrom'][:]
 				temp['pos'] = i['pos'][:]
@@ -55,7 +60,6 @@ if __name__ == '__main__':
 				temp['lambda'] = i['lambda'][:]
 				temp['lambda_perm'] = i['lambda_perm'][:]
 			else: #is trans
-				temp = {}
 				table['geneID'] =i['geneID'][:]
 				temp['chrom'] = i['chrom'][:]
 				temp['pos'] = i['pos'][:]
@@ -75,6 +79,7 @@ if __name__ == '__main__':
 	#calculate qv_all
 	if window != 0:
 		table['qv_all'] = FDR.qvalues(table['qv'])
+		table['window'] = [window] #add group with window size
 	else: #if it's trans
 		pvalues=sp.hstack(table['pv'][0:])
 		beta = sp.hstack(table['beta'][0:])
@@ -101,7 +106,7 @@ if __name__ == '__main__':
 			smartAppend(table,'chrom',chrom[idx]) #append the chrom of the SNP with the min qvalue per gene
 			smartAppend(table,'beta',beta[gene_pv][idx]) #append the beta for the SNP with the min qvalue per gene
 		table['qv_all'] = FDR.qvalues(sp.array(table['qv'])) #if you use qvalues method does not work. TODO: understand what qvalues1 is doing
-
+		table['window'] = [window] #add group with window size
 	#write within the file		
 	smartDumpDictHdf5(table,out)
 	out.close()
