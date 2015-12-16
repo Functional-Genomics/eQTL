@@ -17,15 +17,18 @@
 
 args <- commandArgs(trailingOnly=TRUE)
 
-if (length(args)!=3 ) {
-  print("Error: usage generate_pca expr.tsv sample2labels.tsv out_file")
+if (length(args)!=3 && length(args)!=4 ) {
+  print("Error: usage generate_pca expr.tsv sample2labels.tsv out_file [colors]")
   quit(status=1)
 }
 
 expr.file <- args[1]
 map.file <- args[2]
 out.file <- args[3]
-
+col.map.file <- NULL
+if ( length(args) == 4 ) {
+  col.map.file <- args[4]
+}
 # TODO: validate files
 
 #
@@ -34,7 +37,7 @@ expr.df <- read.table(expr.file,header = T,check.names=F,sep='\t')
 rownames(expr.df) <- expr.df[,1]
 
 expr.df <- expr.df[,-1]
-cat(dim(expr.df))
+cat(dim(expr.df),"\n")
 
 has.genes <- TRUE
 if ( length(rownames(expr.df))==length(colnames(expr.df)) && sum(rownames(expr.df)== colnames(expr.df)) ==0 ) {
@@ -57,15 +60,35 @@ map.df.labels <- unique(as.character(map.df$V2))
 #map.df.labels
 
 # colors
-if(!require(RColorBrewer)) {
-  source("http://bioconductor.org/biocLite.R")
-  biocLite("RColorBrewer",suppressUpdates=T)
+if ( !is.null(col.map.file)) {
+  nclass <- length(unique(map.df$V2))
+  cat("Reading file with mapping between classes and colors from ",col.map.file,"...\n")
+  col.df <- read.table(col.map.file,header = F,check.names=F,sep='\t')
+  cat(dim(col.df),"\n")
+  # 1st column=class/label
+  # 2nd column=colour
+  if ( nclass != nrow(col.df) ) {
+    cat("ERROR: invalid number of classes in ",col.map.file,"\n")
+    quit(status=1)
+  }
+  miss.class <- ! map.df.labels %in% as.character(col.df$V1)
+  if ( sum(miss.class) > 0 ) {
+    cat("ERROR: incomplete ",col.map.file,", missing ",sum(miss.class),"(e.g., ",map.df.labels[miss.class],")\n")
+    quit(status=1)
+  }
+  class2colour <- as.character(col.df$V2)
+  names(class2colour) <- as.character(col.df$v1)
+  cat("Reading file with mapping between classes and colors...done.\n")
+} else {
+  if(!require(RColorBrewer)) {
+    source("http://bioconductor.org/biocLite.R")
+    biocLite("RColorBrewer",suppressUpdates=T)
+  }
+  suppressPackageStartupMessages(library(RColorBrewer))
+  getPalette = colorRampPalette(brewer.pal(9, "Set1"))
+  class2colour <- getPalette(length(map.df.labels))
+  names(class2colour) <- map.df.labels
 }
-suppressPackageStartupMessages(library(RColorBrewer))
-getPalette = colorRampPalette(brewer.pal(9, "Set1"))
-class2colour <- getPalette(length(map.df.labels))
-names(class2colour) <- map.df.labels
-#class2colour
 samples2colour <- as.character(map.df$V1)
 
 rownames(map.df) <- map.df$V1
@@ -111,6 +134,23 @@ xyplot(PC1 ~ PC3,data=as.data.frame(pca$x),
               aspect=1,
             xlab=paste("PC3 (",round(pca.sum$importance["Proportion of Variance","PC3"],2)*100,"% of variance)",sep=""),
             ylab=paste("PC1 (",round(pca.sum$importance["Proportion of Variance","PC1"],2)*100,"% of variance)",sep=""),
+            main = suppressWarnings(draw.key(key = list(
+                                               rect = list(col = class2colour),
+                                               text = list(names(class2colour)),
+                                               columns=3
+                                               ))))
+
+  
+dev.off()
+
+png(filename=gsub(".png","_23.png",out.file),width=1600,height=1600,res=150)
+xyplot(PC2 ~ PC3,data=as.data.frame(pca$x),
+            cex=2,
+            col=samples2colour[rownames(pca$x)],
+            pch=16,
+              aspect=1,
+            xlab=paste("PC3 (",round(pca.sum$importance["Proportion of Variance","PC3"],2)*100,"% of variance)",sep=""),
+            ylab=paste("PC2 (",round(pca.sum$importance["Proportion of Variance","PC2"],2)*100,"% of variance)",sep=""),
             main = suppressWarnings(draw.key(key = list(
                                                rect = list(col = class2colour),
                                                text = list(names(class2colour)),
