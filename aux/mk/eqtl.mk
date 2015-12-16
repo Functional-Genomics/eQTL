@@ -42,6 +42,7 @@ $(foreach chr,$(chromosomes),$(eval $(call make-qtl-rule-chr,$(chr))))
 
 $(eqtl_dir)/summary.hdf5: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
 	$(file >$@.lst.txt,$^) \
+	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	eqtl_aggregate.py $@.tmp $(cis_window) $@.lst.txt && \
 	mv $@.tmp $@ && rm -f $@.lst.txt
 
