@@ -128,6 +128,14 @@ endif
 $(info *       gtf_file  = $(gtf_file))
 $(call file_exists,$(gtf_file))
 
+#********
+#
+ifndef class2colours_file
+class2colours_file=
+else
+$(info *       class2colours_file  = $(class2colours_file))
+$(call file_exists,$(class2colours_file))
+endif
 
 #*************
 # sample2class
