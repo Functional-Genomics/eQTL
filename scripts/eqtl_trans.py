@@ -44,6 +44,20 @@ window=float(window)
 nfolds = int(sys.argv[10])
 fold_j = int(sys.argv[11])
 
+
+if type(nfolds) != (int):
+        usage()
+        sys.stderr.write('\nERROR: Please use integer for nfolds\n')
+        sys.exit(1)
+elif type(fold_j) != (int):
+        usage()
+        sys.stderr.write('\nERROR: Please use integer for fold_j\n')
+        sys.exit(1)
+elif type(window) != (float) and type(window) != (int):
+        usage()
+        sys.stderr.write('\nERROR: Please use integer for window\n')
+        sys.exit(1)
+
 #open outfile 
 fout  = h5py.File(sys.argv[12],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 # load data 
