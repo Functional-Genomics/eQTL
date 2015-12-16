@@ -80,24 +80,34 @@ for gene in genes:
 	    print "...excluding gene %s %s" %(gene,e) 
 	    continue
 	#permutation
+	for perm_i in SP.arange(int(n_perm)):
+		SP.random.seed(perm_i)
+		idx = SP.random.permutation(Xc.shape[0])
+		Xc_perm = Xc[idx,:]
 
 	#check if Kpop or Ktot contains Nan
 	booleanK=SP.isnan(K)
 	if True in booleanK:
 		if peer_cov =='n': #if no covariates were used with peer then account for cov in the model
 			lmm = QTL.test_lmm(Xc,Y,covs=cov)
+			lmm_perm = QTL.test_lmm(Xc_perm,Y,covs=cov)
 		else:
 			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
+			lmm_perm = QTL.test_lmm(Xc_perm,Y)
 	else:
 		if peer_cov =='n': #if no cov where used with peer then
 			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
+			lmm_perm = QTL.test_lmm(Xc_perm,Y)
 		else:
 			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
-
+			lmm_perm = QTL.test_lmm(Xc_perm,Y)
 	# run the linear mixed model
 	pv=lmm.getPv()
+	pv_perm=lmm_perm.getPv()
 	RV = {}
 	RV['pv'] = pv
+	RV['beta'] = lmm.getBetaSNP()
+	RV['pv_perm'] = pv_perm
 	# add gene info
 	for key in geno_info.keys():
 	    RV[key] = geno_info[key]
