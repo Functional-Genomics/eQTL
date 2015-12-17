@@ -64,7 +64,8 @@ map.df.labels <- unique(as.character(map.df$V2))
 if ( !is.null(col.map.file)) {
   nclass <- length(unique(map.df$V2))
   cat("Reading file with mapping between classes and colors from ",col.map.file,"...\n")
-  col.df <- read.table(col.map.file,header = F,check.names=F,sep='\t')
+  col.df <- read.table(col.map.file,header = F,check.names=F,sep='\t',comment.char=" ")
+  help(read.table)
   cat(dim(col.df),"\n")
   # 1st column=class/label
   # 2nd column=colour
