@@ -91,9 +91,12 @@ if __name__ == '__main__':
 
 	#generate plot. TODO: move this within funciotn
 	n_groups = len(dic)
-
-	fig, ax = plt.subplots()
-	
+	plt.figure(figsize=(10,10))
+	#TODO:clean up the code here a bit
+	plt.subplot(111).spines['top'].set_visible(False)
+	plt.subplot(111).spines['right'].set_visible(False)
+	plt.tick_params(axis='x',which='both',bottom='off',top='off', labelsize=14)
+	plt.tick_params(axis='y',which='both',left='on',right='off', labelsize=14)
 	#font = {'family' : 'normal',
         #'weight' : 'bold',
         #'size'   : '15'}
@@ -138,16 +141,16 @@ if __name__ == '__main__':
 			 error_kw=error_config,
 			 label='Filter Missing Genotype + MAC')
 
-	#plt.grid(True)
-	plt.xlabel('Chr', fontsize=10)
-	plt.ylabel('Variants', fontsize=10)
-	plt.tick_params(direction='out')
-	plt.xticks(index + (2.5*bar_width), tuple(C), fontsize=10)
-	sizey=plt.ylim()
-	plt.yticks(fontsize=10)
-	plt.legend(fontsize=10)
+	#plt.grid(True)i
+	plt.legend(loc='upper center', bbox_to_anchor=(0.5,1.1), ncol=3, fancybox=True, shadow=False, frameon=False, fontsize=12)
 
-	plt.tight_layout()
+	plt.xlabel('Chr', fontsize=12)
+	plt.ylabel('Variants', fontsize=12)
+	plt.tick_params(direction='out')
+	plt.xticks(index + (2.5*bar_width), tuple(C), fontsize=12)
+	sizey=plt.ylim()
+	plt.yticks(fontsize=12)
+	#plt.tight_layout()
 	plt.savefig(outfile, format='png',dpi=350)
 
 	sys.exit(0)
