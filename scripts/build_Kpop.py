@@ -11,19 +11,15 @@ def usage():
 Usage: build_Kpop.py <Kpop.hdf5> <samples.hdf5> <chr1.hdf5> [<chr2.hdf5> ... ] '''
 
 
-def build_kpop(chrmatrix,Kpop,samples):
-	if samples == '':
-		samples = chrmatrix.shape
-	else:
-		pass
+def build_kpop(chrmatrix,Kpop):
 	if Kpop == '':
-		Kpop=np.zeros(samples,dtype='float64')
+		#populate the Kpop matrix with 0s
+		Kpop=np.zeros(chrmatrix.shape,dtype='float64')
+		#add the first chr kinship matrix		
 		Kpop += chrmatrix
 	else:
 		Kpop += chrmatrix
-	#normalise Kpop
-	Kpop /= Kpop.diagonal().mean()
-	return Kpop,samples
+	return Kpop
 
 if __name__ == "__main__":
 	#check arguments
@@ -59,11 +55,12 @@ if __name__ == "__main__":
                 print "Processing file:",file                                
     		X=h5py.File(file,'r' ) #catch warning if file is corrupted
 		matrix = X['genotype/Kpop'][:]
-		Kpop,samples = build_kpop(matrix,Kpop,samples)
+		Kpop = build_kpop(matrix,Kpop)
 		if samples_vector == 0:
 			samples_vector = X['genotype/row_header/sample_ID'][:] #get samples from chr file
 		X.close()
-
+	#normalise Kpop
+	Kpop /= Kpop.diagonal().mean()
         #print "Creating kinship matrix..."
 	print "\nCreating output file...\n"                           
 	#output Kpop in hdf5 file
