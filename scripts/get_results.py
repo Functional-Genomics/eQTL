@@ -38,14 +38,6 @@ def get_res(a,b,c,d,e,f,fdr,l,lp):
 	gen_control_perm=lp[boolvector]
 	return genes,chromosome,position,qvalue,qvalue_genes,beta,gen_control,gen_control_perm
 
-def check_numpy_df(hdf5file,key):
-	try:
-		hdf5file[key][:]
-		o=0
-	except:
-		o=1
-	return o
-
 
 if __name__ == '__main__':
 
@@ -84,8 +76,7 @@ if __name__ == '__main__':
 	
 	#check if file has all the expected keys
 	for key in name_keys:
-		o=check_numpy_df(i,key)
-		if o == 1:
+		if key not in i: 
 			std.error.write('ERROR: key '+key+' is not present in file '+file+'\n')
 			sys.exit(1)
 
