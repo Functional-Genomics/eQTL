@@ -59,8 +59,7 @@ if __name__ == '__main__':
 	samples_rows = Kpop['row_header/sample_ID'][:] #catch warnings here
 	samples_columns = Kpop['col_header/sample_ID'][:] #catch warnings here 
 	#standardise kinship
-	kinship /= sp.diag(kinship).mean()
-	kinship += 1e-4 * sp.eye(kinship.shape[0])
+	#kinship += 1e-4 * sp.eye(kinship.shape[0])
 	
 	#select most variable genes
 	selected_phenotypes = select_genes_on_SNR(phenotype, snr_threshold)
