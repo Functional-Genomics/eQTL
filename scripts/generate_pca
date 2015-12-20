@@ -67,7 +67,7 @@ if ( !is.null(col.map.file)) {
   cat(dim(col.df),"\n")
   # 1st column=class/label
   # 2nd column=colour
-  if ( nclass != nrow(col.df) ) {
+  if ( nclass > nrow(col.df) ) {
     cat("ERROR: invalid number of classes in ",col.map.file,"\n")
     quit(status=1)
   }
@@ -78,6 +78,7 @@ if ( !is.null(col.map.file)) {
   }
   class2colour <- as.character(col.df$V2)
   names(class2colour) <- as.character(col.df$V1)
+  class2colour <- class2colour[map.df.labels]
   cat("Reading file with mapping between classes and colors...done.\n")
 } else {
   if(!require(RColorBrewer)) {
