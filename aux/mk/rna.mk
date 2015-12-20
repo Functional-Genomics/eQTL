@@ -18,7 +18,7 @@ $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_f
 	mv $@.tmp $@ 
 
 $(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-	if [ -e $@ ] ; then touch $@; fi
+	if [ -e $@ ] ; then sleep 1; touch $@; fi
 
 # $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 $(step2_dir)/complete:  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
