@@ -95,10 +95,10 @@ for gene in genes:
 	    e = sys.exc_info()[0]
 	    print "...excluding gene %s %s" %(gene,e) 
 	    continue
+	
 	#permutation
-
-	for perm_i in SP.arange(int(n_perm)):
-		SP.random.seed(perm_i)
+	SP.random.seed(0) #check if this is correct
+	for perm_i in xrange(int(n_perm)):
 		idx = SP.random.permutation(Xc.shape[0])
 		Xc_perm = Xc[idx,:]
 
