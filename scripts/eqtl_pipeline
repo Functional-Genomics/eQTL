@@ -198,6 +198,10 @@ $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
 settings_vars=$(def_vars) sample2class_file cov_matrix dna_rna_mapfile expr_matrix corr_method
 
 ##############################
+ifneq (0,$(shell [ $(mac) -lt $(words $(vcfs)) ] && echo 0))
+$(error ERROR: mac ($(mac)) value is greater than the number of vcfs)
+endif
+##############################
 # to filter or not to filter based on pass
 ifeq ($(vcf_filter_pass),y)
 vcf_filter_option=
