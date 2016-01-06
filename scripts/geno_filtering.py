@@ -31,10 +31,15 @@ except:
 	sys.stderr.write('\nERROR: threshold must be int\n')
 	sys.exit(1)
 
-matrix = pd.DataFrame.from_csv(file1,sep='\t')
+#read the tsv file
+matrix = pd.read_csv(file1,sep='\t',index_col=0)
+#change index type into string 
+if matrix.index.dtype == (float):
+	matrix.index=matrix.index.values.astype(int).astype(str)
+elif matrix.index.dtype == (int):
+	matrix.index=matrix.index.values.astype(str)
 
 #select rows based on number of samples with at least 1 event
-
 filt_matrix = matrix[matrix.gt(0,axis='rows').sum(1) >= threshold]
 
 filt_matrix.to_csv(out,sep='\t',header=True,index=True)
