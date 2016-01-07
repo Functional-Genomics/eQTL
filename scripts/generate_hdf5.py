@@ -22,10 +22,10 @@ file1,file2,chr,outfile=sys.argv[1:]
 chr=str(chr)
 
 if os.path.isfile(file1) != True:
-	sys.stderr.write('\nERROR: file'+file1+' not found\n')
+	sys.stderr.write('\nERROR: file '+file1+' not found\n')
 	sys.exit(1)
 elif os.path.isfile(file2) != True:
-	sys.stderr.write('\nERROR: file'+file2+'not found\n')
+	sys.stderr.write('\nERROR: file '+file2+' not found\n')
 	sys.exit(1)
 
 
