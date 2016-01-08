@@ -343,9 +343,6 @@ TARGETS3+=$(STEP1_TARGETS)
 $(step1a_dir)/complete:  $(STEP1_TARGETS)
 	$(call p_info,"Step 1 complete") touch $@
 
-# TODO nf:
-# head -n 1 fqtl/fqtl_fused_genes.tsv | sed "s/\t/\t1\n/g" |tail -n +2 > a
-
 
 ################################################################################
 # RNA
