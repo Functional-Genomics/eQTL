@@ -100,6 +100,13 @@ else
 endif
 $(call file_exists,$(var_pos))
 
+# chr
+# default list of chromosomes
+chromosomes?=1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
+
+ifeq ($(strip $(chromosomes)),)
+$(call p_error, no chromosome was provided)
+endif
 
 # covariates
 ifndef cov_matrix
@@ -128,7 +135,6 @@ LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 #dummy vars
 vcfs?=
 
-# TODO: nf check if chr is not empty
 #####################
 # Other Optional parameters
 #####################
