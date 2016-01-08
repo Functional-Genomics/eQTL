@@ -73,6 +73,15 @@ else
 endif
 $(call file_exists,$(expr_matrix))
 
+#********* 
+# GTF file?
+ifndef gtf_file
+ $(error gtf_file not defined)
+endif
+$(info *       gtf_file  = $(gtf_file))
+$(call file_exists,$(gtf_file))
+
+
 #columns-samples
 #rows-variants
 ifndef var_matrix
@@ -100,6 +109,9 @@ endif
 $(call file_exists,$(cov_matrix))
 $(info *	cov_matrix=$(cov_matrix))
 
+# TODO: generate one dummy file?
+# head -n 1 fqtl/fqtl_fused_genes.tsv | sed "s/\t/\t1\n/g" |tail -n +2 > a
+
 #*************
 # sample2class
 # file containing the mapping between samples and a class/label
@@ -114,8 +126,9 @@ LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 
 
 #dummy vars
-vcfs=
-chromosomes=
+vcfs?=
+
+# TODO: nf check if chr is not empty
 #####################
 # Other Optional parameters
 #####################
@@ -123,13 +136,16 @@ $(info * )
 $(info * Optional Parameters:)
 
 #
-def_vars=  min_expr min_perc_samples expr_transform hidden_k  peer_iterations snr_threshold   n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates 
+def_vars=  min_expr min_perc_samples expr_transform hidden_k  peer_iterations snr_threshold   n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates var_min_freq
 
 subfolder_name?=
 peer_iterations?=100
 fdr_threshold?=0.05
 limix_use_peer_covariates?=n
 cis_window?=1000000
+snr_threshold?=75
+
+var_min_freq?=0
 
 n_folds?=1000
 min_expr?=1
@@ -182,7 +198,7 @@ $(info *	eqtl_method=$(eqtl_method))
 
 
 # HASH
-step1_hash!=echo $(var_minfreq) |md5sum|cut -f1 -d' ' 
+step1_hash!=echo $(var_min_freq) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -f1 -d' '
 
 
@@ -197,10 +213,10 @@ endif
 endif
 
 step1_dir:=$(name)/dna_$(step1_hash)
-step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
+step1a_dir:=$(step1_dir)
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
-eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)/
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)
 report_dir=$(eqtl_dir)/report
 
 # print the folders
@@ -223,6 +239,7 @@ var_matrix_filename=$(notdir $(basename $(var_matrix)))
 matched_expr_matrix=$(step1a_dir)/$(expr_matrix_filename).matched.tsv
 matched_var_matrix=$(step1a_dir)/$(var_matrix_filename).matched.tsv
 kpop_file=$(step1a_dir)/Kpop.hdf5
+samples_hdf5=$(step1a_dir)/samples.hdf5
 
 
 ################################################################################
@@ -265,13 +282,67 @@ TARGETS0+=$(cov_hdf5)
 
 ################################################################################
 # validate the variant file
-step1:
+step1: $(var_matrix).consistent $(matched_var_matrix).filt.tsv $(step1a_dir)/complete
 
+# filter the columns in the matrix based on their names
 $(matched_expr_matrix): $(expr_matrix) $(var_matrix) 
 	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
 
 $(matched_var_matrix): $(var_matrix) $(expr_matrix)
 	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
+
+# var_min_freq [0,1]
+$(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
+	geno_filtering.py $< $(var_min_freq) $@.tmp && mv $@.tmp $@
+
+$(var_matrix).consistent: $(var_matrix) $(var_pos)
+	geno_check_consistency.py $^ && touch $@
+
+# TODO nf: TARGETS!!!!
+
+#
+define make-rules-for-chr=
+# TODO: remove from here
+$(shell mkdir -p $(step1_dir)/$(1))
+$(shell mkdir -p $(step1a_dir)/$(1))
+$(step1a_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos) 
+	generate_hdf5.py  $$^ $(1) $(1).tmp.hdf5 && mv $(1).tmp.hdf5 $$@
+# add kpop?
+# yes-
+#   generate kpop? option to standardize data (yes by default - snp)?
+# no - empty kpop
+# nf: add option to build a kpop
+endef
+
+# Generate the rules per chr
+$(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
+
+# build_Kpop.py kop.hdf5.tmp samples.hdf5 ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
+$(kpop_file): $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
+	build_Kpop.py $(kpop_file).tmp $(samples_hdf5).tmp $^ && \
+	mv $(samples_hdf5).tmp $(samples_hdf5) &&\
+	mv $(kpop_file).tmp $(kpop_file) && \
+	sleep 1 && touch $(samples_hdf5)
+
+$(samples_hdf5): $(kpop_file)
+	if [ -e $@ ] ; then touch $(samples_hdf5); fi
+
+FILTERED_VCF_FILES=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
+#$(info $(FILTERED_VCF_FILES))
+
+filter_vcfs:  $(FILTERED_VCF_FILES)
+
+# one job per chr
+TARGETS2+=$(FILTERED_VCF_FILES)
+
+STEP1_TARGETS=$(var_matrix).consistent $(samples_hdf5) $(matched_expr_matrix) filter_vcfs
+TARGETS3+=$(STEP1_TARGETS)
+
+$(step1a_dir)/complete:  $(STEP1_TARGETS)
+	$(call p_info,"Step 1 complete") touch $@
+
+# TODO nf:
+# head -n 1 fqtl/fqtl_fused_genes.tsv | sed "s/\t/\t1\n/g" |tail -n +2 > a
 
 
 ################################################################################
