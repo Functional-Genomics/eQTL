@@ -1,5 +1,4 @@
-#!/usr/bin/python env
-
+#!/usr/bin/env python 
 
 import sys,os
 import pandas as pd
