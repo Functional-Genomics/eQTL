@@ -304,12 +304,8 @@ $(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
 $(var_matrix).consistent: $(var_matrix) $(var_pos)
 	geno_check_consistency.py $^ && touch $@
 
-# TODO nf: TARGETS!!!!
-
 #
 define make-rules-for-chr=
-# TODO: remove from here
-$(shell mkdir -p $(step1_dir)/$(1))
 $(shell mkdir -p $(step1a_dir)/$(1))
 $(step1a_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos) 
 	generate_hdf5.py  $$^ $(1) $(1).tmp.hdf5 && mv $(1).tmp.hdf5 $$@
