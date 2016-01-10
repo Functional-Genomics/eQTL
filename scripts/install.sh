@@ -142,7 +142,7 @@ function fastqtl_install {
     mv FastQTL/* $EPIPELINE_DIR/bin/fastqtl_software
     cat <<EOF > $EPIPELINE_DIR/bin/fastqtl
 #!/bin/env bash
-$EPIPELINE_DIR/bin/fastqtl_software/bin/fastQTL.static $*
+$EPIPELINE_DIR/bin/fastqtl_software/bin/fastQTL.static \$*
 EOF
     chmod +x $EPIPELINE_DIR/bin/fastqtl
 
