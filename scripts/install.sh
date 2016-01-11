@@ -160,9 +160,10 @@ function limix_install {
 #
 # GCC:
 # gcc version > 4.2.1
-# LIMIX reccomended installation
+# LIMIX recommended installation
     pprint_msg "Installing Limix..."
     pip install  --user  limix==0.7.12
+    pip install  --user  rpy2
     pprint_msg "Installing Limix...done."
 }
 
