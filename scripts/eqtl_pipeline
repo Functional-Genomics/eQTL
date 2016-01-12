@@ -167,9 +167,10 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kpop cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations
 
 
+use_kinship?=y
 subfolder_name?=
 peer_iterations?=100
 fdr_threshold?=0.05
@@ -211,6 +212,15 @@ ifeq ($(vcf_filter_pass),y)
 vcf_filter_option=
 else
 vcf_filter_option=-f
+endif
+
+##############################
+# by default the kinship is used
+# so no parameter needs to be passed to geno_preprocessing.py
+ifeq ($(use_kinship),y)
+use_kinship_option=
+else
+use_kinship_option=n
 endif
 ##############################
 # expression correction method
@@ -275,7 +285,7 @@ endif
 
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) $(fix_vcf_cmd) |md5sum|cut -f1 -d' ' 
-step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(chromosomes) |md5sum|cut -f1 -d' ' 
+step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(use_kinship_option) $(chromosomes) |md5sum|cut -f1 -d' ' 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -f1 -d' '
 
 

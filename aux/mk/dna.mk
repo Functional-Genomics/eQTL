@@ -76,7 +76,7 @@ $(step1a_dir)/$(1)/plink_chr$(1).done: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vc
 ##echo 'convert plink files into hdf5 files using limix binaries'
 $(step1a_dir)/$(1)/chr$(1).hdf5: $(step1a_dir)/$(1)/plink_chr$(1).done 
 	rm -f $$@.tmp $$@ && python $(LIMIX_BINARY)/limix_converter --outfile=$$@.tmp --plink=$$(subst .done,,$$<) && \
-	geno_preprocessing.py $$@.tmp && \
+	geno_preprocessing.py $$@.tmp $(use_kinship_option) && \
 	mv $$@.tmp $$@
 
 endef
