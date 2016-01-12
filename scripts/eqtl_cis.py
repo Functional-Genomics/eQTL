@@ -90,7 +90,7 @@ for gene in genes:
 	#1. get geno and pheno data
 	Y = data.getGeneExpression(gene,standardize=False)
 	try:
-	    Xc,geno_info = data.getGermlineExpr(gene)
+	    Xc,geno_info = data.gene_SNP_pair(gene)
 	except:
 	    e = sys.exc_info()[0]
 	    print "...excluding gene %s %s" %(gene,e) 
