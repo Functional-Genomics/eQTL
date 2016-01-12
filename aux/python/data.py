@@ -20,10 +20,11 @@ class data():
 		self.corrmeth = cormethod #string [ peer | panama | none ]
 		self.window = float(window) #float value with nt window
 	def getGeneIDs(self):
-		""" get geneIDs """
-		_chr = self.p['phenotype/chrom'][:] #upload vector of chr for each gene
-		Iin = (_chr!='X')*(_chr!='Y')*(_chr!='MT') #here we are excluding these chromosomes from the analysis!
-		rv = self.geneID[Iin]
+		""" get GeneID """
+		#_chr = self.p['phenotype/chrom'][:] #upload vector of chr for each gene
+		#Iin = (_chr!='X')*(_chr!='Y')*(_chr!='MT') #here we are excluding these chromosomes from the analysis!
+		#rv = self.geneID[Iin]
+		rv = self.geneID
 		return rv 
 
 	def getK(self,Isample=None,normalize=False):
@@ -81,14 +82,15 @@ class data():
 		return rv
 		
 
-	def getGermlineExpr(self,geneID,standardize=False,Is=None,debug=False):
+	def gene_SNP_pair(self,geneID,standardize=False,Is=None,debug=False):
 		"""
-		get genotypes, chrom, pos. TODO1: change the code for trans analysis 
+		get genotypes, chrom, pos to be tested with each gene. 
 		"""
 		w = self.window
 		genePos = self.getGenePos(geneID)
 		pos = self.g['genotype/col_header/pos'][:]
 		chrom = self.g['genotype/col_header/chrom'][:]
+		chrom = chrom.astype(int).astype(str) #added line. set chromosomes to string
 		if w == 0:
 			#pairwise comparison of each gene with all the SNPs
 			X = self.g['genotype/matrix'][:]
@@ -97,7 +99,8 @@ class data():
 				info[key] = self.g['genotype/col_header'][key][:]
 			return X, info
 		else:
-			Icis  = (chrom==float(genePos[0])) # force comparison on the same chromosome of the gene
+			#Icis  = (chrom==float(genePos[0])) # force comparison on the same chromosome of the gene
+			Icis  = (chrom==genePos[0]) # force comparison on the same chromosome of the gene
 			Icis *= (pos>float(genePos[1])-w) # select downstream cis SNPs
 			Icis *= (pos<float(genePos[2])+w) # select upstream cis SNPs
 			assert Icis.sum()>0, 'no cis intersection found'
