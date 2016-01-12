@@ -39,7 +39,7 @@ if sum(bv) != var_file.index.values.shape[0]:
                sys.stderr.write('\nERROR: variant '+var+' not found in the annotation file\n')
        sys.exit(1)
 else:
-	print 'OK!\n'
+	print 'OK!'
 
 
 sys.exit(0)
