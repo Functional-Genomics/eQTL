@@ -54,8 +54,38 @@ TARGETS8+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
 
 else
 #######################################################
-# matrixEQTL
+# FastQTL
+ifeq ($(eqtl_method),fastqtl)
 
+ifeq ($(corr_method),none)
+define make-fastqtl-rule-chr=
+$(eqtl_dir)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step2_dir)/$(expr_matrix_filename).filtered.bed.gz.tbi $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.tbi
+	mkdir -p $$(@D) && fastqtl --vcf $$< --bed $(step2_dir)/$(expr_matrix_filename).filtered.bed.gz --window $(cis_window) --threshold  $(fdr_threshold) --permute $(n_permutations) --region "$(1):1-100000000000"   --out $$@.tmp && mv $$@.tmp $$@
+endef
+
+else
+# correction method used
+define make-fastqtl-rule-chr=
+$(eqtl_dir)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step3_dir)/$(corr_method)/$(corr_method).bed.gz.tbi $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.tbi
+	mkdir -p $$(@D) && fastqtl --vcf $$< --bed $(step3_dir)/$(corr_method)/$(corr_method).bed.gz --window $(cis_window) --threshold $(fdr_threshold) --permute $(n_permutations) --region "$(1):1-100000000000"   --out $$@.tmp && mv $$@.tmp $$@
+endef
+endif
+
+$(foreach chr,$(chromosomes),$(eval $(call make-fastqtl-rule-chr,$(chr))))
+
+
+#TODO nf: complete
+$(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
+	head -n 1 $< > $@.tmp && \
+	tail -q -n +2 $^  >> $@.tmp && mv $@.tmp $@
+
+
+TARGETS7+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
+TARGETS8+=$(eqtl_dir)/summary.tsv
+
+else
+#######################################################
+# matrixEQTL
 
 # 1 - chr
 # TODO: generate a pos file
@@ -66,6 +96,8 @@ $(eqtl_dir)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step2_dir)/$(exp
 endef
 
 else
+
+# meqQTL
 
 define make-meqtl-rule-chr=
 $(eqtl_dir)/$(1).tsv: $(step1a_dir)/$(1)/chr$(1).genotype.tsv $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
@@ -84,7 +116,7 @@ $(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
 TARGETS7+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
 TARGETS8+=$(eqtl_dir)/summary.tsv
 
-
+endif
 endif
 
 step4: $(step1a_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete report

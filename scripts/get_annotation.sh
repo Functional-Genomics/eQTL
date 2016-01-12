@@ -26,7 +26,7 @@ if [ "$out-" == "-" ]; then
     exit 1
 fi
 
-awk '$3 == "gene" {print $1,$4,$5,$10}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g" > $out
+awk '$3 == "gene" {print $1,$4,$5,$10}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g;s/\"//g" > $out
 
 exit 0
 

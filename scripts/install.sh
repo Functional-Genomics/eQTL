@@ -128,7 +128,26 @@ function anaconda_install {
 }
 #export PATH="/path/to/anaconda/bin:$PATH"
 
+#####################################################
+# fastqtl
+function fastqtl_install {
 
+    pprint_msg "Installing FastQTL..."
+    FASTQTL_VERSION=2.184
+    FASTQTL_FILE=FastQTL-$FASTQTL_VERSION.linux.tgz
+    FASTQTL_URL=http://fastqtl.sourceforge.net/files/$FASTQTL_FILE
+    download $FASTQTL_URL $FASTQTL_FILE
+    tar xzvf $FASTQTL_FILE
+    mkdir -p $EPIPELINE_DIR/bin/fastqtl_software
+    mv FastQTL/* $EPIPELINE_DIR/bin/fastqtl_software
+    cat <<EOF > $EPIPELINE_DIR/bin/fastqtl
+#!/bin/env bash
+$EPIPELINE_DIR/bin/fastqtl_software/bin/fastQTL.static \$*
+EOF
+    chmod +x $EPIPELINE_DIR/bin/fastqtl
+
+    pprint_msg "Installing FastQTL...done."
+}
 #####################################################
 # limix (https://github.com/PMBio/limix)
 function limix_install {
@@ -141,9 +160,10 @@ function limix_install {
 #
 # GCC:
 # gcc version > 4.2.1
-# LIMIX reccomended installation
+# LIMIX recommended installation
     pprint_msg "Installing Limix..."
     pip install  --user  limix==0.7.12
+    pip install  --user  rpy2
     pprint_msg "Installing Limix...done."
 }
 
@@ -427,6 +447,7 @@ bcftools_install
 #samtools_install
 #tabix_install
 plink_install
+#fastqtl_install
 popd
 exit 0
 

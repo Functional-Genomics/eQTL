@@ -150,6 +150,10 @@ $(call file_exists,$(sample2class_file))
 # default list of chromosomes
 chromosomes?=1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
 
+ifeq ($(strip $(chromosomes)),)
+$(call p_error, no chromosome was provided)
+endif
+
 
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
@@ -227,7 +231,7 @@ $(info *	corr_method=$(corr_method))
 
 ###############################
 #
-SUPPORTED_EQTL_METHODS=limix matrix_eqtl
+SUPPORTED_EQTL_METHODS=limix matrix_eqtl fastqtl
 
 #corr_method expr_corr_method?
 ifeq (,$(filter $(eqtl_method),$(SUPPORTED_EQTL_METHODS)))
@@ -337,6 +341,16 @@ all: step0 step1 step2 step3 step4 plots
 
 ################################################################################
 #
+
+# generate bed file (compressed
+# Chr start end ID S1 S2 ...
+%.bed.gz: %.tsv $(gtf_eqtl_tsv)
+	genQuantBed.R $(gtf_eqtl_tsv) $< $@.tmp &&
+	bgzip -c $@.tmp  > $@.tmp2 && mv $@.tmp2 $@ && rm -f  $<.tmp  $@.tmp2
+
+%.bed.gz.tbi: %.bed.gz
+	tabix -p bed $< || (rm -f $@ && exit 1)
+
 
 $(cov_hdf5): $(cov_matrix)
 	get_covariates.py $< $@.tmp && mv $@.tmp $@ 
