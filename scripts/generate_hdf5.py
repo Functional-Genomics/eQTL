@@ -54,7 +54,7 @@ row_header= sp.array(var_file.columns.tolist())
 i = map(lambda x:chr_var_subset.tolist().index(x),var_file_subset.tolist())
 #set array of var positions and chromosome
 pos = chr_subset.iloc[i,1].values.astype(float)
-chrom = chr_subset.iloc[i,0].values.astype(float)
+chrom = chr_subset.iloc[i,0].values.astype(int).astype(str)
 #set array of allele. TODO: is empty for now.
 allele = sp.zeros(pos.shape) 
 
