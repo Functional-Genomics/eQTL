@@ -55,13 +55,13 @@ if ( sum(!colnames(expr.df) %in% as.character(map.df$V1))!=0 ) {
 
 if ( sum(is.na(expr.df))>0 ) {
   cat("NAs found in the matrix passed as arg. one - generating empty plots.\n")
-  png(filename=out.file,width=1,height=1,res=150)
+  png(filename=out.file,width=100,height=100,res=1)
   plot(1,1,col="white")
   dev.off()
-  png(filename=gsub(".png","_23.png",out.file),width=1,height=1,res=150)
+  png(filename=gsub(".png","_23.png",out.file),width=100,height=100,res=150)
   plot(1,1,col="white")
   dev.off()
-  png(filename=gsub(".png","_13.png",out.file),width=1,height=1,res=150)
+  png(filename=gsub(".png","_13.png",out.file),width=100,height=100,res=150)
   plot(1,1,col="white")
   dev.off()
   q(status=0)
