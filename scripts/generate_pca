@@ -52,6 +52,15 @@ if ( sum(!colnames(expr.df) %in% as.character(map.df$V1))!=0 ) {
   cat("ERROR: some samples in expr matrix were not found in ",map.file,"\n")
   quit(status=1)
 }
+
+if ( sum(is.na(expr.df))>0 ) {
+  cat("NAs found in the matrix passed as arg. one - generating an empty plot.\n")
+  png(filename=out.file,width=900,height=900,res=150)
+  plot(1,1,col="white")
+  dev.off()
+  q(status=0)
+}
+
 # subset the mapping
 map.df <- map.df[map.df$V1 %in% colnames(expr.df),]
 
