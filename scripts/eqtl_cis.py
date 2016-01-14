@@ -137,21 +137,6 @@ for gene in genes:
 		print 'number of permutations is set = 1; empirical pvalues will not be computed.'
 		lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K)
 
-#	if True in booleanK:
-#		if peer_cov =='n': #if no covariates were used with peer then account for cov in the model
-#			lmm = QTL.test_lmm(Xc,Y,covs=cov)
-#			lmm_perm = QTL.test_lmm(Xc_perm,Y,covs=cov)
-#		else:
-#			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
-#			lmm_perm = QTL.test_lmm(Xc_perm,Y)
-#	else:
-#		if peer_cov =='n': #if no cov where used with peer then
-#			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
-#			lmm_perm = QTL.test_lmm(Xc_perm,Y,covs=cov,K=K)
-#		else:
-#			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
-#			lmm_perm = QTL.test_lmm(Xc_perm,Y,K=K)
-
 	#store results
 	RV['pv'] = pv #record nominal pvalues
 	if n_perm > 1:
