@@ -105,7 +105,7 @@ if __name__ == '__main__':
 			smartAppend(table,'pos',pos[idx]) #append the position of the SNP with the min qvalue per gene
 			smartAppend(table,'chrom',chrom[idx]) #append the chrom of the SNP with the min qvalue per gene
 			smartAppend(table,'beta',beta[gene_pv][idx]) #append the beta for the SNP with the min qvalue per gene
-		table['qv_all'] = FDR.qvalues(sp.array(table['qv']),pi0=1) #if you use qvalues method with default values it gives back all 0.0. TODO: implement familywise error rate for trans eqtls? 
+		table['qv_all'] = FDR.qvalues(sp.array(table['qv'])) #if you use qvalues method with default values it gives back all 0.0. TODO: implement familywise error rate for trans eqtls? 
 		table['window'] = [window] #add group with window size
 	#write within the file		
 	smartDumpDictHdf5(table,out)
