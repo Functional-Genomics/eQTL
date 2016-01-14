@@ -27,6 +27,20 @@ eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <co
 
 peer_cov values = n | y [default=n] '''
 
+def run_lmm(booleanK,peer_cov,Xc,Y,cov,K):
+	'''this functions computes the lmm model using X (genotype), Y(phenotype). Optional: cov(matrix of covariance), K(kinship)'''
+	if True in booleanK:
+		if peer_cov =='n': #if no covariates were used with peer then account for cov in the model
+			lmm = QTL.test_lmm(Xc,Y,covs=cov)
+		else:
+			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
+	else:
+		if peer_cov =='n': #if no cov where used with peer then
+			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
+		else:
+			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
+	return lmm
+
 if len(sys.argv[1:]) < 12:
 	usage()
 	sys.stderr.write('ERROR: missing parameters\n')
@@ -35,6 +49,7 @@ if len(sys.argv[1:]) < 12:
 #read args
 geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,peer_cov,window,n_perm = sys.argv[1:10]
 window=float(window)
+n_perm=int(n_perm)
 #populate dictionary with all the data needed for eqtl analysis
 #rom eqtlsettings import read_args as ra
 #CFG,correction_method = ra(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf5_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
@@ -45,8 +60,6 @@ window=float(window)
 nfolds = int(sys.argv[10])
 fold_j = int(sys.argv[11])
 
-print type(nfolds)
-print type(fold_j)
 if type(nfolds) != (int):
 	usage()
 	sys.stderr.write('\nERROR: Please use integer for nfolds\n')
@@ -96,41 +109,71 @@ for gene in genes:
 	    print "...excluding gene %s %s" %(gene,e) 
 	    continue
 	
-	#permutation
-	SP.random.seed(0) #check if this is correct
-	for perm_i in xrange(int(n_perm)):
-		idx = SP.random.permutation(Xc.shape[0])
-		Xc_perm = Xc[idx,:]
-
+	
 	#check if Kpop or Ktot contains Nan
 	booleanK=SP.isnan(K)
-	if True in booleanK:
-		if peer_cov =='n': #if no covariates were used with peer then account for cov in the model
-			lmm = QTL.test_lmm(Xc,Y,covs=cov)
-			lmm_perm = QTL.test_lmm(Xc_perm,Y,covs=cov)
-		else:
-			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
-			lmm_perm = QTL.test_lmm(Xc_perm,Y)
+	#run the linear mixed model to get nominal pvalues
+	lmm = run_lmm(booleanK,peer_cov,Xc,Y,cov,K)
+	pv = lmm.getPv() #store nominal pv
+	RV={} #open empty dictionary to store results
+
+	#permutation	
+	if n_perm > 1:
+		print 'number of permutations is set > 1; empirical pvalues will be computed.'
+		#initialize an array of 0 with shape of n_perms X number of SNPs in the cis window
+		RV['pv0'] = SP.zeros((n_perm,pv.shape[1]))
+		#initialize an array with one shape  = n_perms to store for each permutation the minimum pvalue per gene
+		RV['pv0_min'] = SP.zeros(n_perm)
+		SP.random.seed(0) #set random seed for each gene
+		for perm_i in xrange(int(n_perm)):
+			print 'computing permutation # {0}'.format(perm_i)
+			idx = SP.random.permutation(Xc.shape[0]) #take indexes
+			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
+			lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K) #run the lmm model on permuted genotype
+			pv0 = lmm_perm.getPv()[0,:] #get permuted pvalue
+			RV['pv0'][perm_i,:] = pv0 #populate the array with list of permuted pvalues in each row
+			RV['pv0_min'][perm_i] = pv0.min() #take the minimum pvalue of the list and populate the array
 	else:
-		if peer_cov =='n': #if no cov where used with peer then
-			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
-			lmm_perm = QTL.test_lmm(Xc_perm,Y,covs=cov,K=K)
-		else:
-			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
-			lmm_perm = QTL.test_lmm(Xc_perm,Y,K=K)
+		print 'number of permutations is set = 1; empirical pvalues will not be computed.'
+		lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K)
 
-	# run the linear mixed model
-	pv=lmm.getPv()
-	pv_perm = lmm_perm.getPv()
-	RV = {}
-	RV['pv'] = pv
-	RV['pv_perm'] = pv_perm
-	RV['qv'] = FDR.qvalues(pv)
-	RV['lambda'] = getLambda(pv)
-	RV['lambda_perm'] = getLambda(pv_perm)
-	RV['beta'] = lmm.getBetaSNP()
+#	if True in booleanK:
+#		if peer_cov =='n': #if no covariates were used with peer then account for cov in the model
+#			lmm = QTL.test_lmm(Xc,Y,covs=cov)
+#			lmm_perm = QTL.test_lmm(Xc_perm,Y,covs=cov)
+#		else:
+#			lmm = QTL.test_lmm(Xc,Y) # otherwise exclude covariates from the model since already used in peer
+#			lmm_perm = QTL.test_lmm(Xc_perm,Y)
+#	else:
+#		if peer_cov =='n': #if no cov where used with peer then
+#			lmm = QTL.test_lmm(Xc,Y,covs=cov,K=K) #use cov in the model
+#			lmm_perm = QTL.test_lmm(Xc_perm,Y,covs=cov,K=K)
+#		else:
+#			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
+#			lmm_perm = QTL.test_lmm(Xc_perm,Y,K=K)
 
-	# add gene info
+	#store results
+	RV['pv'] = pv #record nominal pvalues
+	if n_perm > 1:
+		#compute how many MINIMUM permuted pvalues for each permutation are less than each nominal pvalue and store the value
+		RV['pv_perm'] = SP.array([(RV['pv0_min']<pv[0,nominal]).sum() for nominal in xrange(pv.shape[1])],dtype=float)
+		RV['pv_perm'] += 1 # compute the empirical pvalues
+		RV['pv_perm'] /= float(n_perm) #compute the empirical pvalues
+		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape
+	else:
+		RV['pv_perm'] = lmm_perm.getPv() #record just the permuted_pvalues after 1 permutation
+
+	
+	RV['qv'] = FDR.qvalues(pv) #multiple test correction for nominal pvalues
+	RV['lambda'] = getLambda(pv) #get lambda for nominal pvalues
+	if n_perm > 1:
+		RV['lambda_perm'] = getLambda(RV['pv_perm']) #get lambda for permuted pvalues
+	else:	
+		RV['lambda_perm'] = getLambda(RV['pv_perm'])
+
+	RV['beta'] = lmm.getBetaSNP() #get beta on nominal pvalues. TODO: should I get beta on permuted?
+			
+ 	# add gene info
 	for key in geno_info.keys():
 	    RV[key] = geno_info[key]
 
