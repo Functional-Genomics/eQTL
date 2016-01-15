@@ -164,6 +164,7 @@ function limix_install {
     pprint_msg "Installing Limix..."
     pip install  --user  limix==0.7.12
     pip install  --user  rpy2
+    pip install  --user  progressbar
     pprint_msg "Installing Limix...done."
 }
 
