@@ -121,4 +121,12 @@ def getChromBounds(chrom,posCum):
 		chrom_bounds.append(_cb)
 	return chrom_bounds
 
+def bonferroni_fmer(pvalues,n,alpha):
+	''' apply Bonferroni family wise error rate to a numpy pvalues array. It returns a boolean vector
+	n = number of tests
+	pvalues = numpy array of pvalues
+	alpha = significance level '''
+	bv = (n*pvalues)<alpha
+	return bv
+
 
