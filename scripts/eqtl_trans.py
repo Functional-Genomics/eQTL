@@ -19,11 +19,11 @@ import h5py
 
 def usage():
         print '''
-This script runs the eqtl analysis on a chunk of the gene expression matrix.
+This script runs the eqtl analysis on a chunk of the gene expression matrix VS all the SNPs.
 
 Usage:
 
-eqtl_trans.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <peer_cov> <cis_window> <n_perm> <nfolds> <fold_j> <outfilename>
+eqtl_trans.py <allchr.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <peer_cov> <cis_window> <n_perm> <nfolds> <fold_j> <outfilename>
 
 peer_cov values = n | y [default=n] '''
 
@@ -123,15 +123,20 @@ for gene in genes:
 	if n_perm > 1:
 		print 'number of permutations is set > 1; empirical pvalues will be computed.'
 		#initialize an array of 0 with shape of n_perms X number of SNPs in the cis window
-		RV['pv_perm'] = SP.zeros((n_perm,pv.shape[1]))
+		#RV['pv0'] = SP.zeros((n_perm,pv.shape[1]))
 		#initialize an array with one shape  = n_perms to store for each permutation the minimum pvalue per gene
+		RV['pv0_min'] = SP.zeros(n_perm)
 		SP.random.seed(0) #set random seed for each gene
 		for perm_i in xrange(int(n_perm)):
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
 			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
 			lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K) #run the lmm model on permuted genotype
-			pv0 = lmm_perm.getPv()[0,:] #get permuted pvalue
-			RV['pv_perm'][perm_i,:] = pv0 #populate the array with list of permuted pvalues in each row
+			pv_perm = lmm_perm.getPv()# get pvalues 
+			pv0 = pv_perm[0,:] #get permuted pvalue
+			#RV['pv0'][perm_i,:] = pv0 #populate the array with list of permuted pvalues in each row
+			RV['pv0_min'][perm_i] = pv0.min() #take the minimum pvalue of the list and populate the array
+			if perm_i == 0: #get lambda at the first permutation
+				RV['lambda_perm'] = getLambda(pv_perm)
 			bar.update(perm_i+1)
 		bar.finish()
 	else:
@@ -140,12 +145,28 @@ for gene in genes:
 
 	# run the linear mixed model
 	RV['pv'] = pv
-	if n_perm == 1:
+
+	#compute empirical pvalues if n_perm > 1
+	if n_perm > 1:
 		#compute how many MINIMUM permuted pvalues for each permutation are less than each nominal pvalue and store the value
-		RV['pv_perm'] = lmm_perm.getPv()
+		RV['pv_perm'] = SP.array([(RV['pv0_min']<pv[0,nominal]).sum() for nominal in xrange(pv.shape[1])],dtype=float)
+		RV['pv_perm'] += 1 # compute the empirical pvalues
+		RV['pv_perm'] /= float(n_perm) #compute the empirical pvalues
+		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape
 	else:
-		pass #store an array of n_perm X SNPs
+		RV['pv_perm'] = lmm_perm.getPv() #do not get empirical pvalue but just permuted ones
+
 	
+	#compute lambda
+	RV['lambda'] = getLambda(pv) # compute lambda on nominal pvalues
+	if n_perm ==  1: #no empirical pvalues
+		RV['lambda_perm'] = getLambda(RV['pv_perm']) #get lambda for permuted pvalues
+		RV['lambda_empirical'] = sp.empty((1,))
+		RV['lambda_empirical'][:] = sp.NAN # create an array with NaN 
+	else:	
+		RV['lambda_empirical'] = getLambda(RV['pv_perm'])
+
+	#compute beta
 	RV['beta'] = lmm.getBetaSNP()
 	
 	# add gene info
