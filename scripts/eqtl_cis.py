@@ -6,6 +6,7 @@ from utils import smartDumpDictHdf5
 from utils import dumpDictHdf5
 from utils import getLambda
 
+import progressbar
 import limix.modules.qtl as QTL
 import limix.stats.fdr as FDR
 
@@ -94,7 +95,10 @@ Icv = SP.floor(nfolds*SP.arange(n_genes)/n_genes)
 I = Icv==fold_j
 #grab the genes in chunk j
 genes = list(genes[I])
-
+#set the widget for the progressbar
+bar = progressbar.ProgressBar(maxval=n_perm, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+#initialise the bar
+bar.start()
 #execute analysis for each gene in chunk j
 for gene in genes:
 
@@ -120,8 +124,6 @@ for gene in genes:
 	#permutation	
 	if n_perm > 1:
 		print 'number of permutations is set > 1; empirical pvalues will be computed.'
-		#initialize an array of 0 with shape of n_perms X number of SNPs in the cis window
-		RV['pv0'] = SP.zeros((n_perm,pv.shape[1]))
 		#initialize an array with one shape  = n_perms to store for each permutation the minimum pvalue per gene
 		RV['pv0_min'] = SP.zeros(n_perm)
 		SP.random.seed(0) #set random seed for each gene
@@ -130,10 +132,14 @@ for gene in genes:
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
 			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
 			lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K) #run the lmm model on permuted genotype
-			pv0 = lmm_perm.getPv()[0,:] #get permuted pvalue
-			RV['pv0'][perm_i,:] = pv0 #populate the array with list of permuted pvalues in each row
+			pv_perm = lmm_perm.getPv() #get permuted pvalues
+			pv0 = pv_perm[0,:] 
 			RV['pv0_min'][perm_i] = pv0.min() #take the minimum pvalue of the list and populate the array
-	else:
+			if perm_i == 0:
+				RV['lambda_perm'] = getLambda(pv_perm) #calculate lambda on the first permutation
+			bar.update(perm_i + 1) #update the bar
+		bar.finish()
+	else:	
 		print 'number of permutations is set = 1; empirical pvalues will not be computed.'
 		lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K)
 
