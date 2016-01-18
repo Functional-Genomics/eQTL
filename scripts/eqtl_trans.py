@@ -96,7 +96,7 @@ I = Icv==fold_j
 #grab the genes in chunk j
 genes = list(genes[I])
 #set progress bar
-bar = progressbar.ProgressBar(maxval=20, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+bar = progressbar.ProgressBar(maxval=n_perm, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
 bar.start()
 #execute analysis for each gene in chunk j
 for gene in genes:
