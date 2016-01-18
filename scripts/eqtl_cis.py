@@ -158,9 +158,11 @@ for gene in genes:
 	RV['qv'] = FDR.qvalues(pv) #multiple test correction for nominal pvalues
 	RV['lambda'] = getLambda(pv) #get lambda for nominal pvalues
 	if n_perm > 1:
-		RV['lambda_perm'] = getLambda(RV['pv_perm']) #get lambda for permuted pvalues
+		RV['lambda_empirical'] = getLambda(RV['pv_perm'])
 	else:	
 		RV['lambda_perm'] = getLambda(RV['pv_perm'])
+		RV['lambda_empirical'] = sp.empty((1,))
+		RV['lambda_empirical'][:] = sp.NAN # create an array with NaN 
 
 	RV['beta'] = lmm.getBetaSNP() #get beta on nominal pvalues. TODO: should I get beta on permuted?
 			
