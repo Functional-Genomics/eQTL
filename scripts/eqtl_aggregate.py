@@ -12,23 +12,25 @@ from utils import getLambda
 
 def usage():
 	print '''
-This script generates a final hdf5 file aggregating all the chr.hdf5 files. It corrects the qvalues for multiple testing across all the genes tested.
+If cis, this script generates a final hdf5 file aggregating all the chr.hdf5 files and corrects the qvalues for multiple testing across all the genes tested; if trans it reads the unique summary file with trans results as input and corrects for multiple testing. 
 
 Usage:
 
-eqtl_aggregate.py <out.summary.cis.hdf5> <window> <chr.lst>
+eqtl_aggregate.py <out.summary.cis.hdf5> <window> <n_perm>  <chr.lst>
 '''
 if __name__ == '__main__':
 
-	if len(sys.argv[1:]) < 3:
+	if len(sys.argv[1:]) < 4:
 		sys.stderr.write('ERROR: missing parameters\n')
 		usage()
 		sys.exit(1)
 
-	outfile,window = sys.argv[1:3]
+	outfile,window,n_perm = sys.argv[1:4]
 	window = float(window)
+	n_perm = int(n_perm)
 
-	chr = sp.loadtxt(sys.argv[3],delimiter='\t',dtype='S1000')
+	with open(sys.argv[4]) as f:
+		chr = [i.strip() for i in f.readlines()]
 
 	for file in chr:
 		if os.path.isfile(file) != True:
@@ -37,6 +39,10 @@ if __name__ == '__main__':
 
 	if type(window) != (int) and  type(window) != (float):
 		sys.stderr.write('\nERROR: Please use integer or float for window\n')
+		usage()
+		sys.exit(1)
+	elif type(n_perm) != (int):
+		sys.stderr.write('\nERROR: Please use integer for n_perm\n')
 		usage()
 		sys.exit(1)
 
@@ -50,22 +56,17 @@ if __name__ == '__main__':
 			print 'file {0} is empty\n'.format(i)
 			pass
 		else:
-			if window != 0 : # is cis:
-				temp['geneID'] =i['geneID'][:]
-				temp['chrom'] = i['chrom'][:]
-				temp['pos'] = i['pos'][:]
-				temp['pv'] = i['pv'][:]
-				temp['qv'] = i['qv'][:]
-				temp['beta'] = i['beta'][:]
-				temp['lambda'] = i['lambda'][:]
-				temp['lambda_perm'] = i['lambda_perm'][:]
-			else: #is trans
-				table['geneID'] =i['geneID'][:]
-				temp['chrom'] = i['chrom'][:]
-				temp['pos'] = i['pos'][:]
-				temp['pv'] = i['pv'][:]
-				temp['beta'] = i['beta'][:]
-				temp['pv_perm'] = i['pv_perm'][:]
+			temp['geneID'] =i['geneID'][:]
+			temp['file'] = i['file'][:]
+			temp['chrom'] = i['chrom'][:]
+			temp['pos'] = i['pos'][:]
+			temp['pv'] = i['pv'][:]
+			temp['qv'] = i['qv'][:]
+			temp['beta'] = i['beta'][:]
+			temp['lambda'] = i['lambda'][:]
+			temp['lambda_perm'] = i['lambda_perm'][:]
+			temp['lambda_empirical'] = i['lambda_empirical'][:]
+			temp['pv_perm'] = i['pv_perm'][:]				
 		#append all file groups to the big table
 		for key in temp.keys():
 			smartAppend(table,key,temp[key])
@@ -75,38 +76,33 @@ if __name__ == '__main__':
 			table[key] = sp.concatenate(table[key])
 		except:
 			pass
-	
-	#calculate qv_all
-	if window != 0:
+
+	#store the number of pvalues tested
+	shape_pv = table['pv'].shape[0]
+	#calculate qv_all,pv_perm_all
+	if window != 0 and n_perm <=1: #if cis and no empirical pvalues
 		table['qv_all'] = FDR.qvalues(table['qv'])
 		table['window'] = [window] #add group with window size
-	else: #if it's trans
-		pvalues=sp.hstack(table['pv'][0:])
-		beta = sp.hstack(table['beta'][0:])
-		pvalues_perm=sp.hstack(table['pv_perm'][0:])
-		pos = table['pos'][:]
-		chrom = table['chrom'][:]
-		del table['pv']
-		del table['pos']
-		del table['chrom']
-		del table['beta']
-		del table['pv_perm']
-		l=getLambda(pvalues)[0]
-		lp=getLambda(pvalues_perm)[0]
-		smartAppend(table,'lambda',l)
-		smartAppend(table,'lambda_perm',lp)
-		for gene_pv in xrange(len(pvalues)):
-			#caclulate qvalues correcting across all the snps tested per gene
-			qv=FDR.qvalues(pvalues[gene_pv]) 
-			idx= qv.argmin() #tale the index of the minumum pvalue per gene
-			#append to the big table of trans eqtls
-			smartAppend(table,'qv',qv[idx]) #append minimum qvalues 
-			smartAppend(table,'pv',pvalues[gene_pv][idx]) #append minimum pvalue per gene
-			smartAppend(table,'pos',pos[idx]) #append the position of the SNP with the min qvalue per gene
-			smartAppend(table,'chrom',chrom[idx]) #append the chrom of the SNP with the min qvalue per gene
-			smartAppend(table,'beta',beta[gene_pv][idx]) #append the beta for the SNP with the min qvalue per gene
-		table['qv_all'] = FDR.qvalues(sp.array(table['qv'])) #if you use qvalues method with default values it gives back all 0.0. TODO: implement familywise error rate for trans eqtls? 
-		table['window'] = [window] #add group with window size
+		table['n_perm'] = [n_perm]
+		table['pv_perm_all'] = sp.empty((shape_pv,))
+		table['pv_perm_all'][:] = sp.NAN
+	elif window !=0 and n_perm >1: # if cis and empirical pvalues
+		table['qv_all'] = FDR.qvalues(table['qv'])
+		table['pv_perm_all'] = FDR.qvalues(table['pv_perm'])
+		table['window'] = [window]
+		table['n_perm'] = [n_perm]
+	elif window == 0 and n_perm <=1: #if trans and no empirical pvalues
+		table['qv_all'] = FDR.qvalues(table['qv'])
+		table['window'] = [window]
+		table['n_perm'] = [n_perm]
+		table['pv_perm_all'] = sp.empty((shape_pv,))
+		table['pv_perm_all'][:] = sp.NAN
+	else: #if trans and empirical pvalues
+		table['qv_all'] = FDR.qvalues(table['qv'])
+		table['pv_perm_all'] = FDR.qvalues(table['pv_perm'])
+		table['window'] = [window]
+		table['n_perm'] = [n_perm]
+
 	#write within the file		
 	smartDumpDictHdf5(table,out)
 	out.close()

@@ -161,8 +161,8 @@ for gene in genes:
 		RV['lambda_empirical'] = getLambda(RV['pv_perm'])
 	else:	
 		RV['lambda_perm'] = getLambda(RV['pv_perm'])
-		RV['lambda_empirical'] = sp.empty((1,))
-		RV['lambda_empirical'][:] = sp.NAN # create an array with NaN 
+		RV['lambda_empirical'] = SP.empty((1,))
+		RV['lambda_empirical'][:] = SP.NAN # create an array with NaN 
 
 	RV['beta'] = lmm.getBetaSNP() #get beta on nominal pvalues. TODO: should I get beta on permuted?
 			

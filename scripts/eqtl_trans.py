@@ -145,7 +145,8 @@ for gene in genes:
 
 	# run the linear mixed model
 	RV['pv'] = pv
-
+	#compute  qvalues with Benjamini - Hochberg
+	RV['qv'] = FDR.qvalues(pv) 
 	#compute empirical pvalues if n_perm > 1
 	if n_perm > 1:
 		#compute how many MINIMUM permuted pvalues for each permutation are less than each nominal pvalue and store the value
@@ -161,8 +162,8 @@ for gene in genes:
 	RV['lambda'] = getLambda(pv) # compute lambda on nominal pvalues
 	if n_perm ==  1: #no empirical pvalues
 		RV['lambda_perm'] = getLambda(RV['pv_perm']) #get lambda for permuted pvalues
-		RV['lambda_empirical'] = sp.empty((1,))
-		RV['lambda_empirical'][:] = sp.NAN # create an array with NaN 
+		RV['lambda_empirical'] = SP.empty((1,))
+		RV['lambda_empirical'][:] = SP.NAN # create an array with NaN 
 	else:	
 		RV['lambda_empirical'] = getLambda(RV['pv_perm'])
 
