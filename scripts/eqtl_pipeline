@@ -167,9 +167,9 @@ $(info * Optional Parameters:)
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha
 
-
+snp_alpha?=1.0
 use_kinship?=y
 subfolder_name?=
 peer_iterations?=100
@@ -303,7 +303,7 @@ step1_dir:=$(name)/dna_$(step1_hash)
 step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
-eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)/
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(fdr_threshold)/
 report_dir=$(eqtl_dir)/report
 
 # print the folders
