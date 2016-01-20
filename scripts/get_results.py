@@ -81,7 +81,7 @@ if __name__ == '__main__':
 		std.error.write('ERROR: file '+i_file+' is empty\n')
 		sys.exit(1)
 	
-	name_keys=['geneID','chrom','pos','pv','qv','qv_all','pv_perm','pv_perm_all','beta','lambda','lambda_perm','lambda_empirical','window','n_perm','file']
+	name_keys=['geneID','chrom','pos','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm','lambda_empirical','window','n_perm','file']
 	#store header
 	header="\t".join(name_keys[:12])
 	#check if file has all the expected keys
@@ -93,9 +93,9 @@ if __name__ == '__main__':
 	#if everything passed numpy array check
 	n_perm = i_file['n_perm'][0] #n_perm
 	if n_perm <= 1: #no empirical pvalues
-		a = i_file['qv_all'][:] #use qv_all to select genes based on fdr
+		a = i_file['g_adj_pval'][:] #use qv_all to select genes based on fdr
 	else:
-		a = i_file['pv_perm_all'][:] #use pv_perm_all to select genes based on fdr
+		a = i_file['g_emp_adj_pval'][:] #use pv_perm_all to select genes based on fdr
 
 	for x in xrange(len(name_keys)):
 		name_keys[x] = i_file[name_keys[x]][:] #assign matrix to each variable
