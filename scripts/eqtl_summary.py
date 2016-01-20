@@ -86,7 +86,7 @@ if __name__=='__main__':
 				# store pv, pv_perm,cis qv,lambda,lambda_perm,lambda_empirical,beta
 				#take the minimum pvalue for each gene. TODO: still don't know which strategy to use for trans!
 				if window > 0: #is cis
-					print geneID
+					print "gene {0} kept".format(geneID)
 					temp['geneID'] = SP.array([str(geneID)])
 					temp['file'] = SP.array([str(file)])
 					gene_pos = data.getGenePos(geneID)
@@ -99,8 +99,8 @@ if __name__=='__main__':
 						temp['lambda_empirical']=fgene['lambda_empirical'][:,0]
 					else:
 						idx = fgene['qv'][0,:].argmin()
-						temp['pv_perm'] = SP.empty((1,))
-						temp['pv_perm'][:] = SP.NAN #no empirical pvalues has been computed
+						temp['pv_perm'] = (SP.empty((1,))).astype(str)
+						temp['pv_perm'][:] = 'NA' #no empirical pvalues has been computed
 						temp['lambda_empirical']=fgene['lambda_empirical'][:]
 					pos = fgene['pos'][[idx]]
 					temp['gene_pos'] = gene_pos
@@ -110,12 +110,11 @@ if __name__=='__main__':
 					temp['qv'] = fgene['qv'][:,idx]
 					temp['beta'] = fgene['beta'][:,idx]
 				else: #is trans
-					print geneID
+					print "gene {0} kept".format(geneID)
 					if n_perm > 1: #if empirical pvalues have been computed.
 						idx = fgene['pv_perm'][0,:]<= alpha #boolean vector based on empirical pvalues
-						print 'n_perm is > 1'
 					else:
-						idx = fgene['qv'][0,:]<= alpha #boolean vector based on qvalues
+						idx = fgene['pv'][0,:]<= alpha #boolean vector based on nominal pvalues
 					if sum(idx) > 0:
 						temp['geneID'] = SP.tile(SP.array([str(geneID)]),sum(idx))
 						temp['file'] = SP.tile(SP.array([str(file)]),sum(idx))
@@ -125,8 +124,8 @@ if __name__=='__main__':
 							temp['pv_perm'] = fgene['pv_perm'][0,:][idx]
 							temp['lambda_empirical'] = SP.tile(fgene['lambda_empirical'][:,0],sum(idx))
 						else:
-							temp['pv_perm'] = SP.empty((sum(idx),))
-							temp['pv_perm'][:] = SP.NAN #no empirical pvalues has been computed
+							temp['pv_perm'] = (SP.empty((sum(idx),))).astype(str)
+							temp['pv_perm'][:] = 'NA' #no empirical pvalues has been computed
 							temp['lambda_empirical'] = SP.tile(fgene['lambda_empirical'][:],sum(idx))
 						temp['pv'] = fgene['pv'][:][0,idx]
 						temp['qv'] = fgene['qv'][:][0,idx]
@@ -140,7 +139,7 @@ if __name__=='__main__':
 						print "no pvalues <= alpha"
 						pass
 			except:
-                                print "nothing significant in here"
+                                print "{0}:  nothing significant in here".format(geneID)
 				pass
 			#append the temp table into the big table
 			for key in temp.keys():
