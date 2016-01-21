@@ -11,12 +11,10 @@ filter_vcf.sh -i <invcf.gz> -o <outvcf.gz> -c <chromosome> -g <minGQ> -d <minDP>
 Options:
 
         -i    input vcf [mandatory]
-	-o    output vcf [mandatory]
         -c    chromosome [INT; mandatory]
         -g    define minGQ [default=50]
         -d    define minDP [default=20]
-        -f    retaining also variants without PASS in FORMAT field [default=true]
-	#-v   specify variant calling type [Sanger | Annai | ... ]
+        -f    retaining also variants without PASS in FORMAT field [optional; default=filter only PASS]
         #-p   select only those variants with >=0.95 probability of the most probable genotype [default=false]
 	-h    show this help message
 
