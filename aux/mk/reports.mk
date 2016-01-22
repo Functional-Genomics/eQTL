@@ -35,7 +35,7 @@ print_report_dir:
 
 $(report_dir)/settings.tsv: $(conf) 
 	mkdir -p $(@D) &&\
-	( $(foreach v,$(settings_vars), echo $v:::$($v);)) | sed "s/:::/\t/" > $@.tmp && mv $@.tmp $@
+	( $(foreach v,$(settings_vars), echo $v:::$($v);) echo num_vcfs:::$(words $(vcfs)); )  | sed "s/:::/\t/" > $@.tmp && mv $@.tmp $@
 
 # Copy the plots and tsv file to the report folder
 $(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png
