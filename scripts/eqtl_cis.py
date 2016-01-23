@@ -128,7 +128,7 @@ for gene in genes:
 		RV['pv0_min'] = SP.zeros(n_perm)
 		SP.random.seed(0) #set random seed for each gene
 		for perm_i in xrange(int(n_perm)):
-			print 'computing permutation # {0}'.format(perm_i)
+			#print 'computing permutation # {0}'.format(perm_i)
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
 			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
 			lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K) #run the lmm model on permuted genotype
