@@ -131,7 +131,7 @@ for gene in genes:
 			#print 'computing permutation # {0}'.format(perm_i)
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
 			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
-			lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K) #run the lmm model on permuted genotype
+			lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov,K) #run the lmm model on permuted genotype
 			pv_perm = lmm_perm.getPv() #get permuted pvalues
 			pv0 = pv_perm[0,:] 
 			RV['pv0_min'][perm_i] = pv0.min() #take the minimum pvalue of the list and populate the array
@@ -146,10 +146,10 @@ for gene in genes:
 	#store results
 	RV['pv'] = pv #record nominal pvalues
 	if n_perm > 1:
-		#compute how many MINIMUM permuted pvalues for each permutation are less than each nominal pvalue and store the value
-		RV['pv_perm'] = SP.array([(RV['pv0_min']<pv[0,nominal]).sum() for nominal in xrange(pv.shape[1])],dtype=float)
+		#compute how many MINIMUM permuted pvalues for each permutation are greater than each nominal pvalue and store the value
+		RV['pv_perm'] = SP.array([(RV['pv0_min']>pv[0,nominal]).sum() for nominal in xrange(pv.shape[1])],dtype=float)
 		RV['pv_perm'] += 1 # compute the empirical pvalues
-		RV['pv_perm'] /= float(n_perm) #compute the empirical pvalues
+		RV['pv_perm'] /= float(n_perm)+1 #compute the empirical pvalues
 		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape
 	else:
 		RV['pv_perm'] = lmm_perm.getPv() #record just the permuted_pvalues after 1 permutation
