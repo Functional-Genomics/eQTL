@@ -147,7 +147,7 @@ for gene in genes:
 	RV['pv'] = pv #record nominal pvalues
 	if n_perm > 1:
 		#compute how many MINIMUM permuted pvalues for each permutation are less than each nominal pvalue and store the value
-		RV['pv_perm'] = SP.array([(sum(RV['pv0_min'][:]<pv[0,nominal]) for nominal in xrange(pv[:].shape[1])],dtype=float)
+		RV['pv_perm'] = SP.array([sum(RV['pv0_min'][:]<pv[0,nominal]) for nominal in xrange(pv[:].shape[1])],dtype=float)
 		RV['pv_perm'] += 1 # compute the empirical pvalues
 		RV['pv_perm'] /= float(n_perm)+1 #compute the empirical pvalues
 		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape
