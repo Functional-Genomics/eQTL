@@ -21,7 +21,6 @@ This script generates a list of significant eqtls based on fdr threshold. The li
 9)Effect size (nominal)
 10)Lambda (nominal pvalues)
 11)Lambda_perm (pvalues of the first permutation)
-12)Lambda_empirical ['NA' if n_perm <= 1]
 
 
 Usage:
@@ -29,7 +28,7 @@ Usage:
 get_results.py <fdr_threshold> <result.tsv> <final_res.hdf5>'''
 
 def get_res(a,l,fdr):
-	global genes,chromosome,position,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm,gene_control_empirical
+	global genes,chromosome,position,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm
 	boolvector = (a<=fdr)
 	genes = l[0][boolvector]
 	chromosome = l[1][boolvector]
@@ -44,8 +43,7 @@ def get_res(a,l,fdr):
 	beta =l[8][boolvector]
 	gen_control=l[9][boolvector]
 	gen_control_perm=l[10][boolvector]
-	gene_control_empirical=l[11][boolvector]
-	return genes,chromosome,position,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm,gene_control_empirical
+	return genes,chromosome,position,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm
 
 
 if __name__ == '__main__':
@@ -81,9 +79,9 @@ if __name__ == '__main__':
 		std.error.write('ERROR: file '+i_file+' is empty\n')
 		sys.exit(1)
 	
-	name_keys=['geneID','chrom','pos','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm','lambda_empirical','window','n_perm','file']
+	name_keys=['geneID','chrom','pos','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm','window','n_perm','file']
 	#store header
-	header="\t".join(name_keys[:12])
+	header="\t".join(name_keys[:11])
 	#check if file has all the expected keys
 	for key in name_keys:
 		if key not in i_file: 

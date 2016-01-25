@@ -96,12 +96,10 @@ if __name__=='__main__':
 					if n_perm > 1 :#if empirical pvalues have been computed			
 						idx = fgene['pv'][0,:].argmin()
 						temp['pv_perm'] = fgene['pv_perm'][:]
-						temp['lambda_empirical']=fgene['lambda_empirical'][:,0]
 					else:
 						idx = fgene['qv'][0,:].argmin()
 						temp['pv_perm'] = (SP.empty((1,))).astype(str)
 						temp['pv_perm'][:] = 'NA' #no empirical pvalues has been computed
-						temp['lambda_empirical']=fgene['lambda_empirical'][:]
 					pos = fgene['pos'][[idx]]
 					temp['gene_pos'] = gene_pos
 					temp['chrom'] = fgene['chrom'][[idx]]
@@ -111,30 +109,26 @@ if __name__=='__main__':
 					temp['beta'] = fgene['beta'][:,idx]
 				else: #is trans
 					print "gene {0} kept".format(geneID)
-					if n_perm > 1: #if empirical pvalues have been computed.
-						idx = fgene['pv_perm'][0,:]<= alpha #boolean vector based on empirical pvalues
-					else:
-						idx = fgene['pv'][0,:]<= alpha #boolean vector based on nominal pvalues
-					if sum(idx) > 0:
-						temp['geneID'] = SP.tile(SP.array([str(geneID)]),sum(idx))
-						temp['file'] = SP.tile(SP.array([str(file)]),sum(idx))
+					idx = fgene['pv'][0,:]<= alpha #boolean vector based on nominal pvalues
+					s_idx = sum(idx)
+					if s_idx > 0:
+						temp['geneID'] = SP.tile(SP.array([str(geneID)]),s_idx)
+						temp['file'] = SP.tile(SP.array([str(file)]),s_idx)
 						gene_pos = data.getGenePos(geneID)
-						temp['gene_pos'] = SP.tile(gene_pos,sum(idx))
+						temp['gene_pos'] = SP.tile(gene_pos,s_idx)
 						if n_perm > 1 : 
-							temp['pv_perm'] = fgene['pv_perm'][0,:][idx]
-							temp['lambda_empirical'] = SP.tile(fgene['lambda_empirical'][:,0],sum(idx))
+							temp['pv_perm'] = SP.tile(fgene['pv_perm'][:,0],s_idx)
 						else:
-							temp['pv_perm'] = (SP.empty((sum(idx),))).astype(str)
+							temp['pv_perm'] = (SP.empty((s_idx,))).astype(str)
 							temp['pv_perm'][:] = 'NA' #no empirical pvalues has been computed
-							temp['lambda_empirical'] = SP.tile(fgene['lambda_empirical'][:],sum(idx))
 						temp['pv'] = fgene['pv'][:][0,idx]
 						temp['qv'] = fgene['qv'][:][0,idx]
 						temp['beta'] = fgene['beta'][:][0,idx]
 						pos = fgene['pos'][idx]
 						temp['chrom'] = fgene['chrom'][idx]
 						temp['pos'] = pos
-						temp['lambda'] = SP.tile(fgene['lambda'][:,0],sum(idx))
-						temp['lambda_perm'] = SP.tile(fgene['lambda_perm'][:,0],sum(idx))
+						temp['lambda'] = SP.tile(fgene['lambda'][:,0],s_idx)
+						temp['lambda_perm'] = SP.tile(fgene['lambda_perm'][:,0],s_idx)
 					else:
 						print "no pvalues <= alpha"
 						pass

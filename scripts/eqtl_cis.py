@@ -125,44 +125,46 @@ for gene in genes:
 	if n_perm > 1:
 		print 'number of permutations is set > 1; empirical pvalues will be computed.'
 		#initialize an array with one shape  = n_perms to store for each permutation the minimum pvalue per gene
-		RV['pv0_min'] = SP.zeros(n_perm)
+		r = 0 #initialize fraction of permuted pvalues <= minimum nominal pval
 		SP.random.seed(0) #set random seed for each gene
 		for perm_i in xrange(int(n_perm)):
 			#print 'computing permutation # {0}'.format(perm_i)
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
-			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
-			lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov,K) #run the lmm model on permuted genotype
+			Xc_perm = Xc[:][idx,:] #shuffle the samples of the genome matrix
+			cov_perm = cov[:][idx,:] #shuffle covariates
+			K_perm=K[:][idx,:][:,idx]
+			lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov_perm,K_perm) #run the lmm model on permuted genotype
 			pv_perm = lmm_perm.getPv() #get permuted pvalues
-			pv0 = pv_perm[0,:] 
-			RV['pv0_min'][perm_i] = pv0.min() #take the minimum pvalue of the list and populate the array
+			pv0_min= pv_perm[0,:].min() #take the minimum pvalue of the list 
+			if pv0_min <= pv[:].min(): #if minimum permuted pval is less or equal than the nominal increase r
+				r+=1
 			if perm_i == 0:
 				RV['lambda_perm'] = getLambda(pv_perm) #calculate lambda on the first permutation
 			bar.update(perm_i + 1) #update the bar
 		bar.finish()
 	else:	
 		print 'number of permutations is set = 1; empirical pvalues will not be computed.'
-		lmm_perm =run_lmm(booleanK,peer_cov,Xc,Y,cov,K)
+		idx = SP.random.permutation(Xc.shape[0])
+		Xc_perm = Xc[:][idx,:]
+		cov_perm = cov[:][idx,:]
+		K_perm=K[:][idx,:][:,idx]
+		lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov_perm,K_perm)
 
 	#store results
 	RV['pv'] = pv #record nominal pvalues
 	if n_perm > 1:
 		#compute how many MINIMUM permuted pvalues for each permutation are less than the minimum nominal pvalue and store the value
-		RV['pv_perm'] = SP.array([sum(RV['pv0_min'][:]<pv[:].min()),dtype=float)
-		RV['pv_perm'] += 1 # compute the empirical pvalues
-		RV['pv_perm'] /= float(n_perm)+1 #compute the empirical pvalues
-		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape
-	else:
-		RV['pv_perm'] = lmm_perm.getPv() #record just the permuted_pvalues after 1 permutation
+		RV['pv_perm'] = SP.array([((r+1)/(float(n_perm)+1))],dtype=float) #one value per gene
+		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape an array of (1,1)
+	else: #if n_perm ==1 
+		perm_pv= lmm_perm.getPv() #record the minimum permuted_pvalues after 1 permutation
+		RV['pv_perm'] = SP.array([perm_pv[:].min()])
 
 	
 	RV['qv'] = FDR.qvalues(pv) #multiple test correction for nominal pvalues
 	RV['lambda'] = getLambda(pv) #get lambda for nominal pvalues
-	if n_perm > 1:
-		RV['lambda_empirical'] = getLambda(RV['pv_perm'])
-	else:	
-		RV['lambda_perm'] = getLambda(RV['pv_perm'])
-		RV['lambda_empirical'] = (SP.empty((1,))).astype(str)
-		RV['lambda_empirical'][:] = 'NA' # create an array with NA
+	if n_perm == 1:
+		RV['lambda_perm'] = getLambda(perm_pv[:]) #calculate lambda on the the permutation
 
 	RV['beta'] = lmm.getBetaSNP() #get beta on nominal pvalues. TODO: should I get beta on permuted?
 			
