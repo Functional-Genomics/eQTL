@@ -94,8 +94,8 @@ if __name__=='__main__':
 					temp['lambda'] = fgene['lambda'][:,0]
                                 	temp['lambda_perm'] = fgene['lambda_perm'][:,0]
 					if n_perm > 1 :#if empirical pvalues have been computed			
-						idx = fgene['pv_perm'][0,:].argmin()
-						temp['pv_perm'] = fgene['pv_perm'][:,idx]
+						idx = fgene['pv'][0,:].argmin()
+						temp['pv_perm'] = fgene['pv_perm'][:]
 						temp['lambda_empirical']=fgene['lambda_empirical'][:,0]
 					else:
 						idx = fgene['qv'][0,:].argmin()
