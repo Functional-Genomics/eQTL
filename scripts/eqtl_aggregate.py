@@ -70,7 +70,6 @@ if __name__ == '__main__':
 			temp['beta'] = i['beta'][:]
 			temp['lambda_pval'] = i['lambda'][:]
 			temp['lambda_perm'] = i['lambda_perm'][:]
-			temp['lambda_empirical'] = i['lambda_empirical'][:]
 			temp['l_emp_pval'] = i['pv_perm'][:]				
 		#append all file groups to the big table
 		for key in temp.keys():
@@ -93,7 +92,7 @@ if __name__ == '__main__':
 		table['g_emp_adj_pval'][:] = 'NA' #fill an empty array with NA values
 	elif window !=0 and n_perm >1: # if cis and empirical pvalues
 		table['g_adj_pval'] = FDR.qvalues(table['l_adj_pval'])
-		table['g_emp_adj_pval'] = FDR.qvalues(table['l_emp_pval'])
+		table['g_emp_adj_pval'] = FDR.qvalues(table['l_emp_pval'][:,0])
 		table['window'] = [window]
 		table['n_perm'] = [n_perm]
 	elif window == 0 and n_perm <=1: #if trans and no empirical pvalues
@@ -105,7 +104,7 @@ if __name__ == '__main__':
 	else: #if trans and empirical pvalues
 		table['g_adj_pval'] = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
 		table['g_adj_pval'] [:] = 'NA'
-		table['g_emp_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['l_emp_pval'][:].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across empirical pvalues
+		table['g_emp_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['l_emp_pval'][:,0].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across empirical pvalues
 		table['window'] = [window]
 		table['n_perm'] = [n_perm]
 
