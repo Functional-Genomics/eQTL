@@ -151,7 +151,7 @@ for gene in genes:
 	#compute empirical pvalues if n_perm > 1
 	if n_perm > 1:
 		#compute how many MINIMUM permuted pvalues for each permutation are greater than each nominal pvalue and store the value
-		RV['pv_perm'] = SP.array([(RV['pv0_min'][:]<pv[0,nominal]).sum() for nominal in xrange(pv[:].shape[1])],dtype=float)
+		RV['pv_perm'] = SP.array([sum(RV['pv0_min'][:]<pv[:].min()),dtype=float)
 		RV['pv_perm'] += 1 # compute the empirical pvalues
 		RV['pv_perm'] /= float(n_perm)+1 #compute the empirical pvalues
 		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape
