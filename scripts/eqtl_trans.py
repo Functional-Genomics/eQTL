@@ -127,9 +127,7 @@ for gene in genes:
 		for perm_i in xrange(int(n_perm)):
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
 			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
-			cov_perm = cov[:][idx,:]
-			K_perm = K[:][idx,:][:,idx]
-			lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov_perm,K_perm) #run the lmm model on permuted genotype
+			lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov,K) #run the lmm model on permuted genotype
 			pv_perm = lmm_perm.getPv()# get pvalues 
 			pv0_min = pv_perm[0,:].min() #get minimum permuted pvalue
 			if pv0_min <= pv[:].min():
@@ -142,9 +140,7 @@ for gene in genes:
 		print 'number of permutations is set = 1; empirical pvalues will not be computed.'
 		idx = SP.random.permutation(Xc.shape[0]) #take indexes
 		Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
-		cov_perm = cov[:][idx,:]
-		K_perm = K[:][idx,:][:,idx]
-		lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov_perm,K_perm)
+		lmm_perm =run_lmm(booleanK,peer_cov,Xc_perm,Y,cov,K)
 
 	# run the linear mixed model
 	RV['pv'] = pv
