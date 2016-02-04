@@ -251,7 +251,7 @@ function bedtools_install {
     pprint_msg "Installing bedtools...done."
 }
 
-function bedtools_install {
+function vcftools_install {
     pprint_msg "Installing vcftools..."
     
     VCFTOOLS_VERSION=0.1.14
