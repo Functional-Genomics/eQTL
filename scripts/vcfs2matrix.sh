@@ -11,6 +11,12 @@ if [ ! -e $bed_file ] ; then
     echo "ERROR: $usage" > /dev/stderr
     exit 1
 fi
+# TODO: check if bed has 5 columns
+col=`head -n 1 $bed_file|wc -w`
+if [ $col -lt 5 ]; then
+    echo "ERROR:bed file should have 5 columns" > /dev/stderr
+    exit 1
+fi
 shift 1
 vcfs=$*
 if [ "x$vcfs" == "x" ]; then
@@ -23,17 +29,19 @@ if [ "x$vcfs" == "x" ]; then
     echo "ERROR: $usage" > /dev/stderr
     exit 1
 fi
+set -e
 tmp_file=`mktemp`
 tmp_file2=`mktemp`
+tmp_file3=`mktemp`
 
-set -e
-cut -f 1,2,3 $bed_file > $tmp_file
-col=`head -n 1 $bed_file|wc -w`
+
+cut -f 1,2,3 $bed_file > $tmp_file3
+cut -f 1,2,3,4,5 $bed_file > $tmp_file
 for vcf in $vcfs; do
-    cut -f 1,2,3 $bed_file | bedtools intersect -c -a stdin -b $vcf | cut -f $col |paste $tmp_file - > $tmp_file2
+    bedtools intersect -c -a $tmp_file3 -b $vcf | cut -f 4- |paste $tmp_file - > $tmp_file2
     mv $tmp_file2 $tmp_file
 done
-echo chr start end $vcfs | tr " " "\t"
+echo chr start end name score $vcfs | tr " " "\t"
 cat $tmp_file
-rm -f $tmp_file
+rm -f $tmp_file $tmp_file3 $tmp_file2
 exit 0
