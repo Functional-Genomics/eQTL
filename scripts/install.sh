@@ -233,7 +233,25 @@ function plink_install {
     cp `echo $PLINK_FILE|sed "s/.zip//"`/plink $EPIPELINE_DIR/bin/
     pprint_msg "Installing plink...done"
 }
-function vcftools_install {
+
+function bedtools_install {
+    pprint_msg "Installing bedtools..."
+    
+    BEDTOOLS_VERSION=2.2.25
+    BEDTOOLS_FILE=bedtools-$BEDTOOLS_VERSION.tar.gz
+    BEDTOOLS_URL=https://github.com/arq5x/bedtools2/releases/download/v$BEDTOOLS_VERSION/$BEDTOOLS_FILE
+
+    download $BEDTOOLS_URL $BEDTOOLS_FILE
+    
+    tar xvzf $BEDTOOLS_FILE
+    pushd bedtools2
+    make
+    cp bin/* $EPIPELINE_DIR/bin
+    popd
+    pprint_msg "Installing bedtools...done."
+}
+
+function bedtools_install {
     pprint_msg "Installing vcftools..."
     
     VCFTOOLS_VERSION=0.1.14
@@ -445,6 +463,7 @@ limix_install
 peer_install
 vcftools_install
 bcftools_install
+bedtools_install
 #samtools_install
 #tabix_install
 plink_install
