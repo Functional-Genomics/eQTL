@@ -26,7 +26,7 @@ fi
 tmp_file=`mktemp`
 tmp_file2=`mktemp`
 
-
+set -e
 cut -f 1,2,3 $bed_file > $tmp_file
 col=`head -n 1 $bed_file|wc -w`
 for vcf in $vcfs; do
