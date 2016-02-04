@@ -8,20 +8,20 @@ def usage():
 	print '''
 
 Usage:
-geno_filtering.py <var.tsv> <threshold> <filtered_matrix.tsv>
+geno_filtering.py <stdin> <threshold> <filtered_matrix_stdout>
 '''
 
-if len(sys.argv[1:]) < 3:
+if len(sys.argv[1:]) < 1:
 	usage()
 	sys.stderr.write('\nERROR: missing parameter\n')
 	sys.exit(1)
 
-file1,threshold,out = sys.argv[1:]
+threshold = sys.argv[1]
 
 
-if os.path.isfile(file1) != True:
-	sys.stderr.write('\nERROR: file '+file1+' not found\n')
-	sys.exit(1)
+#if os.path.isfile(file1) != True:
+#	sys.stderr.write('\nERROR: file '+file1+' not found\n')
+#	sys.exit(1)
 
 try:
 	threshold = int(threshold)
@@ -30,6 +30,8 @@ except:
 	sys.stderr.write('\nERROR: threshold must be int\n')
 	sys.exit(1)
 
+#read file from stdin
+file1 = sys.stdin
 #read the tsv file
 matrix = pd.read_csv(file1,sep='\t',index_col=0)
 #change index type into string 
@@ -41,7 +43,7 @@ elif matrix.index.dtype == (int):
 #select rows based on number of samples with at least 1 event
 filt_matrix = matrix[matrix.gt(0,axis='rows').sum(1) >= threshold]
 
-filt_matrix.to_csv(out,sep='\t',header=True,index=True)
+filt_matrix.to_csv(sys.stdout,sep='\t',header=True,index=True)
 
 sys.exit(0)
 
