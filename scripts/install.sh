@@ -237,7 +237,7 @@ function plink_install {
 function bedtools_install {
     pprint_msg "Installing bedtools..."
     
-    BEDTOOLS_VERSION=2.2.25
+    BEDTOOLS_VERSION=2.25.0
     BEDTOOLS_FILE=bedtools-$BEDTOOLS_VERSION.tar.gz
     BEDTOOLS_URL=https://github.com/arq5x/bedtools2/releases/download/v$BEDTOOLS_VERSION/$BEDTOOLS_FILE
 
