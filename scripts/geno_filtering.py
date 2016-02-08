@@ -8,7 +8,7 @@ def usage():
 	print '''
 
 Usage:
-geno_filtering.py <stdin> <threshold> <filtered_matrix_stdout>
+geno_filtering.py <threshold> <filtered_matrix_stdout>
 '''
 
 if len(sys.argv[1:]) < 1:
