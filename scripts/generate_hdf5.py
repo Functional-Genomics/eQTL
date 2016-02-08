@@ -3,6 +3,7 @@
 import sys,os
 import h5py
 import scipy as sp
+from utils import corr_matrix
 import pandas as pd
 
 def usage():
@@ -10,7 +11,8 @@ def usage():
 This scripts substitutes the mutation burden in 0/1 and generates an hdf5 file using the matrix of genotype veriants and the annotation bed file.
  
 Usage:
-generate_hdf.py <var_filtered_stdin> <var_annotation.bed> <chr> <chr.hdf5>
+cat <var_filtered_stdin> | generate_hdf.py <var_annotation.bed> <chr> <chr.hdf5> 
+Optional parameter: <skip_kinship>
 '''
 
 
@@ -19,10 +21,14 @@ if len(sys.argv[1:])<3:
 	sys.stderr.write('\nERROR: missing parameter\n')
 	sys.exit(1)
 
-file2,chr,outfile=sys.argv[1:]
+if len(sys.argv[1:]) == 3:
+	file2,chr,outfile=sys.argv[1:]
+	skip_kinship=False #generate kinship by default
+elif len(sys.argv[1:]) == 4:
+	file2,chr,outfile,skip_kinship = sys.argv[1:]
+	skip_kinship=True #generate kinship with NaN
 
 chr=str(chr)
-
 
 if os.path.isfile(file2) != True:
 	sys.stderr.write('\nERROR: file '+file2+' not found\n')
@@ -54,6 +60,8 @@ matrix = var_file.values[sp.in1d(var_file.index.values,var_file_subset)].T.astyp
 burden_matrix=matrix.copy()
 #change mutation burden into 1
 matrix[matrix>=1]=1
+#compute kinship based on optional parameter
+matrix,K = corr_matrix(matrix[:],skip_kinship=skip_kinship) 
 #set row_header
 row_header= sp.array(var_file.columns.tolist())
 #store indexes of the geno variant in the annotation list
@@ -69,6 +77,7 @@ hdf = h5py.File(outfile,'w')
 
 #append the matrix, row_header,col_header (with subkeys)
 dset = hdf.create_dataset('genotype/matrix',data=matrix)
+dset = hdf.create_dataset('genotype/Kpop',data=K)
 dset = hdf.create_dataset('genotype/burden_matrix',data=burden_matrix)
 dset = hdf.create_dataset('genotype/row_header/sample_ID', data=row_header)
 dset = hdf.create_dataset('genotype/col_header/alleles',data=allele)
