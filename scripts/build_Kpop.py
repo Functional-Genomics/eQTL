@@ -3,6 +3,8 @@
 import os, sys
 import numpy as np
 import h5py
+import warnings
+warnings.filterwarnings('error')
 
 def usage():
 
@@ -59,8 +61,14 @@ if __name__ == "__main__":
 		if samples_vector == 0:
 			samples_vector = X['genotype/row_header/sample_ID'][:] #get samples from chr file
 		X.close()
-	#normalise Kpop
-	Kpop /= Kpop.diagonal().mean()
+	
+	try:
+		#normalise Kpop if values are != NaN
+		Kpop /= Kpop.diagonal().mean()
+	except:
+		warnings.simplefilter("error")
+		print 'Failed to normalise Kpop!'
+
         #print "Creating kinship matrix..."
 	print "\nCreating output file...\n"                           
 	#output Kpop in hdf5 file
