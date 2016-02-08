@@ -81,13 +81,15 @@ $(step1a_dir)/$(1)/chr$(1).hdf5: $(step1a_dir)/$(1)/plink_chr$(1).done
 	mv $$@.tmp $$@
 
 ifneq ($(aggr_bed_file),)
-$(step1b_dir)/$(1)/chr$(1)_merged.tsv: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz $(aggr_bed_file)
-	vcfs2matrix.sh $(aggr_bed_file) $$< > $$@.tmp && mv $$@.tmp $$@
+$(step1b_dir)/$(1)/chr$(1)_filt.tsv: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $(aggr_bed_file)
+	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
+	cat $$@.lst | vcfs2matrix.sh $(aggr_bed_file) > $$@.tmp && mv $$@.tmp $$@
+#&& rm -f $$@.lst
 
-$(step1b_dir)/$(1)/chr$(1).tsv: $(step1b_dir)/$(1)/chr$(1)_merged.tsv
+$(step1b_dir)/$(1)/chr$(1).tsv: $(step1b_dir)/$(1)/chr$(1)_filt.tsv
 	cut -f 4,6- $$< |  geno_filtering.py $(geno_threshold) > $$@.tmp && mv $$@.tmp $$@
 
-$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1)_merged.tsv
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1).tsv
 	cat $$< | generate_hdf5.py $(aggr_bed_file) $(1) $$@.tmp && mv $$@.tmp $$@
 endif
 endef
