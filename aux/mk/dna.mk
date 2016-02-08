@@ -86,10 +86,10 @@ $(step1b_dir)/$(1)/chr$(1)_filt.tsv: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(s
 	cat $$@.lst | vcfs2matrix.sh $(aggr_bed_file) > $$@.tmp && mv $$@.tmp $$@
 #&& rm -f $$@.lst
 
-$(step1b_dir)/$(1)/chr$(1).tsv: $(step1b_dir)/$(1)/chr$(1)_filt.tsv
+$(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(step1b_dir)/$(1)/chr$(1)_filt.tsv
 	cut -f 4,6- $$< |  geno_filtering.py $(geno_threshold) > $$@.tmp && mv $$@.tmp $$@
 
-$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1).tsv
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1).genotype.tsv
 	cat $$< | generate_hdf5.py $(aggr_bed_file) $(1) $$@.tmp && mv $$@.tmp $$@
 endif
 endef

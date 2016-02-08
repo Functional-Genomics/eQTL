@@ -18,5 +18,5 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 	mv $@.tmp  $@
 
 #$(step3_dir)/$(corr_method)/$(corr_method).hdf5
-$(step3_dir)/complete: $(step1a_dir)/complete $(step2_dir)/complete   $(step3_dir)/$(corr_method)/$(corr_method).clus.png
+$(step3_dir)/complete: $(step1b_dir)/complete $(step2_dir)/complete   $(step3_dir)/$(corr_method)/$(corr_method).clus.png
 	$(call p_info,"Step 3 complete") touch $@
