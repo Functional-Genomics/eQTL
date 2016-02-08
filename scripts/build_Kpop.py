@@ -4,7 +4,6 @@ import os, sys
 import numpy as np
 import h5py
 import warnings
-warnings.filterwarnings('error')
 
 def usage():
 
