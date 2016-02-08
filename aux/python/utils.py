@@ -129,4 +129,18 @@ def bonferroni_fmer(pvalues,n,alpha):
 	bv = (n*pvalues)<alpha
 	return bv
 
+def corr_matrix(matrix,skip_kinship=False):
 
+	'''if calculate_kinship is False, this function standardises the geno data by centering SNPs to mean 0, with unit variance. Then it calculates matrix of correlation N x N, using matrix of N samples x G genotypes. If skip_kinship is True, it generates a N x N matrix of NaN '''
+	if skip_kinship == False: 
+		matrix -= matrix.mean(0)
+		matrix /= matrix.std(0)
+		nan=SP.isnan(matrix)
+		matrix[nan]=0.0
+		K = SP.dot(matrix,matrix.T)
+	else:
+		#if kinship is not requested
+		shape=matrix.shape[0]
+		K = SP.empty((shape,shape))
+		K[:] = SP.NAN
+	return matrix,K
