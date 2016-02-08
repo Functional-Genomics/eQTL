@@ -7,8 +7,8 @@ import scipy as sp
 def usage():
 	print '''
 
-Usage:
-geno_filtering.py <threshold> <filtered_matrix_stdout>
+Usage: geno_filtering.py <threshold>
+The matrix will be read from stdin and the filtered matrix will be printed to stdout.
 '''
 
 if len(sys.argv[1:]) < 1:
