@@ -1,5 +1,5 @@
 
-step1: step0 $(step1a_dir)/complete
+step1: step0 $(step1b_dir)/complete
 step1_a: tbi_files
 step1_b: fix_vcf_headers
 step1_c: filter_vcfs
@@ -31,6 +31,7 @@ define make-rules-for-chr=
 # TODO: remove from here
 $(shell mkdir -p $(step1_dir)/$(1))
 $(shell mkdir -p $(step1a_dir)/$(1))
+$(shell mkdir -p $(step1b_dir)/$(1))
 
 $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))) $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz.tbi,$$(l)))
 	$$(file > $$@.lst,$$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(subst .vcf.gz,.filter.vcf.gz,$$(l))))  \
@@ -79,6 +80,16 @@ $(step1a_dir)/$(1)/chr$(1).hdf5: $(step1a_dir)/$(1)/plink_chr$(1).done
 	geno_preprocessing.py $$@.tmp $(use_kinship_option) && \
 	mv $$@.tmp $$@
 
+ifneq ($(aggr_bed_file),)
+$(step1b_dir)/$(1)/chr$(1)_merged.tsv: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz $(aggr_bed_file)
+	vcfs2matrix.sh $(aggr_bed_file) $$< > $$@.tmp && mv $$@.tmp $$@
+
+$(step1b_dir)/$(1)/chr$(1).tsv: $(step1b_dir)/$(1)/chr$(1)_merged.tsv
+	cut -f 4,6- $$< |  geno_filtering.py $(geno_threshold) > $$@.tmp && mv $$@.tmp $$@
+
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1)_merged.tsv
+	cat $$< | generate_hdf5.py $(aggr_bed_file) $(1) $$@.tmp && mv $$@.tmp $$@
+endif
 endef
 
 # Generate the rules per chr
@@ -86,7 +97,7 @@ $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
 
 # 
 # build_Kpop.py kop.hdf5.tmp samples.hdf5 ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
-$(kpop_file): $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
+$(kpop_file): $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	build_Kpop.py $(kpop_file).tmp $(samples_hdf5).tmp $^ && \
 	mv $(samples_hdf5).tmp $(samples_hdf5) &&\
 	mv $(kpop_file).tmp $(kpop_file) && \
@@ -99,7 +110,7 @@ $(step1_dir)/filter1/%.filter1.done: $(foreach chr,$(chromosomes),$(step1_dir)/$
 	mkdir -p $(@D) && touch $@
 
 FILTERED_VCF_FILES=$(foreach l,$(vcfs),$(step1_dir)/filter1/$(subst .vcf.gz,.filter1.done,$(l)))
-FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
+FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 #$(info $(FILTERED_VCF_FILES))
 filter_vcfs:  $(FILTERED_VCF_FILES)
 filter1: filter_vcfs
@@ -109,7 +120,7 @@ filter2: $(FILTERED_VCF_FILES2)
 TARGETS2+=$(FILTERED_VCF_FILES)
 TARGETS3+=$(FILTERED_VCF_FILES2)
 
-STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).genotype.tsv)
+STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).genotype.tsv)
 TARGETS4+=$(STEP1_TARGETS)
 
 
@@ -118,5 +129,5 @@ $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
 
-$(step1a_dir)/complete:  $(STEP1_TARGETS) vcf_stats
+$(step1b_dir)/complete:  $(STEP1_TARGETS) vcf_stats
 	$(call p_info,"Step 1 complete") touch $@
