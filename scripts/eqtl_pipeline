@@ -155,6 +155,7 @@ $(call p_error, no chromosome was provided)
 endif
 
 
+
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 
@@ -165,9 +166,18 @@ LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 $(info * )
 $(info * Optional Parameters:)
 
-
 #
 def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha
+
+# optional: bed file to aggregate the variants
+ifdef aggr_bed_file
+$(info *	aggr_bed_file=$(aggr_bed_file))
+$(call file_exists,$(aggr_bed_file))
+else
+aggr_bed_file=
+endif
+
+
 
 snp_alpha?=1.0
 use_kinship?=y
@@ -276,6 +286,8 @@ TARGETS9=
 #   |+-------------none_[step3_md5]/
 #	{1,2,...}
 #       1.hd5
+# optional
+#   |+-------------dna_[dna_filter_options_md5]/plink_[dna_filder_options_md5]/[aggr_bed]
 
 ifeq ($(shell test $(words $(vcfs)) -lt 300; echo $$?),0)
 vcfs2hash=$(vcfs)
@@ -285,7 +297,9 @@ endif
 
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) $(fix_vcf_cmd) |md5sum|cut -f1 -d' ' 
-step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(use_kinship_option) $(chromosomes) |md5sum|cut -f1 -d' ' 
+step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(use_kinship_option) $(chromosomes) |md5sum|cut -f1 -d' '
+step1b_hash!=echo $(aggr_bed_file) $(max_missing) $(step1a_hash) |md5sum|cut -f1 -d' ' 
+
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -f1 -d' '
 
 
@@ -299,8 +313,16 @@ step3_hash!=echo $(step1a_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
 endif
 
+##########
+# Folders
 step1_dir:=$(name)/dna_$(step1_hash)
 step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
+ifeq ($(aggr_bed_file),)
+step1b_dir:=$(step1a_dir)
+else
+step1b_dir:=$(step1a_dir)/$(step1b_hash)
+endif
+
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
 eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(fdr_threshold)/
@@ -311,6 +333,9 @@ $(info * )
 $(info * Output will be placed in $(name)/)
 $(info * DNA folder (step1_dir)=$(step1_dir))
 $(info * DNA folder - merged vcfs=$(step1a_dir))
+ifneq ($(aggr_bed_file),)
+$(info * DNA folder - burden and hdf5 files=$(step1b_dir))
+endif
 $(info * RNA folder (step2_dir)=$(step2_dir))
 $(info * QTL folder (step3_dir)=$(eqtl_dir))
 $(info * Report/plots folder =$(report_dir))
