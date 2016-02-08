@@ -21,9 +21,11 @@ shift 1
 vcfs=$*
 if [ "x$vcfs" == "x" ]; then
     # read the vcfs from stdin
-    read -n vcfs
+    read  -a vcfsa
+    vcfs="${vcfsa[*]}"
+#    echo VCFS=$vcfs > /dev/stderr
 fi
-#echo VCFS=$vcfs > /stderr
+
 if [ "x$vcfs" == "x" ]; then
     echo "VCFs not provided" > /dev/stderr
     echo "ERROR: $usage" > /dev/stderr
@@ -41,7 +43,14 @@ for vcf in $vcfs; do
     bedtools intersect -c -a $tmp_file3 -b $vcf | cut -f 4- |paste $tmp_file - > $tmp_file2
     mv $tmp_file2 $tmp_file
 done
-echo chr start end name score $vcfs | tr " " "\t"
+vcfs2=""
+for vcf in $vcfs; do
+    vcf2=`basename $vcf`
+    vcf2=`echo $vcf2 | sed "s/.filter.vcf.gz//"`
+    vcfs2="$vcfs2 $vcf2"
+done
+vcfs2=`echo $vcfs2 | sed "s/^ //"`
+echo chr start end name score $vcfs2 | tr " " "\t"
 cat $tmp_file
 rm -f $tmp_file $tmp_file3 $tmp_file2
 exit 0
