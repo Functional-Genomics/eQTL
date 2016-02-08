@@ -11,7 +11,7 @@ if [ ! -e $bed_file ] ; then
     echo "ERROR: $usage" > /dev/stderr
     exit 1
 fi
-# TODO: check if bed has 5 columns
+# 
 col=`head -n 1 $bed_file|wc -w`
 if [ $col -lt 5 ]; then
     echo "ERROR:bed file should have 5 columns" > /dev/stderr
