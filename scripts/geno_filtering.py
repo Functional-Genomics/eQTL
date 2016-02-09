@@ -5,10 +5,10 @@ import pandas as pd
 import scipy as sp
 
 def usage():
-	print '''
+	print ''' 
+This script selects genomic variants based on the selected fraction of samples carrying the variant
 
-Usage: geno_filtering.py <threshold>
-The matrix will be read from stdin and the filtered matrix will be printed to stdout.
+Usage: cat matrix.tsv | geno_filtering.py <sample_fraction_threshold>
 '''
 
 if len(sys.argv[1:]) < 1:
@@ -18,16 +18,11 @@ if len(sys.argv[1:]) < 1:
 
 threshold = sys.argv[1]
 
-
-#if os.path.isfile(file1) != True:
-#	sys.stderr.write('\nERROR: file '+file1+' not found\n')
-#	sys.exit(1)
-
 try:
-	threshold = int(threshold)
+	threshold = float(threshold)
 except:
 	usage()
-	sys.stderr.write('\nERROR: threshold must be int\n')
+	sys.stderr.write('\nERROR: threshold must be float\n')
 	sys.exit(1)
 
 #read file from stdin
@@ -40,9 +35,12 @@ if matrix.index.dtype == (float):
 elif matrix.index.dtype == (int):
 	matrix.index=matrix.index.values.astype(str)
 
-#select rows based on number of samples with at least 1 event
-filt_matrix = matrix[matrix.gt(0,axis='rows').sum(1) >= threshold]
+#select rows based on number of samples with at least 1 event (it assumes a SNPs by Samples matrix)
+samples = matrix.shape[1]
+sample_threshold = threshold * samples
+filt_matrix = matrix[matrix.gt(0,axis='rows').sum(1) >= sample_threshold]
 
+#write to stdout
 filt_matrix.to_csv(sys.stdout,sep='\t',header=True,index=True)
 
 sys.exit(0)
