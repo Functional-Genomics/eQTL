@@ -34,22 +34,13 @@ if os.path.isfile(file2) != True:
 	sys.stderr.write('\nERROR: file '+file2+' not found\n')
 	sys.exit(1)
 
+#open an hdf5 file
+hdf = h5py.File(outfile,'w')
 
 file1 = sys.stdin
 var_file=pd.read_csv(file1,sep='\t',index_col=0)
 annotation = pd.read_csv(file2,sep='\t',index_col=0,header=None)
 
-#bv=sp.in1d(annotation.index.values,var_file.index.values)
-
-#check consistency between geno matrix and geno_annotation
-#if sum(bv) != var_file.index.values.shape[0]:
-#	bv2 = sp.in1d(var_file.index.values,annotation.index.values)
-#	for var in var_file.index.values[~bv2]:
-#		sys.stderr.write('\nERROR: variant '+var+' not found in the annotation file\n') 
-#	sys.exit(1)
-
-#extract variants annotations for a specific chr
-#chr_subset = annotation[annotation.ix[:,0]==chr]
 chr_subset = annotation[annotation.index.values==chr]
 chr_var_subset = chr_subset[3].values #take names from bed file
 
@@ -57,11 +48,12 @@ var_file_subset = var_file.index.values[sp.in1d(var_file.index.values,chr_var_su
 #set array of geno values and transpose (samples X var)
 matrix = var_file.values[sp.in1d(var_file.index.values,var_file_subset)].T.astype(float)
 #save a copy of the matrix with burden
-burden_matrix=matrix.copy()
+dset = hdf.create_dataset('genotype/burden_matrix',data=matrix)
+burden = matrix.copy()
+#compute kinship based on optional parameter (skip_kinship)
+matrix,K = corr_matrix(matrix[:],skip_kinship=skip_kinship) #this step overwrite the matrix array (standardised genotypes)
 #change mutation burden into 1
-matrix[matrix>=1]=1
-#compute kinship based on optional parameter
-matrix,K = corr_matrix(matrix[:],skip_kinship=skip_kinship) 
+burden[burden>=1]=1
 #set row_header
 row_header= sp.array(var_file.columns.tolist())
 #store indexes of the geno variant in the annotation list
@@ -72,13 +64,9 @@ chrom = chr_subset.index[i].values.astype(int).astype(str)
 #set array of allele. TODO: is empty for now.
 allele = sp.zeros(pos.shape) 
 
-#open an hdf5 file
-hdf = h5py.File(outfile,'w')
-
 #append the matrix, row_header,col_header (with subkeys)
-dset = hdf.create_dataset('genotype/matrix',data=matrix)
+dset = hdf.create_dataset('genotype/matrix',data=burden)
 dset = hdf.create_dataset('genotype/Kpop',data=K)
-dset = hdf.create_dataset('genotype/burden_matrix',data=burden_matrix)
 dset = hdf.create_dataset('genotype/row_header/sample_ID', data=row_header)
 dset = hdf.create_dataset('genotype/col_header/alleles',data=allele)
 dset = hdf.create_dataset('genotype/col_header/chrom',data=chrom)

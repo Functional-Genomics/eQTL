@@ -4,6 +4,7 @@ import os, sys
 import numpy as np
 import h5py
 import warnings
+warnings.simplefilter("error")
 
 def usage():
 
@@ -65,7 +66,6 @@ if __name__ == "__main__":
 		#normalise Kpop if values are != NaN
 		Kpop /= Kpop.diagonal().mean()
 	except:
-		warnings.simplefilter("error")
 		print 'Failed to normalise Kpop!'
 
         #print "Creating kinship matrix..."
