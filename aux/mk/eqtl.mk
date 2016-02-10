@@ -6,7 +6,7 @@ ifeq ($(cis_window),0)
 # Limix trans-eQTL (start)
 $(info trans-EQTL mode)
 # Trans specific
-$(step1b_dir)/all_chr.hdf5: $(foreach chr,$(chromosomes),$(step1a_dir)/$(chr)/chr$(chr).hdf5)
+$(step1b_dir)/all_chr.hdf5: $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	aggregate_chromosomes.py $@.lst.txt $@.tmp.hdf5 && \
