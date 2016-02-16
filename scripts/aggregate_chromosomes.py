@@ -14,16 +14,10 @@ Usage:
 aggregate_chromosomes.py <chr_list.lst> <outfile.hdf5>
 '''
 
-def add_column(m,n):
+def stack_array(m,n):
 	''' add column to a numpy array'''
 	m = sp.hstack((m,n))
 	return m
-
-def add_row(m,n):
-	''' add row to a numpy array '''
-	m = sp.vstack((m,n))
-	return m
-
 
 if __name__ == '__main__':
 	if len(sys.argv[1:])<2:
@@ -52,13 +46,14 @@ if __name__ == '__main__':
 			if matrix == '' and chromosome == '' and pos == '' and samples == '' and alleles == '' :
 				matrix,chromosome,pos,samples,alleles = chr['genotype/matrix'][:],chr['genotype/col_header/chrom'][:],chr['genotype/col_header/pos'][:],chr['genotype/row_header/sample_ID'][:],chr['genotype/col_header/alleles'][:]
 			else:
-				matrix = add_column(matrix,chr['genotype/matrix'][:])
-				chromosome = add_column(chromosome,chr['genotype/col_header/chrom'][:])
-				pos = add_column(pos,chr['genotype/col_header/pos'][:])
+				matrix = stack_array(matrix,chr['genotype/matrix'][:])
+				chromosome = stack_array(chromosome,chr['genotype/col_header/chrom'][:])
+				pos = stack_array(pos,chr['genotype/col_header/pos'][:])
 				if alleles.shape[0] == 0:
+					sys.sdterr.write('No significant genomic variants found for this chromosome!\n')
 					pass
 				else:
-					alleles = add_row(alleles,chr['genotype/col_header/alleles'][:])
+					alleles = sp.concatenate((alleles,chr['genotype/col_header/alleles'][:]))
 
 
 	outfile = h5py.File(outfile,'w')
