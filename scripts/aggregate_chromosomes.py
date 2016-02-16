@@ -55,7 +55,10 @@ if __name__ == '__main__':
 				matrix = add_column(matrix,chr['genotype/matrix'][:])
 				chromosome = add_column(chromosome,chr['genotype/col_header/chrom'][:])
 				pos = add_column(pos,chr['genotype/col_header/pos'][:])
-				alleles = add_row(alleles,chr['genotype/col_header/alleles'][:])
+				if alleles.shape[0] == 0:
+					pass
+				else:
+					alleles = add_row(alleles,chr['genotype/col_header/alleles'][:])
 
 
 	outfile = h5py.File(outfile,'w')
