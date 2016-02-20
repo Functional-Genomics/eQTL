@@ -56,7 +56,7 @@ function submit_job {
     #-R  "span[ptile=$THREADS]"
     local MAX_MEM=$MEM
     if [ "$waitforids-" != "-" ]; then
-	$ECHO bsub $LSF_PARAMS -q $QUEUE -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "ended($waitforids)"  -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
+	$ECHO bsub $LSF_PARAMS -q $QUEUE $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM] rusage[mem=$MEM]"  -w "ended($waitforids)"  -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
     else
 	$ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MAX_MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]"    -cwd `pwd` -o "${LOGS_FOLDER}$jobname-%J.out" -e "${LOGS_FOLDER}$jobname-%J.err" -J $jobname  $cmd2e 
     fi
