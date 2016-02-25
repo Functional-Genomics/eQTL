@@ -4,7 +4,7 @@
 exec make --warn-undefined-variables -Rf "$0"  ${1+"$@"} 
 # --trace
 # =========================================================
-# Copyright 2015
+# Copyright 2015-2016
 #
 #
 # This is free software: you can redistribute it and/or modify
@@ -81,6 +81,41 @@ else
 endif
 $(call file_exists,$(expr_matrix))
 
+
+ifdef var_matrix
+# Ignore VCFs and use the matrix with the variants provided by the user
+#columns-samples
+#rows-variants
+ifndef var_matrix
+ $(call p_error, missing argument var_matrix)
+else
+ $(info *	var_matrix=$(var_matrix))
+endif
+$(call file_exists,$(var_matrix))
+
+
+# variant id\tchr\tstart\tend
+ifndef var_pos
+ $(call p_error, missing argument var_pos)
+else
+ $(info *	var_pos=$(var_pos))
+endif
+$(call file_exists,$(var_pos))
+
+# dummy vars
+vcfs:=
+mac:=1
+
+# incompatible option (for now?)
+ifdef aggr_bed_file
+$(error incompatible options: aggr_bed_file and var_matrix)
+endif
+
+# var_matrix 
+##########################
+else
+#************************
+# VCF specific variables
 # two columns
 # 1st column: DNA
 # 2st column: RNA
@@ -92,9 +127,6 @@ endif
 $(call file_exists,$(dna_rna_mapfile))
 
 
-
-#************************
-# ?
 ifndef vcf_toplevel_dir
 $(call p_error,vcf_toplevel_dir not defined)
 endif
@@ -109,6 +141,8 @@ endif
 $(info *	|vcfs|=$(words $(vcfs)))
 #$(call file_exists,$(vcfs))
 $(foreach l,$(vcfs),$(call file_exists,$(vcf_toplevel_dir)/$(l)))
+
+endif
 
 #
 ifndef cov_matrix
@@ -167,10 +201,11 @@ $(info * )
 $(info * Optional Parameters:)
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k max_missing mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha
 
 # optional: bed file to aggregate the variants
 aggr_bed_file?=
+# value between 0 and 1 
 geno_threshold?=1
 ifneq ($(aggr_bed_file),)
 $(info *	aggr_bed_file=$(aggr_bed_file))
@@ -214,8 +249,10 @@ $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
 settings_vars=$(def_vars) sample2class_file cov_matrix dna_rna_mapfile expr_matrix corr_method
 
 ##############################
+ifndef var_matrix
 ifneq (0,$(shell [ $(mac) -lt $(words $(vcfs)) ] && echo 0))
 $(error ERROR: mac ($(mac)) value is greater than the number of vcfs)
+endif
 endif
 ##############################
 # to filter or not to filter based on pass
@@ -290,6 +327,9 @@ TARGETS9=
 # optional
 #   |+-------------dna_[dna_filter_options_md5]/plink_[dna_filder_options_md5]/[aggr_bed]
 
+#
+ifndef var_matrix
+# VCFs
 ifeq ($(shell test $(words $(vcfs)) -lt 300; echo $$?),0)
 vcfs2hash=$(vcfs)
 else
@@ -299,29 +339,43 @@ endif
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) $(fix_vcf_cmd) |md5sum|cut -f1 -d' ' 
 step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(use_kinship_option) $(chromosomes) |md5sum|cut -f1 -d' '
-step1b_hash!=echo $(aggr_bed_file) $(max_missing) $(step1a_hash) |md5sum|cut -f1 -d' ' 
+step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut -f1 -d' ' 
+# end VCF based analysis
+else
+# Matrix based analysis
+step1_hash!=echo $(var_matrix) |md5sum|cut -f1 -d' ' 
+step1a_hash!=echo $(step1_hash)  $(chromosomes) |md5sum|cut -f1 -d' '
+step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut -f1 -d' '
+endif
+
 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -f1 -d' '
 
 
 ifeq ($(corr_method),peer)
-step3_hash!=echo $(step1a_hash) $(step2_hash) $(peer_iterations) $(limix_use_peer_covariates) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1b_hash) $(step2_hash) $(peer_iterations) $(limix_use_peer_covariates) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
 else
 ifeq ($(corr_method),panama)
-step3_hash!=echo $(step1a_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform) |md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1b_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform) |md5sum|cut -f1 -d' '
 else
-step3_hash!=echo $(step1a_hash) $(step2_hash)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1b_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
 endif
 
 ##########
 # Folders
 step1_dir:=$(name)/dna_$(step1_hash)
+ifndef var_matrix
 step1a_dir:=$(step1_dir)/plink_$(step1a_hash)
 ifeq ($(aggr_bed_file),)
 step1b_dir:=$(step1a_dir)
 else
 step1b_dir:=$(step1a_dir)/$(step1b_hash)
+endif
+else
+# var_matrix
+step1a_dir:=$(step1_dir)
+step1b_dir:=$(step1a_dir)
 endif
 
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
@@ -332,8 +386,15 @@ report_dir=$(eqtl_dir)/report
 # print the folders
 $(info * )
 $(info * Output will be placed in $(name)/)
+
+ifndef var_matrix
 $(info * DNA folder (step1_dir)=$(step1_dir))
 $(info * DNA folder - merged vcfs=$(step1a_dir))
+else
+$(info * DNA folder (step1_dir)=$(step1_dir))
+$(info * DNA folder - files per chr=$(step1a_dir))
+endif
+
 ifneq ($(aggr_bed_file),)
 $(info * DNA folder - burden and hdf5 files=$(step1b_dir))
 endif
@@ -354,6 +415,14 @@ matched_expr_matrix=$(step1a_dir)/$(expr_matrix_filename).matched.tsv
 samples_hdf5=$(step1b_dir)/samples.hdf5
 kpop_file=$(step1b_dir)/Kpop.hdf5
 
+# 
+ifdef var_matrix
+var_matrix_filename=$(notdir $(basename $(var_matrix)))
+matched_var_matrix=$(step1a_dir)/$(var_matrix_filename).matched.tsv
+
+endif
+
+
 ################################################################################
 # Make stuff
 phony_targets=
@@ -364,6 +433,9 @@ space:=$(empty) $(empty)#
 ################################################################################
 # AUXILIARY FUNCTIONS
 ################################################################################
+
+ifdef var_pos
+endif
 
 
 # create the folders
