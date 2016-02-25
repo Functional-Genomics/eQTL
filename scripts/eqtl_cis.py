@@ -24,7 +24,7 @@ This script runs the eqtl analysis on a chunk of the gene expression matrix.
 
 Usage:
 
-eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <peer_cov> <cis_window> <n_perm> <nfolds> <fold_j> <outfilename>
+eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename>
 
 peer_cov values = n | y [default=n] '''
 
@@ -42,24 +42,21 @@ def run_lmm(booleanK,peer_cov,Xc,Y,cov,K):
 			lmm = QTL.test_lmm(Xc,Y,K=K) #exclude cov in the model since already used by peer
 	return lmm
 
-if len(sys.argv[1:]) < 12:
+if len(sys.argv[1:]) < 13:
 	usage()
 	sys.stderr.write('ERROR: missing parameters\n')
 	sys.exit(1)
 
 #read args
-geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,peer_cov,window,n_perm = sys.argv[1:10]
+geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,peer_cov,window,n_perm,change_beta_sign = sys.argv[1:11]
 window=float(window)
 n_perm=int(n_perm)
 #populate dictionary with all the data needed for eqtl analysis
-#rom eqtlsettings import read_args as ra
-#CFG,correction_method = ra(geno = sys.argv[1], pheno=sys.argv[2], correction_method = sys.argv[3], hdf5_correction =sys.argv[4], Kpop = sys.argv[5], covariates = sys.argv[6])
-
 
 #take nfold and j to name the out file for each j
 
-nfolds = int(sys.argv[10])
-fold_j = int(sys.argv[11])
+nfolds = int(sys.argv[11])
+fold_j = int(sys.argv[12])
 
 if type(nfolds) != (int):
 	usage()
@@ -73,9 +70,13 @@ elif type(window) != (float) and type(window) != (int):
 	usage()
 	sys.stderr.write('\nERROR: Please use integer for window\n')
 	sys.exit(1)
+elif change_beta_sign != 'y' and change_beta_sign != 'n':
+	usage()
+	sys.stderr.write('\nERROR: Please use either y or n for beta sign\n')
+	sys.exit(1)
 
 #open outfile 
-fout  = h5py.File(sys.argv[12],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
+fout  = h5py.File(sys.argv[13],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 # load data 
 import data as DATA
 data  = DATA.data(geno,kinship,pheno,cov_hdf5,cm_hdf5,cm,window)
@@ -97,8 +98,6 @@ I = Icv==fold_j
 genes = list(genes[I])
 #set the widget for the progressbar
 bar = progressbar.ProgressBar(maxval=n_perm, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
-#initialise the bar
-bar.start()
 #execute analysis for each gene in chunk j
 for gene in genes:
 
@@ -124,6 +123,8 @@ for gene in genes:
 	#permutation	
 	if n_perm > 1:
 		print 'number of permutations is set > 1; empirical pvalues will be computed.'
+		#initialize the bar
+		bar.start()
 		#initialize an array with one shape  = n_perms to store for each permutation the minimum pvalue per gene
 		r = 0 #initialize fraction of permuted pvalues <= minimum nominal pval
 		SP.random.seed(0) #set random seed for each gene
@@ -162,7 +163,10 @@ for gene in genes:
 	if n_perm == 1:
 		RV['lambda_perm'] = getLambda(perm_pv[:]) #calculate lambda on the the permutation
 
-	RV['beta'] = lmm.getBetaSNP() #get beta on nominal pvalues. TODO: should I get beta on permuted?
+	if change_beta_sign == 'y':
+		RV['beta'] = -lmm.getBetaSNP() #get beta on nominal pvalues and change sign: this gives always the effect size computed between the ALT with respect to the REF allele as defined in the VCF
+	else:
+		RV['beta'] = lmm.getBetaSNP() #get beta on nominal pvalues. This gives always the effect size computed between the REF with respect to the ALT allele as defined in the VCF
 			
  	# add gene info
 	for key in geno_info.keys():
