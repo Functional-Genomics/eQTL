@@ -3,7 +3,7 @@
 # =========================================================
 # Copyright 2012-2016,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
 #
-# This file is part of iRAP.
+# This file is based on code from iRAP (https://github.com/nunofonseca/irap)
 #
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,29 +19,143 @@
 # along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
 #
 #
-#    $Id: irap.txt Nuno Fonseca Wed Feb 6 00:51:29 2013$
 # =========================================================
 suppressPackageStartupMessages(library("optparse"))
 
-IRAP.DIR <- Sys.getenv(c("IRAP_DIR"))
-if ( IRAP.DIR == "" ) {
-  cat("ERROR: environment variable IRAP_DIR is not set\n")
-  q(status=1)
+###############################################################
+# Functions from iRAP (copy to avoid an extra dependency)
+perror <- function(...) {
+  cat(paste("[ERROR] ",...,"\n",sep=""),file=stderr())
 }
-# specify our desired options in a list
-#
-source(paste(IRAP.DIR,"aux/R","irap_utils.R",sep="/"))
-pdebug.enabled <- FALSE
+pinfo <- function(...) {
+  cat(paste("[INFO] ",...,"\n",sep=""),file=stdout())
+}
 
-#######################
-usage <- "irap_qn -i quant_tsv_file -m mapping_tsv_file [-q quantile_norm_vector -c num_cores] -o output_tsv_file"
+myParseArgs <- function(usage,option_list,filenames.exist=NULL,multiple.options=NULL,mandatory=NULL,...) {
+
+  # get command line options, if help option encountered print help and exit,
+  # otherwise if options not found on command line then set defaults,
+  parser <- OptionParser(usage = usage, option_list=option_list)
+  opt <- parse_args(parser,...)
+  
+  for ( m in mandatory ) {
+    if ( is.null(opt[[m]]) ) {
+        perror("Parameter ",m," needs to be defined")
+        q(status=1)
+    }
+  }  
+  for ( p in filenames.exist ) {
+    if (! is.null(opt[[p]]) ) {
+      if (! file.exists(opt[[p]]) ) {
+        perror("File ",opt[[p]]," not found")
+        q(status=1)
+      }
+    }
+  }
+
+  for ( op in names(multiple.options) ) {
+    if ( ! opt[[op]] %in% multiple.options[[op]] ) {
+      perror("Invalid value ",opt[[op]]," for option ",op)
+      q(status=1)
+    }
+  }
+  return(opt)
+}
+
+# load a file with a quant. matrix
+# returns NULL in case of failure
+quant.load <- function(f,clean.cuff=FALSE) {
+  tsv.data <- NULL
+
+  tsv.data <- qload.tsv(f,header=FALSE)
+  if ( !is.null(tsv.data) && ncol(tsv.data)>1 ) {
+    if ( sum(grepl("(Gene|Exon|Transcript|ID|feature)",tsv.data[1,1],ignore.case=T))!=0 || tsv.data[1,1]=="") {
+      # reload to include the header
+      tsv.data <- qload.tsv(f,header=TRUE)
+    }
+  }
+  if(is.null(tsv.data)) return(NULL);
+  rownames(tsv.data) <- as.character(tsv.data[,1])
+  tsv.data <- tsv.data[,-1,drop=FALSE]
+  if (clean.cuff) {
+    sel<-grep("^CUFF.*",rownames(tsv.data),perl=T,invert=TRUE)
+    tsv.data <- tsv.data[sel,,drop=FALSE]
+  }
+  return(tsv.data)
+}
+
+# keep backwards compatibility by using read.table when data.table is not 
+# available
+qload.tsv <- function(f,header,comment.char="") {
+  tsv.data <- NULL
+  if (require("data.table",quietly=TRUE,character.only=TRUE) &&
+      compareVersion(as.character(packageVersion("data.table")),"1.9.6")>=0) {
+    library("data.table")
+    if ( sum(grep(".gz$",f)) ) {
+      f <- paste("zcat ",f,sep="")
+    } else {
+      f <- paste("cat ",f,sep="")
+    }
+    # not optimal, but faster than read.table
+    if ( comment.char!="") {
+      f <- paste(f," | grep -v \"^",comment.char,"\"",sep="")
+    }
+    tryCatch(tsv.data <- fread(input=f,sep = "\t", header="auto",check.names=FALSE,data.table=FALSE),error=function(x) NULL)
+  } else 
+    tryCatch(tsv.data <- read.table(f,sep = "\t", header=header, comment.char=comment.char, quote = "\"",check.names=FALSE),error=function(x) NULL)
+  return(tsv.data)
+}
+
+quantile_norm <- function(df,means=NULL){
+  if ( ! is.data.frame(df) ) {
+    perror("Expected a data frame")
+  }  
+  #
+  if ( ! is.null(means)) {
+    l1 <- nrow(df)
+    l2 <- length(means)
+    if ( l1 != l2 ) {
+      pwarning("Number of rows in data frame (",l1,") does not match with the length of quantile normalized means vector (",l2,")")
+      if ( l1 > l2 ) {
+        perror("Unable to proceed")
+      }
+      # l1 <l2
+      offset <- l2-l1
+      means <- means[append(2,seq(offset+2,l2))]
+      #pinfo(length(means),"==",l1)
+    }  
+  }
+
+  # increasing
+  ranks <- apply(df,2,rank,ties.method="max")
+  # sort: increasing
+  if (is.null(means) ) {
+    means <- apply(data.frame(apply(df, 2, sort)), 1, mean, na.rm=T)
+  }
+  df_qn<- apply(ranks, 2, quantile_norm_vect, means)
+  rownames(df_qn) <- rownames(df)
+  return(list(qn=df_qn,means=means))
+}
+
+quantile_norm_vect <- function(v,qn_values) {
+  lv <- length(v)
+  lqn <- length(qn_values)
+  if ( lv!=lqn ) {
+    perror("length of vector v (",lv,") is different from qn_means' length (",lqn,")")
+  }
+  
+  p <- rank(v,ties.method="max")
+  return(qn_values[p])
+}
+
+###############################################################
+
+usage <- "irap_qn -i quant_tsv_file -m mapping_tsv_file -o output_tsv_file"
 option_list <- list(
-  make_option(c("--debug"),action="store_true",dest="debug",default=FALSE,help="Debug mode"),
   make_option(c("-o","--out"),type="character",default=NULL,help="Output quantification file"),
   make_option(c("-i","--in"),type="character",default=NULL,dest="tsv_file",help="Quantification matrix"),
   make_option(c("-m","--map"),type="character",default=NULL,dest="map_tsv_file",help="Mapping file: samples to classes"),
-  make_option(c("-q","--qn_vec"),type="character",default=NULL,dest="qn_vector_file",help="Filename with the normalization vector to use."),
-  make_option(c("-c", "--cores"), type="character",default="3",dest="num_cores",help="Number of cores to use ([default %default])")
+  make_option(c("-c", "--cores"), type="character",default="1",dest="num_cores",help="Number of cores to use ([default %default])")
 )
 
 multiple.options = list()
@@ -53,9 +167,6 @@ mandatory <- c("tsv_file","out","map_tsv_file")
 #
 args <- commandArgs(trailingOnly = TRUE)
 opt <- myParseArgs(usage = usage, option_list=option_list,filenames.exist=filenames,multiple.options=multiple.options,mandatory=mandatory,args=args)
-
-pdebug.enabled <- opt$debug
-pdebug.save.state("irap_qn","p0")
 
 suppressPackageStartupMessages(library(parallel))
 tryCatch(num.cores <- as.integer(as.numeric(opt$num_cores)),warning=
@@ -69,8 +180,6 @@ if (num.cores<1) {
   q(status=3)    
 }
 
-irap.assert(num.cores>0)
-
 if ( num.cores>parallel:::detectCores()) {
   num.cores <- parallel:::detectCores()
   pwarning("The number of cores to use exceeds the cores available. Reducing the limit to ",parallel:::detectCores())
@@ -78,6 +187,12 @@ if ( num.cores>parallel:::detectCores()) {
 
 options(cores=num.cores)
 options(mc.cores=num.cores)
+
+# 
+#opt <- list()
+#opt$tsv_file <- "ex1/pheno.tsv"
+#opt$map_tsv_file <- "ex1/sample2class.tsv"
+
 
 pinfo("Loading ",opt$tsv_file)
 quant <- quant.load(opt$tsv_file)
@@ -88,53 +203,47 @@ mapping <- read.table(opt$map_tsv_file,sep='\t',header=FALSE)
 pinfo("Loading ",opt$map_tsv_file, " complete")
 
 
-qn_vector <- NULL
-if ( ! is.null(opt$qn_vector_file) ) {
-  pinfo("Loading ",opt$qn_vector_file)
-  qn_vector <- read.tsv(opt$qn_vector_file)
-  pinfo("Loading ",opt$qn_vector_file, " complete")
-  pinfo("# genes:",nrow(qn_vector))
-  if (nrow(qn_vector) < nrow(quant) ) {
-    perror(opt$qn_vector_file, " should have the same number or more rows than ",opt$tsv.file)
-    q(status=1)
-  }
-  pinfo("Using provided values for quantile normalization")
-}
-# remove the rpkm from the libname
-#colnames(quant) <- gsub(".rpkm","",colnames(quant))
-#pinfo("Starting quantile normalization (this may take a while)...")
-#x <- quantile_norm(quant,means=qn_vector$x)
+pinfo("Starting quantile normalization (this may take a while)...")
 
 rownames(mapping)<-mapping[,1]
 #keep cancer studies
-classes<-unique(mapping[,2])
-#new df
-qn_df<-as.data.frame(rownames(quant))
-means<-as.data.frame(rownames(quant))
-#quantile normalise
-for (class in classes) {
- samples<- rownames(mapping)[mapping[,2]==class]
- pinfo("Starting quantile normalization (this may take a while)...")
- temp_quant<- quantile_norm(quant[,colnames(quant) %in% samples,drop=FALSE])
- qn_df<- cbind(qn_df,temp_quant$qn)
- means<-cbind(means,temp_quant$means)
+classes<-unique(as.character(mapping[,2]))
+
+qn_df_group <- function(group,df,mapping,...) {
+  samples<- rownames(mapping)[mapping[,2]==group]
+  temp_quant<- quantile_norm(df[,colnames(df) %in% samples,drop=FALSE])
+  return(temp_quant$qn)
 }
 
+qn_df<- NULL
+for (class in classes) {
+  pinfo("Computing QN for ",class,"...")
+  qn_df<- cbind(qn_df,qn_df_group(class,quant,mapping))
+  pinfo("Computing QN for ",class,"...done.")
+}
+
+# keep the same initial ordering for the common columns
+cols <- colnames(quant)[colnames(quant) %in% colnames(qn_df)]
+qn_df <- qn_df[,cols]
 pinfo("Quantile normalization complete.")
 
-rownames(qn_df)<-qn_df[,1]
-qn_df<-qn_df[,-1]
-rownames(means)<-means[,1]
-means<-means[,-1]
+pinfo("Generating boxplots...")
+png(file=paste(opt$out,".png",sep=""),width=800,height=800)
+par(mfrow=c(2,1),bty="l")
+boxplot(abs(quant[,colnames(qn_df)])+1,log="y",las=2,ylab="Expr.")
+boxplot(abs(qn_df)+1,log="y",las=2,ylab="QN Expr.")
+dev.off()
 
-#write.table(file=opt$out,x=x$qn,sep="\t",row.names=TRUE)
-write.table(file=opt$out,x=qn_df, sep='\t', row.names=TRUE)
-write.tsv(file=opt$out,x=qn_df,rownames.label="Gene",fix=FALSE)
-pinfo("File ",opt$out," created ")
-if ( is.null(qn_vector)) {
-  means.file <- paste(gsub(".tsv","",opt$out),".means.tsv",sep="")
-  write.table(file=means.file,means,row.names=F,sep="\t")
-  pinfo("File ",means.file," created ")
-}
+# without outliers
+png(file=paste(opt$out,"_no.png",sep=""),width=800,height=800)
+par(mfrow=c(2,1),bty="l")
+boxplot(abs(quant[,colnames(qn_df)])+1,outline=F,log="y",las=2,ylab="Expr.")
+boxplot(abs(qn_df)+1,log="y",outline=F,las=2,ylab="QN Expr.")
+dev.off()
+pinfo("Generating boxplots...done.")
+
+Feature <- rownames(qn_df)
+qn_df <- cbind(Feature,qn_df)
+write.table(file=opt$out,x=qn_df, quote=F,sep="\t",row.names=FALSE,col.names=TRUE)
 
 q(status=0)
