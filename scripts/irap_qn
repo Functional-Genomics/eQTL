@@ -232,10 +232,16 @@ pinfo("Generating boxplots...")
 #dev.off()
 
 # without outliers
-png(file=paste(opt$out,"_no.png",sep=""),width=800,height=800)
+w <- 1
+xnames <- colnames(qn_df)
+if ( ncol(qn_df)>100 ) {
+  w <- 1+round(ncol(qn_df)/300,0)
+  xnames <-  rep("",ncol(qn_df))
+}
+png(file=paste(opt$out,"_no.png",sep=""),width=800*w,height=800)
 par(mfrow=c(2,1),bty="l")
-boxplot(abs(quant[,colnames(qn_df)])+1,outline=F,log="y",las=2,ylab="Expr.")
-boxplot(abs(qn_df)+1,log="y",outline=F,las=2,ylab="QN Expr.")
+boxplot(abs(quant[,colnames(qn_df)])+1,outline=F,log="y",las=2,ylab="Expr.",names=xnames)
+boxplot(abs(qn_df)+1,log="y",outline=F,las=2,ylab="QN Expr.",names=xnames)
 dev.off()
 pinfo("Generating boxplots...done.")
 
