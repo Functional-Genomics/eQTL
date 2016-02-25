@@ -222,17 +222,14 @@ for (class in classes) {
   pinfo("Computing QN for ",class,"...done.")
 }
 
-# keep the same initial ordering for the common columns
-cols <- colnames(quant)[colnames(quant) %in% colnames(qn_df)]
-qn_df <- qn_df[,cols]
 pinfo("Quantile normalization complete.")
 
 pinfo("Generating boxplots...")
-png(file=paste(opt$out,".png",sep=""),width=800,height=800)
-par(mfrow=c(2,1),bty="l")
-boxplot(abs(quant[,colnames(qn_df)])+1,log="y",las=2,ylab="Expr.")
-boxplot(abs(qn_df)+1,log="y",las=2,ylab="QN Expr.")
-dev.off()
+#png(file=paste(opt$out,".png",sep=""),width=800,height=800)
+#par(mfrow=c(2,1),bty="l")
+#boxplot(abs(quant[,colnames(qn_df)])+1,log="y",las=2,ylab="Expr.")
+#boxplot(abs(qn_df)+1,log="y",las=2,ylab="QN Expr.")
+#dev.off()
 
 # without outliers
 png(file=paste(opt$out,"_no.png",sep=""),width=800,height=800)
@@ -241,6 +238,10 @@ boxplot(abs(quant[,colnames(qn_df)])+1,outline=F,log="y",las=2,ylab="Expr.")
 boxplot(abs(qn_df)+1,log="y",outline=F,las=2,ylab="QN Expr.")
 dev.off()
 pinfo("Generating boxplots...done.")
+
+# keep the same initial ordering for the common columns
+cols <- colnames(quant)[colnames(quant) %in% colnames(qn_df)]
+qn_df <- qn_df[,cols]
 
 Feature <- rownames(qn_df)
 qn_df <- cbind(Feature,qn_df)
