@@ -64,33 +64,26 @@ if sum(bv) == len(rnafiles):
 	print 'OK'
 	####
 	header = header.tolist()
-	rnafiles=rnafiles.tolist()
+	rnafiles = rnafiles.tolist()
 	n=map(lambda x:header.index(x),rnafiles)
 	#insert index 0 in list to take also first column name
 	n.insert(0,0)
 	#grep only columns from the GEarray matching the RNA samples with a correspondent VCF analysis IDs.
-	GEsliced=GE.take(n, axis=1)
+	GEsliced = GE.take(n, axis=1)
 	#susbstitute RNA samples ID with DNA samples ID
-	GEsliced.columns=mapfile[:,0]
+	GEsliced.columns = mapfile[:,0]
 	#get shape of the matrix of genes
-	annot=GEsliced.shape[0]-1
-	nsamples=GEsliced.shape[1]-1
+	annot = GEsliced.shape[0]-1
+	nsamples = GEsliced.shape[1]-1
 	print 'matrix with {0} genes and {1} samples'.format(annot,nsamples)
-
-	#transpose the matrix
-	GEt = GEsliced.T
-	#take indexes to sort the gene expression table based on VCF samples order
-	#indexes_again=map(lambda x:GEarraysliced[0].tolist().index(x), samples)
-	#GEarraysliced[:,range(1,nsamples+1)]=GEarraysliced[:,indexes_again]
-
 	#write the new CSV file with Gene expression 
 	phenofileout = open(phenofileout, 'w')
-	GEt.to_csv(phenofileout, sep = '\t', header = False)
+	GEsliced.to_csv(phenofileout, sep = '\t', index=None)
 	phenofileout.close()
 	sys.exit(0)
 else:
         print 'The following samples in the mapfile were not found in the gene expression matrix:\n'
-        notfound=rnafiles[~bv].tolist()
+        notfound = rnafiles[~bv].tolist()
         s="\n".join(notfound)
         print s
         sys.exit(1)
