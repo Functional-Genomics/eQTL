@@ -9,23 +9,27 @@ import normalise as NM
 
 def usage():
 	print """ 
-This script optionally transforms filtered gene counts to gauss distribution. It assumes that the matrix is (samples X genes). If not please set transpose = y.
+This script optionally transforms filtered gene counts to gauss distribution. It takes a matrix of genes X samples and transposes the final matrix.
 
 Usage:
-filtering_pheno.py <pheno.filtered.qn.tsv> <expr_transform> <pheno.filtered.qn.normal.tsv> <transpose>
+normalising_pheno.py <pheno.filtered.qn.tsv> <expr_transform> <pheno.filtered.qn.normal.tsv> <transpose>
 
 - expr_transform = [gauss | log | none]
-- transpose = [y | n]
+- OPTIONAL : transpose = [y | n] 
 """
 
 #check arguments
-if len(sys.argv[1:]) < 4:
+if len(sys.argv[1:]) < 3:
 	sys.stderr.write("ERROR: missing parameter\n")
 	usage()
 	sys.exit(1)
 
-pheno,expr_transform,phenout,transpose=sys.argv[1:]
-
+if len(sys.argv[1:]) == 3:
+	pheno,expr_transform,phenout=sys.argv[1:]
+	transpose = 'y'
+elif len(sys.argv[1:]) == 4:
+	pheno,expr_transform,phenout,transpose=sys.argv[1:]
+	
 #check files/arguments exist
 if os.path.isfile(pheno) != True:
 	sys.stderr.write("ERROR: file "+pheno+" not found\n")
@@ -42,22 +46,25 @@ elif transpose != 'n' and transpose != 'y':
 
 
 pheno = pd.read_csv(pheno, sep='\t', index_col=[0])
-
-if transpose == 'y':
-	pheno = pheno.T[:]
 	
-
-
-#apply transformation to gene expression data
+#apply transformation to transposed gene expression data
 if expr_transform == 'gauss':
-	Y=NM.gaussianize(pheno.values[:])
+	Y=NM.gaussianize(pheno.T.values[:])
 elif expr_transform == 'log':
-	Y=NM.logtransform(pheno.values[:])
+	Y=NM.logtransform(pheno.T.values[:])
 else:
 	Y=pheno.values[:]
 
+
 #substitute values
+pheno = pheno.T[:]
 pheno.values[:] = Y[:]
+
+if transpose == 'n':
+	pheno = pheno.T[:] #to have a matrix of genes X samples
+else:
+	pass #to have a matrix of samples X genes
+
 #write to output
 pheno.to_csv(phenout,sep='\t',index=True)
 
