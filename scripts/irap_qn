@@ -20,6 +20,11 @@
 #
 #
 # =========================================================
+
+if (!require("optparse")) {
+    source("http://bioconductor.org/biocLite.R")
+    biocLite("optparse")
+}
 suppressPackageStartupMessages(library("optparse"))
 
 ###############################################################
