@@ -4,8 +4,8 @@
 $(cov_sorted_hdf5).tsv:  $(cov_sorted_hdf5)
 	hdf52tsv $< "/covariates" "/row_header/sample_ID" "-"   $@.tmp y && mv $@.tmp $@
 
-$(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"   $@.tmp y && mv $@.tmp $@
+#$(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
+#	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"   $@.tmp y && mv $@.tmp $@
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
 	hdf52tsv $< "Kpop" "/row_header/sample_ID" "/col_header/sample_ID"  $@.tmp  n && mv $@.tmp $@
