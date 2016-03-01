@@ -62,7 +62,7 @@ if __name__ == '__main__':
 	#run peer
 	sample_ID = pheno['phenotype/row_header/sample_ID'][:] #get samples IDs; catch warnings here
 	gene_ID = pheno['phenotype/col_header/phenotype_ID'][:] #get genes IDs; catch warnings here
-	phenotype = pheno['phenotype/Ytransformed'][:] #get matrix of gene counts; catch warnings here
+	phenotype = pheno['phenotype/matrix'][:] #get matrix of gene counts; catch warnings here
 	samples = phenotype.shape[0]
 	#exit if the number of hidden confounding factor selected is >=25% of samples used in the analysis!
 	threshold = (25.0*samples)/100

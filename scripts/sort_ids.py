@@ -52,7 +52,7 @@ ic = map(lambda x:(covids.tolist()).index(x), genoids.tolist())
 #sort pheno and covariates ids based of geno indices
 pheno['phenotype/row_header/sample_ID'][:]=pheno['phenotype/row_header/sample_ID'][:][ip]
 pheno['phenotype/matrix'][:] = pheno['phenotype/matrix'][:][ip,:]
-pheno['phenotype/Ytransformed'][:] = pheno['phenotype/Ytransformed'][:][ip,:]
+#pheno['phenotype/Ytransformed'][:] = pheno['phenotype/Ytransformed'][:][ip,:]
 covariates['row_header/sample_ID'][:] = covariates['row_header/sample_ID'][:][ic]
 covariates['covariates'][:] = covariates['covariates'][:][ic,:]
 

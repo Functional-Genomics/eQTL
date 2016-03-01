@@ -54,7 +54,7 @@ if __name__ == '__main__':
 	fileout = h5py.File(fileout, 'w')
 
 	#read Kpop file
-	phenotype = pheno['phenotype/Ytransformed'][:] #catch warnings here
+	phenotype = pheno['phenotype/matrix'][:] #catch warnings here
 	kinship = Kpop['Kpop'][:] #catch warnings here	
 	samples_rows = Kpop['row_header/sample_ID'][:] #catch warnings here
 	samples_columns = Kpop['col_header/sample_ID'][:] #catch warnings here 

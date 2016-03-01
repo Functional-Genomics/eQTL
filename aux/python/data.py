@@ -62,9 +62,9 @@ class data():
 		if self.corrmeth == 'peer':
 			Y = self.correction['phenotype'][:,idx]
 		elif self.corrmeth  == 'panama':
-			Y = self.p['phenotype/Ytransformed'][:,idx]
+			Y = self.p['phenotype/matrix'][:,idx]
 		else:
-			Y = self.p['phenotype/Ytransformed'][:,idx] #when none is selected
+			Y = self.p['phenotype/matrix'][:,idx] #when none is selected
 		if standardize: #at the moment this standardization is not optional in the pipeline. TODO: make it optional
 			Y-=Y.mean(0)
 			Y/=Y.std(0)
