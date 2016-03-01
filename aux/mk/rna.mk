@@ -13,10 +13,10 @@ $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv: $(step2_dir)/$(expr_matrix
 
 # Transform expression values of each gene across all the samples.
 $(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv
-	normalising_pheno.py $< $(expr_transform) $@.tmp && mv $@.tmp $@
+	normalise_pheno.py $< $(expr_transform) $@.tmp && mv $@.tmp $@
 
 
-$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(matched_expr_matrix).filtered.qn.trans.tsv $(gtf_eqtl_tsv)  $(samples_hdf5) $(cov_hdf5)
+$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv $(gtf_eqtl_tsv)  $(samples_hdf5) $(cov_hdf5)
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
 	cp $(cov_hdf5) $(cov_sorted_hdf5).tmp && \
