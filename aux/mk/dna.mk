@@ -1,5 +1,12 @@
+# DNA level (variants) provided as VCF files or as a matrix
 
 step1: step0 $(step1b_dir)/complete
+
+STEP1_TARGETS=
+##############################
+# start the analysis with VCFs
+ifndef var_matrix
+
 step1_a: tbi_files
 step1_b: fix_vcf_headers
 step1_c: filter_vcfs
@@ -97,6 +104,55 @@ endef
 # Generate the rules per chr
 $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
 
+STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).genotype.tsv)
+
+$(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
+#	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
+	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
+
+else
+#############################################
+# Variant matrix based analysis
+
+step1_d: $(kpop_file) $(matched_expr_matrix) $(step1a_dir)/data_consistent
+
+
+# filter the columns in the matrix based on their names
+$(matched_expr_matrix): $(expr_matrix) $(var_matrix) 
+	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
+
+$(matched_var_matrix): $(var_matrix) $(expr_matrix)
+	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
+
+
+$(var_matrix).consistent: $(var_matrix) $(var_pos)
+	geno_check_consistency.py $^ && touch $@
+
+$(step1a_dir)/data_consistent: $(var_matrix).consistent $(matched_var_matrix) $(matched_expr_matrix)
+	touch $(step1a_dir)/data_consistent
+
+$(var_pos).bed5: $(var_pos)
+	cat $< | awk 'BEGIN{OFS="\t";}' '{ print $$2 $$3 $$3 . $$1 }' > $@.tmp && mv $@.tmp $@
+
+# var_min_freq [0,1]
+$(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
+	cat $< | geno_filtering.py $(geno_threshold) > $@.tmp && mv $@.tmp $@
+
+define make-rules-for-chr=
+$(shell mkdir -p $(step1b_dir)/$(1))
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed5 
+	cat $$< | generate_hdf5.py  $(var_pos).bed5 $(1) $$@.tmp && mv $$@.tmp $$@
+endef
+
+# Generate the rules per chr
+$(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
+
+
+#
+STEP1_TARGETS+=$(var_matrix).consistent $(samples_hdf5) $(matched_expr_matrix) 
+
+endif
+
 # 
 # build_Kpop.py kop.hdf5.tmp samples.hdf5 ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
 $(kpop_file): $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
@@ -126,10 +182,8 @@ STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matri
 TARGETS4+=$(STEP1_TARGETS)
 
 
-$(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
-#	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
-	check_consistency.py $(dna_rna_mapfile) $(samples_hdf5) && touch $(step1a_dir)/data_consistent
 
 
 $(step1b_dir)/complete:  $(STEP1_TARGETS) vcf_stats
 	$(call p_info,"Step 1 complete") touch $@
+
