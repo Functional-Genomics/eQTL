@@ -3,18 +3,16 @@
 
 step2: $(step2_dir)/complete
 
-
-
 # Filtering the pheno matrix based on fpkm threshold and number of samples
-$(step2_dir)/$(matched_expr_matrix).filtered.tsv: $(matched_expr_matrix)
+$(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(matched_expr_matrix)
 	filtering_pheno.py $< $(min_expr) $(min_perc_samples) $@.tmp && mv $@.tmp $@
 
 # Quantile normalization per classes/studies/groups
-$(step2_dir)/$(matched_expr_matrix).filtered.qn.tsv: $(step2_dir)/$(matched_expr_matrix).filtered.tsv
+$(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.tsv
 	irap_qn -i $< -m $(sample2class_file) -o $@.tmp && mv $@.tmp $@
 
 # Transform expression values of each gene across all the samples.
-$(step2_dir)/$(matched_expr_matrix).filtered.qn.trans.tsv: $(step2_dir)/$(matched_expr_matrix).filtered.qn.tsv
+$(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv
 	normalising_pheno.py $< $(expr_transform) $@.tmp && mv $@.tmp $@
 
 
