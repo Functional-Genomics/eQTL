@@ -48,7 +48,7 @@ if len(sys.argv[1:]) < 13:
 	sys.exit(1)
 
 #read args
-geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,peer_cov,window,n_perm,change_beta,sign = sys.argv[1:11]
+geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,peer_cov,window,n_perm,change_beta_sign = sys.argv[1:11]
 window=float(window)
 n_perm=int(n_perm)
 
