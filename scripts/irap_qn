@@ -67,13 +67,8 @@ myParseArgs <- function(usage,option_list,filenames.exist=NULL,multiple.options=
 quant.load <- function(f,clean.cuff=FALSE) {
   tsv.data <- NULL
 
-  tsv.data <- qload.tsv(f,header=FALSE)
-  if ( !is.null(tsv.data) && ncol(tsv.data)>1 ) {
-    if ( sum(grepl("(Gene|Exon|Transcript|ID|feature)",tsv.data[1,1],ignore.case=T))!=0 || tsv.data[1,1]=="") {
-      # reload to include the header
-      tsv.data <- qload.tsv(f,header=TRUE)
-    }
-  }
+  # header is always present
+  tsv.data <- qload.tsv(f,header=TRUE)
   if(is.null(tsv.data)) return(NULL);
   rownames(tsv.data) <- as.character(tsv.data[,1])
   tsv.data <- tsv.data[,-1,drop=FALSE]
@@ -125,7 +120,7 @@ quantile_norm <- function(df,means=NULL){
       #pinfo(length(means),"==",l1)
     }  
   }
-
+  print(dim(df))
   # increasing
   ranks <- apply(df,2,rank,ties.method="max")
   # sort: increasing
@@ -198,6 +193,7 @@ pinfo("Loading ",opt$tsv_file)
 quant <- quant.load(opt$tsv_file)
 pinfo("Loading ",opt$tsv_file, " complete")
 pinfo("# genes:",nrow(quant))
+pinfo("# samples:",ncol(quant))
 pinfo("Loading ",opt$map_tsv_file)
 mapping <- read.table(opt$map_tsv_file,sep='\t',header=FALSE)
 pinfo("Loading ",opt$map_tsv_file, " complete")
@@ -208,6 +204,11 @@ pinfo("Starting quantile normalization (this may take a while)...")
 rownames(mapping)<-mapping[,1]
 #keep cancer studies
 classes<-unique(as.character(mapping[,2]))
+pinfo("# Classes:",length(classes),"\n")
+# keep only the classes with samples
+mapping <- mapping[mapping[,1]%in%colnames(quant),]
+classes<-unique(as.character(mapping[,2]))
+pinfo("# Classes with samples in the expression matrix:",length(classes),"\n")
 
 qn_df_group <- function(group,df,mapping,...) {
   samples<- rownames(mapping)[mapping[,2]==group]
