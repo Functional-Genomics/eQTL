@@ -53,8 +53,7 @@ if expr_transform == 'gauss':
 elif expr_transform == 'log':
 	Y=NM.logtransform(pheno.T.values[:])
 else:
-	Y=pheno.values[:]
-
+	Y=pheno.T.values[:]
 
 #substitute values
 pheno = pheno.T[:]
