@@ -4,7 +4,7 @@ import sys, os
 import h5py
 import scipy as SP
 import pandas as pd
-
+from utils import select_genes_on_SNR as SNR
 
 
 def usage():
@@ -12,33 +12,30 @@ def usage():
 This script filters the matrix of gene expression (genes X samples) values based on a gene expression threshold (e.g. FPKMs) and minimum percentage n of samples meeting this threshold. It outputs a tsv file with (genes X samples)
 
 Usage:
-filtering_pheno.py <pheno.matched.tsv> <min_expr> <min_perc_samples> <pheno.filtered.tsv>
+filtering_pheno.py <pheno.matched.tsv> <min_expr> <min_perc_samples> <snr_threshold> <pheno.filtered.tsv>
 
 
 - min_exp = [INT | FLOAT]
 - min_perc_samples = [INT | FLOAT]
+- snr_threshold = [INT]
 """
 
 #check arguments
-if len(sys.argv[1:]) < 4 :
+if len(sys.argv[1:]) < 5 :
 	sys.stderr.write("ERROR: missing parameter\n")
 	usage()
 	sys.exit(1)
 
-pheno,threshold,perc_samples,phenout = sys.argv[1:]
+pheno,threshold,perc_samples,snr_threshold,phenout = sys.argv[1:]
 
 threshold = float(threshold)
+snr_threshold = int(snr_threshold)
 perc_samples = float(perc_samples)
 #check files/arguments exist
 if os.path.isfile(pheno) != True:
 	sys.stderr.write("ERROR: file "+pheno+" not found\n")
 	usage()
 	sys.exit(1)
-#elif expr_transform not in [ 'gauss', 'log', 'none' ]:
-#        sys.stderr.write("ERROR: method "+expr_transform+" not available\n")
-#        usage()
-#        sys.exit(1)
-
 
 pheno = pd.read_csv(pheno, sep='\t', index_col=[0])
 threshold = float(threshold)
@@ -57,8 +54,12 @@ print "{0} genes retained after filtering".format(len(indexes))
 #filter original matrix of gene expression
 filtered_matrix = pheno.iloc[indexes,:]
 
-#output the matrix 
-filtered_matrix.to_csv(phenout, sep='\t', index=True)
+#select the genes based on snr threshold
+index = SNR(filtered_matrix.T.values[:],snr_threshold)
+final_matrix = filtered_matrix.T.iloc[:,index]
+
+#output the matrix of gene expression
+final_matrix.to_csv(phenout, sep='\t', index=True)
 
 
 

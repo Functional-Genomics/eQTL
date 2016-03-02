@@ -144,3 +144,15 @@ def corr_matrix(matrix,skip_kinship=False):
 		K = SP.empty((shape,shape))
 		K[:] = SP.NAN
 	return matrix,K
+
+def select_genes_on_SNR(phenotype, t):
+	''' Selection of variable genes based on signal-to-noise ratio calculation for each gene. It assumes tha matrix of phenotypes is samples X genes '''
+        #calculate the signal-to-noise ratio for each gene of the matrix
+        SNR = (phenotype.mean(0)/phenotype.std(0))
+        #get the percentile of the SNR distribution based on threshold user defined
+        perc = SP.percentile(SP.sort(SNR),t)
+        #take indexes of those genes with SNR >=t
+        index = SP.where(SNR >= perc)[0]
+        #take genes from phenotype matrix with SNR >= t
+        #Y = SP.take(phenotype,index, axis=1)
+        return index

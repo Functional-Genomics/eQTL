@@ -70,7 +70,9 @@ if __name__ == '__main__':
 	hidden_k = int(hidden_k)
 
 	if hidden_k > threshold:
-		sys.stderr.write('\nERROR: Number of hidden factors chosen is above 25% of the number of samples. Please select a lower value.\n')
+		sys.stderr.write('\nWARNING: Number of hidden factors chosen is above 25% of the number of samples.\n')
+	elif hidden_k > samples:
+		sys.stderr.write('\nERROR: Number of hidden factors chosen is above the number of samples. Exit.\n')
 		sys.exit(1)
 			 
 	#iterations and outfile
