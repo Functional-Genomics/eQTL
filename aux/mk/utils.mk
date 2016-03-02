@@ -26,7 +26,7 @@ define p_error=
 $(info $(shell date "+%H:%M:%S %d/%m/%Y") * ERROR: $(1)) && $(error Fatal error)
 endef
 
-maf=0.02
+
 define get_mac=
 $(shell bash -c "echo \($(words $(vcfs)) \* $(maf) \* 2 +1\)/1 | bc")
 endef

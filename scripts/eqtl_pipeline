@@ -198,7 +198,7 @@ LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 # Other Optional parameters
 #####################
 $(info * )
-$(info * Optional Parameters:)
+
 
 #
 def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha
@@ -214,7 +214,7 @@ def_vars+=geno_threshold
 endif
 
 
-
+maf?=0.01
 snp_alpha?=1.0
 use_kinship?=y
 subfolder_name?=
@@ -244,9 +244,22 @@ eqtl_method?=limix
 
 mac?=20
 
+#
+ifdef maf
+mac=$(call get_mac)
+$(info *	mac=$(mac) (maf=$(maf)))
+else
+maf=
+endif
+
+$(info * )
+$(info * Optional Parameters:)
 $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
 
-settings_vars=$(def_vars) sample2class_file cov_matrix dna_rna_mapfile expr_matrix corr_method
+settings_vars=$(def_vars) sample2class_file cov_matrix dna_rna_mapfile expr_matrix corr_method maf
+
+##############################
+
 
 ##############################
 ifndef var_matrix
@@ -412,6 +425,7 @@ gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
 expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
 matched_expr_matrix=$(step1a_dir)/$(expr_matrix_filename).matched.tsv
 
+#$(info matched_expr_matrix=$(matched_expr_matrix))
 samples_hdf5=$(step1b_dir)/samples.hdf5
 kpop_file=$(step1b_dir)/Kpop.hdf5
 
