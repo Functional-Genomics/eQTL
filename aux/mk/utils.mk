@@ -29,7 +29,7 @@ endef
 
 define get_mac=
 $(shell bash -c "echo \($(words $(vcfs)) \* $(maf) \* 2 +1\)/1 | bc")
-endef
+endef	
 
 # complain if a file does not exist and exit
 file_exists=$(if  $(realpath $(1)),,$(call p_error,$(1) not found))
