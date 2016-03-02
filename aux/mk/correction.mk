@@ -9,7 +9,7 @@ $(step3_dir)/panama/panama.hdf5: $(kpop_file) $(step2_dir)/$(expr_matrix_filenam
 
 $(step3_dir)/peer/peer.hdf5 $(step3_dir)/peer/peer_factors.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(if $(subst y,,$(limix_use_peer_covariates)),,$(cov_sorted_hdf5))
 	mkdir -p $(@D) && \
-	runpeer.py $<  $(hidden_k) $(peer_iterations)  $@.tmp $(@D)/peer_factors.hdf5 $(if $(subst y,,$(limix_use_peer_covariates)),,$(cov_sorted_hdf5)) && \
+	run_peer.sh $<  $(hidden_k) $(peer_iterations)  $@.tmp $(@D)/peer_factors.hdf5 $(if $(subst y,,$(limix_use_peer_covariates)),,$(cov_sorted_hdf5)) && \
 	mv $@.tmp  $@
 
 $(step3_dir)/none/none.hdf5: $(kpop_file)
