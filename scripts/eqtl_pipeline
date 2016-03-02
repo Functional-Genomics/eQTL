@@ -192,6 +192,8 @@ endif
 
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
+# 
+CHANGE_BETA_SIGN?=y
 
 
 #####################
@@ -366,7 +368,7 @@ step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) |md5sum|cut -
 
 
 ifeq ($(corr_method),peer)
-step3_hash!=echo $(step1b_hash) $(step2_hash) $(peer_iterations) $(limix_use_peer_covariates) $(hidden_k) $(expr_transform)|md5sum|cut -f1 -d' '
+step3_hash!=echo $(step1b_hash) $(step2_hash) $(peer_iterations) $(limix_use_peer_covariates) $(hidden_k) $(expr_transform) $(snr_threshold)|md5sum|cut -f1 -d' '
 else
 ifeq ($(corr_method),panama)
 step3_hash!=echo $(step1b_hash) $(step2_hash)  $(hidden_k) $(snr_threshold) $(expr_transform) |md5sum|cut -f1 -d' '
