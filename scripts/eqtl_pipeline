@@ -205,12 +205,12 @@ $(info * )
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold
 
 # optional: bed file to aggregate the variants
 aggr_bed_file?=
 # value between 0 and 1 
-geno_threshold?=1
+geno_threshold?=0.1
 ifneq ($(aggr_bed_file),)
 $(info *	aggr_bed_file=$(aggr_bed_file))
 $(call file_exists,$(aggr_bed_file))
@@ -221,7 +221,7 @@ endif
 snp_alpha?=1.0
 use_kinship?=y
 subfolder_name?=
-peer_iterations?=100
+peer_iterations?=1000
 fdr_threshold?=0.05
 minGQ?=50
 minRD?=20
