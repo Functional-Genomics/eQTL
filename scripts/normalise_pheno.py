@@ -26,7 +26,7 @@ if len(sys.argv[1:]) < 3:
 
 if len(sys.argv[1:]) == 3:
 	pheno,expr_transform,phenout=sys.argv[1:]
-	transpose = 'y'
+	transpose = 'n'
 elif len(sys.argv[1:]) == 4:
 	pheno,expr_transform,phenout,transpose=sys.argv[1:]
 	
@@ -40,7 +40,7 @@ elif expr_transform not in [ 'gauss', 'log', 'none' ]:
         usage()
         sys.exit(1)
 elif transpose != 'n' and transpose != 'y':
-	sys.stderr.write("ERROR: please use \'y\' or \'n\' for transpose option\n")
+	sys.stderr.write("ERROR: please use y or n for transpose option\n")
 	usage()
 	sys.exit(1)
 
