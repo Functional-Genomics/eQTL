@@ -132,7 +132,7 @@ $(step1a_dir)/data_consistent: $(var_matrix).consistent $(matched_var_matrix) $(
 	touch $(step1a_dir)/data_consistent
 
 $(var_pos).bed5: $(var_pos)
-	cat $< | awk 'BEGIN{OFS="\t";}' '{ print $$2 $$3 $$3 . $$1 }' > $@.tmp && mv $@.tmp $@
+	cat $< | awk  'BEGIN {OFS="\t";} {print $$2,$$3,$$3,".",$$1;}'  > $@.tmp && mv $@.tmp $@
 
 # var_min_freq [0,1]
 $(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
