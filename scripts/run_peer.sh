@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 OUT=`mktemp`
-runpeer.py $* | tee $OUT -
+runpeer.py $* | tee $OUT
 STATUS=$?
 if [ $STATUS -eq 0 ]; then
     # grep $OUT for convergence
