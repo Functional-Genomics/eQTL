@@ -14,7 +14,7 @@ with N samples and G genes.
 Usage:
 runpeer.py <pheno.filtered.hdf5> <hidden_k> <n_iterations> <peer_residuals.hd5> <peer_factors.hdf5>  <covariates_sorted.hdf5>
 
-NB:<covariates_sorted_hdf5> is optional. TODO: change make file.
+NB:<covariates_sorted_hdf5> is optional. 
 
 '''
 
@@ -69,11 +69,12 @@ if __name__ == '__main__':
         #select hidden confounding 
 	hidden_k = int(hidden_k)
 
+        if hidden_k > samples:
+		sys.stderr.write('\nERROR: Number of hidden factors chosen is above the number of samples. \n')
+		sys.exit(1)
+
 	if hidden_k > threshold:
 		sys.stderr.write('\nWARNING: Number of hidden factors chosen is above 25% of the number of samples.\n')
-	elif hidden_k > samples:
-		sys.stderr.write('\nERROR: Number of hidden factors chosen is above the number of samples. Exit.\n')
-		sys.exit(1)
 			 
 	#iterations and outfile
         n_iterations=int(n_iterations)
