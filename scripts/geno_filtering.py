@@ -37,7 +37,9 @@ elif matrix.index.dtype == (int):
 
 #select rows based on number of samples with at least 1 event (it assumes a SNPs by Samples matrix)
 samples = matrix.shape[1]
-sample_threshold = threshold * samples
+sample_threshold = int(round(threshold * samples,0))
+sys.stderr.write('#Samples:'+str(samples)+'\n')
+sys.stderr.write('Sample threshold:'+str(sample_threshold)+'\n')
 filt_matrix = matrix[matrix.gt(0,axis='rows').sum(1) >= sample_threshold]
 
 #write to stdout
