@@ -111,6 +111,7 @@ ifdef aggr_bed_file
 $(error incompatible options: aggr_bed_file and var_matrix)
 endif
 
+CHANGE_BETA_SIGN=n
 # var_matrix 
 ##########################
 else
@@ -141,6 +142,9 @@ endif
 $(info *	|vcfs|=$(words $(vcfs)))
 #$(call file_exists,$(vcfs))
 $(foreach l,$(vcfs),$(call file_exists,$(vcf_toplevel_dir)/$(l)))
+
+# needed due to plink
+CHANGE_BETA_SIGN=y
 
 endif
 
@@ -192,8 +196,6 @@ endif
 
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
-# 
-CHANGE_BETA_SIGN?=y
 
 
 #####################
@@ -212,11 +214,10 @@ geno_threshold?=1
 ifneq ($(aggr_bed_file),)
 $(info *	aggr_bed_file=$(aggr_bed_file))
 $(call file_exists,$(aggr_bed_file))
+CHANGE_BETA_SIGN=n
 def_vars+=geno_threshold
 endif
 
-
-maf?=0.01
 snp_alpha?=1.0
 use_kinship?=y
 subfolder_name?=
@@ -251,7 +252,7 @@ ifdef maf
 mac=$(call get_mac)
 $(info *	mac=$(mac) (maf=$(maf)))
 else
-maf=
+maf=not defined
 endif
 
 $(info * )
