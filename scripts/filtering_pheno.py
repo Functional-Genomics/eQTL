@@ -58,7 +58,7 @@ filtered_matrix = pheno.iloc[indexes,:]
 index = SNR(filtered_matrix.T.values[:],snr_threshold)
 final_matrix = filtered_matrix.T.iloc[:,index]
 # transpose back
-final_matrix = final_matrix.T
+final_matrix = final_matrix.T[:]
 #output the matrix of gene expression
 final_matrix.to_csv(phenout, sep='\t', index=True)
 
