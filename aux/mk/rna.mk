@@ -17,7 +17,7 @@ $(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv: $(step2_dir)/$(expr_
 
 
 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv $(gtf_eqtl_tsv)  $(samples_hdf5) $(cov_hdf5)
-	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
+	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< -T && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
 	cp $(cov_hdf5) $(cov_sorted_hdf5).tmp && \
 	sort_ids.py $@.tmp $(cov_sorted_hdf5).tmp $(samples_hdf5) &&\
