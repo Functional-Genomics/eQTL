@@ -109,9 +109,10 @@ for gene in genes:
 	    Xc,geno_info = data.gene_SNP_pair(gene)
 	except:
 	    e = sys.exc_info()[0]
-	    print "...excluding gene %s %s" %(gene,e) 
+	    print "-"
 	    continue
 	
+	print "+"
 	
 	#check if Kpop or Ktot contains Nan
 	booleanK=SP.isnan(K)
