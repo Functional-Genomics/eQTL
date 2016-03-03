@@ -1,8 +1,5 @@
 
-
 ifeq ($(eqtl_method),limix)
-
-CHANGE_BETA_SIGN=y
 
 step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete
 
