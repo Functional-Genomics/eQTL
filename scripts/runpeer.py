@@ -52,7 +52,8 @@ if __name__ == '__main__':
 		cov=h5py.File(covariates,'r')
 		cov_matrix=cov['covariates'][:] #get matrix of covariates N x K. Catch warnings here
 		cov_set=True
-        sys.stdout.flush()
+
+	sys.stdout.flush()
 	if os.path.isfile(pheno) != True:
 		sys.stderr.write("\nERROR: file "+pheno+" not found\n")
 		sys.exit(1)
