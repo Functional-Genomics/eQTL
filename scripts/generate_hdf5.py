@@ -37,9 +37,14 @@ if os.path.isfile(file2) != True:
 #open an hdf5 file
 hdf = h5py.File(outfile,'w')
 
+sys.stderr.write('\nReading from stdin... ')
 file1 = sys.stdin
 var_file=pd.read_csv(file1,sep='\t',index_col=0)
+sys.stderr.write('complete.\n')
+
+sys.stderr.write('Reading from '+file2+'... ')
 annotation = pd.read_csv(file2,sep='\t',index_col=0,header=None)
+sys.stderr.write('done.')
 
 chr_subset = annotation[annotation.index.values==chr]
 chr_var_subset = chr_subset[3].values #take names from bed file
