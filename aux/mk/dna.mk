@@ -142,7 +142,14 @@ define make-rules-for-chr=
 $(shell mkdir -p $(step1b_dir)/$(1))
 $(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed5 
 	cat $$< | generate_hdf5.py  $(var_pos).bed5 $(1) $$@.tmp && mv $$@.tmp $$@
+
+$(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed5
+	grep "^$(1)\s" $(var_pos).bed5|cut -f 5 | sed -E 's/^/^/;s/$$$$/\\\s/' > $$@.tmp1 &&\
+	head -n 1 $$< > $$@.tmp && \
+	grep $$< -f $$@.tmp1 >> $$@.tmp && \
+	mv $$@.tmp $$@ && rm -f $$@.tmp1
 endef
+
 
 # Generate the rules per chr
 $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
