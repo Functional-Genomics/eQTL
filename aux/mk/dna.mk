@@ -96,7 +96,7 @@ $(step1b_dir)/$(1)/chr$(1)_filt.tsv: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(s
 $(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(step1b_dir)/$(1)/chr$(1)_filt.tsv
 	cut -f 4,6- $$< |  geno_filtering.py $(geno_threshold) > $$@.tmp && mv $$@.tmp $$@
 
-$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1).genotype.tsv
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1).genotype.tsv $(aggr_bed_file)
 	cat $$< | generate_hdf5.py $(aggr_bed_file) $(1) $$@.tmp && mv $$@.tmp $$@
 endif
 endef
@@ -132,7 +132,9 @@ $(step1a_dir)/data_consistent: $(var_matrix).consistent $(matched_var_matrix) $(
 	touch $(step1a_dir)/data_consistent
 
 $(var_pos).bed5: $(var_pos)
-	cat $< | awk  'BEGIN {OFS="\t";} {print $$2,$$3,$$3,".",$$1;}'  > $@.tmp && mv $@.tmp $@
+	echo "chrom start end name score" | tr " " "\t" > $@.tmp &&\
+	tail -n +2 $< | awk  'BEGIN {OFS="\t";} {print $$2,$$3,$$3,".",$$1;}'  >> $@.tmp && \
+	mv $@.tmp $@
 
 # var_min_freq [0,1]
 $(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
@@ -145,8 +147,8 @@ $(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed5
 
 $(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed5
 	grep "^$(1)\s" $(var_pos).bed5|cut -f 5 | sed -E 's/^/^/;s/$$$$/\\\s/' > $$@.tmp1 &&\
-	head -n 1 $$< > $$@.tmp && \
-	grep $$< -f $$@.tmp1 >> $$@.tmp && \
+	head -n 1 $$< > $$@.tmp
+	grep $$< -f $$@.tmp1 >> $$@.tmp 
 	mv $$@.tmp $$@ && rm -f $$@.tmp1
 endef
 

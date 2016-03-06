@@ -114,7 +114,13 @@ $(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	sed -i "s/ /\t/g" $@.tmp && \
 	cat $@.tmp.lst | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
-VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
+vcf_stats_targets=$(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv 
+ifndef var_matrix
+VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)
+vcf_stats_stats+=$(report_dir)/vcf_snps_2.tsv 
+else
+VCF_STATS_2=
+endif
 $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mkdir -p $(@D) && \
 	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
@@ -123,7 +129,7 @@ $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 
 TARGETS4+=$(VCF_STATS_0) $(VCF_STATS_1) $(VCF_STATS_2)
 
-vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv 
+vcf_stats: $(vcf_stats_targets)
 
 
 $(report_dir)/vcf_filtering.png: $(report_dir)/vcf_snps_0.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_2.tsv  
