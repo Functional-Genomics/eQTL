@@ -162,7 +162,10 @@ function limix_install {
 # gcc version > 4.2.1
 # LIMIX recommended installation
     pprint_msg "Installing Limix..."
-    pip install  --user  limix==0.7.12
+    #pip install  --user  limix==0.7.12
+    git clone git@github.com:PMBio/limix.git
+    cd limix
+    $EPIPELINE_DIR/anaconda/bin/python setup.py install
     pip install  --user  rpy2
     pip install  --user  progressbar
     pprint_msg "Installing Limix...done."
