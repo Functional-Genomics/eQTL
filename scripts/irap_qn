@@ -100,7 +100,7 @@ qload.tsv <- function(f,header,comment.char="") {
     if ( comment.char!="") {
       f <- paste(f," | grep -v \"^",comment.char,"\"",sep="")
     }
-    tryCatch(tsv.data <- fread(input=f,sep = "\t", header="auto",check.names=FALSE,data.table=FALSE),error=function(x) NULL)
+    tryCatch(tsv.data <- fread(input=f,sep = "\t", header=header,check.names=FALSE,data.table=FALSE),error=function(x) NULL)
   } else 
     tryCatch(tsv.data <- read.table(f,sep = "\t", header=header, comment.char=comment.char, quote = "\"",check.names=FALSE),error=function(x) NULL)
   return(tsv.data)
@@ -203,15 +203,13 @@ pinfo("Loading ",opt$map_tsv_file)
 mapping <- read.table(opt$map_tsv_file,sep='\t',header=FALSE)
 pinfo("Loading ",opt$map_tsv_file, " complete")
 
-
 pinfo("Starting quantile normalization (this may take a while)...")
-
 rownames(mapping)<-mapping[,1]
 #keep cancer studies
 classes<-unique(as.character(mapping[,2]))
 pinfo("# Classes:",length(classes),"\n")
 # keep only the classes with samples
-mapping <- mapping[mapping[,1]%in%colnames(quant),]
+mapping <- mapping[as.character(mapping[,1])%in%colnames(quant),,drop=FALSE]
 classes<-unique(as.character(mapping[,2]))
 pinfo("# Classes with samples in the expression matrix:",length(classes),"\n")
 
@@ -221,7 +219,7 @@ qn_df_group <- function(group,df,mapping,...) {
   return(temp_quant$qn)
 }
 
-qn_df<- NULL
+qn_df <- NULL
 for (class in classes) {
   pinfo("Computing QN for ",class,"...")
   qn_df<- cbind(qn_df,qn_df_group(class,quant,mapping))
@@ -251,6 +249,7 @@ boxplot(abs(qn_df)+1,log="y",outline=F,las=2,ylab="QN Expr.",names=xnames)
 dev.off()
 pinfo("Generating boxplots...done.")
 
+####################################################
 # keep the same initial ordering for the common columns
 cols <- colnames(quant)[colnames(quant) %in% colnames(qn_df)]
 qn_df <- qn_df[,cols]

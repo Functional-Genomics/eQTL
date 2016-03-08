@@ -427,6 +427,7 @@ override expr_matrix:=$(subst .gz,,$(expr_matrix))
 gtf_eqtl_tsv=$(subst .gtf,.gtf.eqtl.tsv,$(subst .gz,,$(gtf_file)))
 expr_matrix_filename=$(notdir $(basename $(expr_matrix)))
 matched_expr_matrix=$(step1a_dir)/$(expr_matrix_filename).matched.tsv
+matched_expr_matrix_no_ext=$(step1a_dir)/$(expr_matrix_filename).matched
 
 #$(info matched_expr_matrix=$(matched_expr_matrix))
 samples_hdf5=$(step1b_dir)/samples.hdf5

@@ -38,9 +38,12 @@ $(report_dir)/settings.tsv: $(conf)
 	( $(foreach v,$(settings_vars), echo $v:::$($v);) echo num_vcfs:::$(words $(vcfs)); )  | sed "s/:::/\t/" > $@.tmp && mv $@.tmp $@
 
 # Copy the plots and tsv file to the report folder
-$(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_qn_clus.png $(report_dir)/expr_filtered_qn_pca.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png
-#the tsv files are transposed...
-#$(report_dir)/expr_filtered_qn_trans_clus.png $(report_dir)/expr_filtered_qn_trans_pca.png
+$(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_qn_clus.png $(report_dir)/expr_filtered_qn_pca.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png $(report_dir)/expr_filtered_qn_trans_clus.png $(report_dir)/expr_filtered_qn_trans_pca.png $(report_dir)/$(expr_matrix_filename)_pca.png $(report_dir)/$(expr_matrix_filename)_clus.png
+
+$(report_dir)/$(expr_matrix_filename)_clus.png: $(matched_expr_matrix_no_ext).clus.png
+	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
+$(report_dir)/$(expr_matrix_filename)_pca.png: $(matched_expr_matrix_no_ext).pca.png
+	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
 
 $(report_dir)/expr_filtered_qn_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.qn.clus.png $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
@@ -111,7 +114,13 @@ $(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	sed -i "s/ /\t/g" $@.tmp && \
 	cat $@.tmp.lst | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
-VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)	
+vcf_stats_targets=$(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv 
+ifndef var_matrix
+VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)
+vcf_stats_stats+=$(report_dir)/vcf_snps_2.tsv 
+else
+VCF_STATS_2=
+endif
 $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mkdir -p $(@D) && \
 	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
@@ -120,7 +129,7 @@ $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 
 TARGETS4+=$(VCF_STATS_0) $(VCF_STATS_1) $(VCF_STATS_2)
 
-vcf_stats: $(report_dir)/vcf_snps_2.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv 
+vcf_stats: $(vcf_stats_targets)
 
 
 $(report_dir)/vcf_filtering.png: $(report_dir)/vcf_snps_0.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_2.tsv  

@@ -96,7 +96,7 @@ $(step1b_dir)/$(1)/chr$(1)_filt.tsv: $$(foreach l,$(vcfs),$(step1_dir)/$(1)/$$(s
 $(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(step1b_dir)/$(1)/chr$(1)_filt.tsv
 	cut -f 4,6- $$< |  geno_filtering.py $(geno_threshold) > $$@.tmp && mv $$@.tmp $$@
 
-$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1).genotype.tsv
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(step1b_dir)/$(1)/chr$(1).genotype.tsv $(aggr_bed_file)
 	cat $$< | generate_hdf5.py $(aggr_bed_file) $(1) $$@.tmp && mv $$@.tmp $$@
 endif
 endef
@@ -131,8 +131,9 @@ $(var_matrix).consistent: $(var_matrix) $(var_pos)
 $(step1a_dir)/data_consistent: $(var_matrix).consistent $(matched_var_matrix) $(matched_expr_matrix)
 	touch $(step1a_dir)/data_consistent
 
-$(var_pos).bed5: $(var_pos)
-	cat $< | awk 'BEGIN{OFS="\t";}' '{ print $$2 $$3 $$3 . $$1 }' > $@.tmp && mv $@.tmp $@
+$(var_pos).bed4: $(var_pos)
+	tail -n +2 $< | awk  'BEGIN {OFS="\t";} {print $$2,$$3,$$3,$$1;}'  >> $@.tmp && \
+	mv $@.tmp $@
 
 # var_min_freq [0,1]
 $(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
@@ -140,9 +141,16 @@ $(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
 
 define make-rules-for-chr=
 $(shell mkdir -p $(step1b_dir)/$(1))
-$(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed5 
-	cat $$< | generate_hdf5.py  $(var_pos).bed5 $(1) $$@.tmp && mv $$@.tmp $$@
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed4 
+	cat $$< | generate_hdf5.py  $(var_pos).bed4 $(1) $$@.tmp && mv $$@.tmp $$@
+
+$(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed4
+	grep "^$(1)\s" $(var_pos).bed4|cut -f 4 | sed -E 's/^/^/;s/$$$$/\\\s/' > $$@.tmp1 &&\
+	head -n 1 $$< > $$@.tmp
+	grep $$< -f $$@.tmp1 >> $$@.tmp 
+	mv $$@.tmp $$@ && rm -f $$@.tmp1
 endef
+
 
 # Generate the rules per chr
 $(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
