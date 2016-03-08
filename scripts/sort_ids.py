@@ -46,8 +46,13 @@ covids = covariates['row_header/sample_ID'][:]
 genoids = geno_ids['sample_ID'][:]
 
 #take indices of geno ids in pheno and covariates samples
-ip = map(lambda x:(phenoids.tolist()).index(x), genoids.tolist())
-ic = map(lambda x:(covids.tolist()).index(x), genoids.tolist())
+try:
+	ip = map(lambda x:(phenoids.tolist()).index(x), genoids.tolist())
+	ic = map(lambda x:(covids.tolist()).index(x), genoids.tolist())
+except:
+	e = sys.exc_info()[1]
+	sys.stderr.write('ERROR : {0}\n'.format(e))
+	sys.exit(1)
 
 #sort pheno and covariates ids based of geno indices
 pheno['phenotype/row_header/sample_ID'][:]=pheno['phenotype/row_header/sample_ID'][:][ip]
