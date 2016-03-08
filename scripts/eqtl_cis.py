@@ -108,8 +108,8 @@ for gene in genes:
 	try:
 	    Xc,geno_info = data.gene_SNP_pair(gene)
 	except:
-	    e = sys.exc_info()[0]
-	    print "...excluding gene %s %s" %(gene,e) 
+	    #e = sys.exc_info()[0]
+	    print "...excluding gene %s" %(gene) 
 	    continue
 	
 	
