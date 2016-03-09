@@ -54,6 +54,18 @@ except:
 	sys.stderr.write('ERROR : {0}\n'.format(e))
 	sys.exit(1)
 
+if len(ip) != phenoids.shape[0]:
+	bv = sp.in1d(phenoids,genoids)
+	for x in xrange(len(phenoids[~bv])):
+		sys.stderr.write('The following genotype id {0} was not found in the phenotype file\n'.format(phenoids[~bv][x]))
+	sys.exit(1)
+
+if len(ic) != covids.shape[0]:
+	bv = sp.in1d(covids,genoids)
+	for x in xrange(len(phenoids[~bv])):
+		sys.stderr.write('The following genotype id {0} was not found in the phenotype file\n'.format(phenoids[~bv][x]))
+	sys.exit(1)
+
 #sort pheno and covariates ids based of geno indices
 pheno['phenotype/row_header/sample_ID'][:]=pheno['phenotype/row_header/sample_ID'][:][ip]
 pheno['phenotype/matrix'][:] = pheno['phenotype/matrix'][:][ip,:]
