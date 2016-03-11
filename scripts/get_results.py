@@ -82,13 +82,13 @@ if __name__ == '__main__':
 	#check if file is non-empty
 	if i_file.keys() == [] : #file is empty:
 		out.close()
-		sys.stdout.write('ERROR: file '+file+' is empty\n')
-		sys.exit(1)
+		sys.stdout.write('WARNING: file '+file+' is empty\n')
+		sys.exit(0)
 	
 	#check if file has all the expected keys
 	for key in name_keys:
 		if key not in i_file: 
-			std.error.write('ERROR: key '+key+' is not present in file '+i_file+'\n')
+			sys.stderr.write('ERROR: key '+key+' is not present in file '+i_file+'\n')
 			sys.exit(1)
 
 	#if everything passed numpy array check
