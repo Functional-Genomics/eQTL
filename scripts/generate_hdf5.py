@@ -52,6 +52,9 @@ chr_var_subset = chr_subset[3].values #take names from bed file
 var_file_subset = var_file.index.values[sp.in1d(var_file.index.values,chr_var_subset)]
 #set array of geno values and transpose (samples X var)
 matrix = var_file.values[sp.in1d(var_file.index.values,var_file_subset)].T.astype(float)
+#msg if the matrix is empty
+if matrix.shape[1] == 0:
+	sys.stdout.write('WARNING: 0 variants retained after filtering. No results for chr {0} \n'.format(chr))
 #save a copy of the matrix with burden
 dset = hdf.create_dataset('genotype/burden_matrix',data=matrix)
 burden = matrix.copy()

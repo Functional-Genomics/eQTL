@@ -58,8 +58,8 @@ if __name__ == '__main__':
 		temp = {}
 		i = h5py.File(file,'r')
 		if i.keys() == []: #the file is empty
-			print 'file {0} is empty\n'.format(i)
-			pass
+			sys.stdout.write('WARNING: file {0} is empty\n'.format(i))
+			continue
 		else:
 			temp['geneID'] =i['geneID'][:]
 			temp['file'] = i['file'][:]
@@ -80,37 +80,40 @@ if __name__ == '__main__':
 			table[key] = sp.concatenate(table[key])
 		except:
 			pass
+	if table.keys() == []:
+		sys.stdout.write('WARNING: no result found. Writing an empty {0} file\n'.format(outfile))
+		out.close()
+	else:
+		#store the number of pvalues tested
+		shape_pv = table['pval'].shape[0]
+		#calculate qv_all,pv_perm_all
+		if window != 0 and n_perm <=1: #if cis and no empirical pvalues
+			table['g_adj_pval'] = FDR.qvalues(table['l_adj_pval'])
+			table['window'] = [window] #add group with window size
+			table['n_perm'] = [n_perm]
+			table['g_emp_adj_pval'] = (sp.empty((shape_pv,))).astype(str)
+			table['g_emp_adj_pval'][:] = 'NA' #fill an empty array with NA values
+		elif window !=0 and n_perm >1: # if cis and empirical pvalues
+			table['g_adj_pval'] = FDR.qvalues(table['l_adj_pval'])
+			table['g_emp_adj_pval'] = FDR.qvalues(table['l_emp_pval'][:,0])
+			table['window'] = [window]
+			table['n_perm'] = [n_perm]
+		elif window == 0 and n_perm <=1: #if trans and no empirical pvalues
+			table['g_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['pval'][:].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across nominal pvalues
+			table['window'] = [window]
+			table['n_perm'] = [n_perm]
+			table['g_emp_adj_pval'] = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
+			table['g_emp_adj_pval'][:] = 'NA'
+		else: #if trans and empirical pvalues
+			table['g_adj_pval'] = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
+			table['g_adj_pval'] [:] = 'NA'
+			table['g_emp_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['l_emp_pval'][:,0].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across empirical pvalues
+			table['window'] = [window]
+			table['n_perm'] = [n_perm]
 
-	#store the number of pvalues tested
-	shape_pv = table['pval'].shape[0]
-	#calculate qv_all,pv_perm_all
-	if window != 0 and n_perm <=1: #if cis and no empirical pvalues
-		table['g_adj_pval'] = FDR.qvalues(table['l_adj_pval'])
-		table['window'] = [window] #add group with window size
-		table['n_perm'] = [n_perm]
-		table['g_emp_adj_pval'] = (sp.empty((shape_pv,))).astype(str)
-		table['g_emp_adj_pval'][:] = 'NA' #fill an empty array with NA values
-	elif window !=0 and n_perm >1: # if cis and empirical pvalues
-		table['g_adj_pval'] = FDR.qvalues(table['l_adj_pval'])
-		table['g_emp_adj_pval'] = FDR.qvalues(table['l_emp_pval'][:,0])
-		table['window'] = [window]
-		table['n_perm'] = [n_perm]
-	elif window == 0 and n_perm <=1: #if trans and no empirical pvalues
-		table['g_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['pval'][:].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across nominal pvalues
-		table['window'] = [window]
-		table['n_perm'] = [n_perm]
-		table['g_emp_adj_pval'] = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
-		table['g_emp_adj_pval'][:] = 'NA'
-	else: #if trans and empirical pvalues
-		table['g_adj_pval'] = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
-		table['g_adj_pval'] [:] = 'NA'
-		table['g_emp_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['l_emp_pval'][:,0].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across empirical pvalues
-		table['window'] = [window]
-		table['n_perm'] = [n_perm]
-
-	#write within the file		
-	smartDumpDictHdf5(table,out)
-	out.close()
+		#write within the file		
+		smartDumpDictHdf5(table,out)
+		out.close()
 	sys.exit(0)
 
 		

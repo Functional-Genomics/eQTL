@@ -68,20 +68,23 @@ if __name__ == '__main__':
 		sys.stderr.write('ERROR: file '+file+' not found\n')
 		sys.exit(1)
 
+	name_keys=['geneID','chrom','pos','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm','window','n_perm','file']
+	#store header
+	header="\t".join(name_keys[:11])
+
 	#open tsv file
 	out = open(outfile,'w')
+	out.write(header+'\n')
 
 	#open hdf5 file with final results
 	i_file = h5py.File(file,'r')
 
 	#check if file is non-empty
 	if i_file.keys() == [] : #file is empty:
-		std.error.write('ERROR: file '+i_file+' is empty\n')
+		out.close()
+		sys.stdout.write('ERROR: file '+file+' is empty\n')
 		sys.exit(1)
 	
-	name_keys=['geneID','chrom','pos','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm','window','n_perm','file']
-	#store header
-	header="\t".join(name_keys[:11])
 	#check if file has all the expected keys
 	for key in name_keys:
 		if key not in i_file: 
@@ -109,7 +112,6 @@ if __name__ == '__main__':
 		for res in o[1:]:
 			finalarray = sp.column_stack((finalarray,res))
 		#write into the outfile
-		out.write(header+'\n')
 		for line in finalarray:
 			r = '\t'.join(line)
 			out.write(r+'\n')
