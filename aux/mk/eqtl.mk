@@ -8,6 +8,9 @@ ifeq ($(cis_window),0)
 # Limix trans-eQTL (start)
 $(info trans-EQTL mode)
 # Trans specific
+$(shell mkdir -p $(step1b_dir))
+$(shell mkdir -p $(eqtl_dir))
+
 $(step1b_dir)/all_chr.hdf5: $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
@@ -28,6 +31,7 @@ $(eqtl_dir)/all_chr/summary.hdf5: $(All_QTL_JOBS)  $(cov_sorted_hdf5) $(step2_di
 	eqtl_summary.py $(step1b_dir)/all_chr.hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha) $(n_folds) $@.lst.txt  $@.tmp && \
 	rm -f $@.lst.txt && \
 	mv $@.tmp $@
+
 
 $(eqtl_dir)/summary.hdf5: $(eqtl_dir)/all_chr/summary.hdf5
 	$(file >$@.lst.txt,$^) \
