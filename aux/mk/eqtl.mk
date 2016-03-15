@@ -9,7 +9,7 @@ ifeq ($(cis_window),0)
 $(info trans-EQTL mode)
 # Trans specific
 $(shell mkdir -p $(step1b_dir))
-$(shell mkdir -p $(eqtl_dir))
+$(shell mkdir -p $(eqtl_dir)/all_chr/)
 
 $(step1b_dir)/all_chr.hdf5: $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	$(file >$@.lst.txt,$^) \
