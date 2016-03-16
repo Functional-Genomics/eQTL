@@ -41,7 +41,9 @@ sample_threshold = int(round(threshold * samples,0))
 sys.stderr.write('#Samples:'+str(samples)+'\n')
 sys.stderr.write('Sample threshold:'+str(sample_threshold)+'\n')
 filt_matrix = matrix[matrix.gt(0,axis='rows').sum(1) >= sample_threshold]
-
+#output msg if matrix is empty
+if filt_matrix.shape[0] == 0:
+	sys.stderr.write('WARNING: 0 variants retained after filtering. No possible eQTL result with this set of parameters\n')
 #write to stdout
 filt_matrix.to_csv(sys.stdout,sep='\t',header=True,index=True)
 
