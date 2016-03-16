@@ -30,7 +30,8 @@ if ( length(args) == 4 ) {
   col.map.file <- args[4]
 }
 # TODO: validate files
-
+#setwd("/home/nf/Research/Projects/WIP/eQTL_pipeline/eQTL/test")
+load(".RData")
 #
 expr.file
 expr.df <- read.table(expr.file,header = T,check.names=F,sep='\t')
@@ -110,7 +111,7 @@ samples2colour <- as.character(map.df$V1)
 rownames(map.df) <- map.df$V1
 samples2colour <- as.character(class2colour[map.df[samples2colour,"V2"]])
 names(samples2colour) <- as.character(map.df$V1)
-samples2colour
+#samples2colour
 if(!require(lattice)) {
   source("http://bioconductor.org/biocLite.R")
   biocLite("lattice",suppressUpdates=T)
@@ -123,7 +124,15 @@ if ( has.genes) {
 } else {
   data <- as.matrix(data.frame(expr.df))
 }
-pca <- prcomp(data,center=TRUE,scale=TRUE)
+# remove columns with zero variance 
+data2 <- data[,apply(data, 2, var, na.rm=TRUE) != 0]
+removed <- colnames(data)[!colnames(data) %in% colnames(data2)]
+if ( length(removed) >0 ) {
+  cat("Removed columns with zero variance:")
+  cat(removed)
+  cat("\n")
+}
+pca <- prcomp(data2,center=TRUE,scale=TRUE)
 pca.sum <- summary(pca)
 print(pca)
 print(pca.sum)
