@@ -5,7 +5,7 @@ runpeer.py $* | tee $OUT
 STATUS=$?
 if [ $STATUS -eq 0 ]; then
     # grep $OUT for convergence
-    N=`grep -i -c "Converged \(.* after" $OUT`
+    N=`grep -i -c "Converged (.* after" $OUT`
     rm -f $OUT
     if [ "$N-" == "0-" ]; then
 	exit 1
