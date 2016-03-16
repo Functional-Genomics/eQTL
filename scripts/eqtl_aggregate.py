@@ -17,7 +17,7 @@ stats = importr('stats')
 
 def usage():
 	print '''
-If cis, this script generates a final hdf5 file aggregating all the chr.hdf5 files and corrects the qvalues for multiple testing across all the genes tested; if trans it reads the unique summary file with trans results as input and corrects for multiple testing. 
+If cis, this script generates a final hdf5 file aggregating all the chr.hdf5 files and corrects the qvalues for multiple testing across all the genes tested; if trans it reads the unique summary file with trans results as input and corrects for multiple testing using Bonferroni correction. 
 
 Usage:
 
@@ -70,7 +70,8 @@ if __name__ == '__main__':
 			temp['beta'] = i['beta'][:]
 			temp['lambda_pval'] = i['lambda'][:]
 			temp['lambda_perm'] = i['lambda_perm'][:]
-			temp['l_emp_pval'] = i['pv_perm'][:]				
+			temp['l_emp_pval'] = i['pv_perm'][:]
+			temp['n_tests'] = i['n_tests'][:]
 		#append all file groups to the big table
 		for key in temp.keys():
 			smartAppend(table,key,temp[key])
@@ -99,7 +100,7 @@ if __name__ == '__main__':
 			table['window'] = [window]
 			table['n_perm'] = [n_perm]
 		elif window == 0 and n_perm <=1: #if trans and no empirical pvalues
-			table['g_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['pval'][:].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across nominal pvalues
+			table['g_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['pval'][:].tolist()),method = 'bonferroni',n=table['n_tests'][:][0])) #compute bonferroni adjusted across nominal pvalues
 			table['window'] = [window]
 			table['n_perm'] = [n_perm]
 			table['g_emp_adj_pval'] = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
@@ -107,7 +108,7 @@ if __name__ == '__main__':
 		else: #if trans and empirical pvalues
 			table['g_adj_pval'] = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
 			table['g_adj_pval'] [:] = 'NA'
-			table['g_emp_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['l_emp_pval'][:,0].tolist()),method = 'bonferroni')) #compute bonferroni adjusted across empirical pvalues
+			table['g_emp_adj_pval'] = sp.array(stats.p_adjust(FloatVector(table['l_emp_pval'][:,0].tolist()),method = 'bonferroni',n=table['n_tests'][:][0])) #compute bonferroni adjusted across empirical pvalues
 			table['window'] = [window]
 			table['n_perm'] = [n_perm]
 

@@ -55,12 +55,17 @@ if __name__=='__main__':
 
 	#load file with samples list
 	fileslist = SP.loadtxt(samples_list,dtype='str') #TODO: these list of files needs to be produced before running this script in the make file
-
+	
 	#check if there are missing files according to nfolds		 
 	if len(fileslist) != nfolds:
 		sys.stderr.write('ERROR : missing files\n')
 		sys.exit(1)
 
+	#store info about number of variants and phenotypeIDs and compute number of tests. Useful only for trans multiple test correction
+	n_x = data.g['genotype/matrix'][:].shape[1] #number of variants
+	n_y = data.p['phenotype/matrix'][:].shape[1] #number of phenotype_IDs
+	n_tests = n_x*n_y #number of tests
+	sys.stdout.write('Number of variants tested: {0}\nNumber of phenotype_IDs tested: {1}\nNumber of tests (for trans analysis): {2}\n'.format(n_x,n_y,n_tests))
 	#run the analysis					
 	table = {}
 
@@ -141,6 +146,9 @@ if __name__=='__main__':
 				#print table
 
 		f.close()
+
+	if window == 0: #is trans bring fwd the info about number of tests
+		smartAppend(table,'n_tests',SP.array(n_tests))
 
 	for key in table.keys():
 		try: 
