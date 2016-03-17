@@ -31,7 +31,7 @@ if ( length(args) == 4 ) {
 }
 # TODO: validate files
 #setwd("/home/nf/Research/Projects/WIP/eQTL_pipeline/eQTL/test")
-load(".RData")
+
 #
 expr.file
 expr.df <- read.table(expr.file,header = T,check.names=F,sep='\t')
