@@ -1,4 +1,6 @@
 
+############################################################
+# Limix 
 ifeq ($(eqtl_method),limix)
 
 step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete
@@ -38,6 +40,8 @@ $(eqtl_dir)/summary.hdf5: $(eqtl_dir)/all_chr/summary.hdf5
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	eqtl_aggregate.py $@.tmp $(cis_window) $(n_permutations) $@.lst.txt && \
 	mv $@.tmp $@ && rm -f $@.lst.txt
+
+TARGETS8+=$(eqtl_dir)/summary.hdf5
 
 # Limix trans-eQTL (end)
 ############################################################
@@ -92,8 +96,11 @@ TARGETS7+=$(All_QTL_JOBS)
 $(eqtl_dir)/summary.tsv: $(eqtl_dir)/summary.hdf5
 	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
 
+
+# Limix 
+############################################################	
 else
-#######################################################
+############################################################
 # FastQTL
 ifeq ($(eqtl_method),fastqtl)
 
