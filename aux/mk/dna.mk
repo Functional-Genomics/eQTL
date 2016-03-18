@@ -142,7 +142,7 @@ $(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
 define make-rules-for-chr=
 $(shell mkdir -p $(step1b_dir)/$(1))
 $(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed4 
-	cat $$< | generate_hdf5.py  $(var_pos).bed4 $(1) $$@.tmp && mv $$@.tmp $$@
+	cat $$< | generate_hdf5_mqtl.py  $(var_pos).bed4 $(1) $$@.tmp && mv $$@.tmp $$@
 
 $(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed4
 	grep "^$(1)\s" $(var_pos).bed4|cut -f 4 | sed -E 's/^/^/;s/$$$$/\\\s/' > $$@.tmp1 &&\

@@ -66,8 +66,8 @@ elif check_matrix.shape[0] > 2:
 	matrix,K = corr_matrix(matrix[:],skip_kinship=skip_kinship) #this step overwrite the matrix array (standardised genotypes)
 	sys.stdout.write('matrix provided contains more than 2 values. Computing standardised genotypes and kinship\n')
 else:
-	sys.stderr.write('ERROR: the matrix given contains only 1 genotype!\n')
-	sys.exit(1)
+        matrix,K = corr_matrix(matrix[:],skip_kinship=True) 
+	sys.stderr.write('WARNING: the matrix given contains only 1 genotype!\n')
 
 #output the matrix of 0/1 or 0/1/2 standardised into the hdf5 file
 dset = hdf.create_dataset('genotype/matrix',data=matrix)
