@@ -71,7 +71,8 @@ if __name__ == '__main__':
 			temp['lambda_pval'] = i['lambda'][:]
 			temp['lambda_perm'] = i['lambda_perm'][:]
 			temp['l_emp_pval'] = i['pv_perm'][:]
-			temp['n_tests'] = i['n_tests'][:]
+			if window == 0:
+				temp['n_tests'] = i['n_tests'][:] #if trans
 		#append all file groups to the big table
 		for key in temp.keys():
 			smartAppend(table,key,temp[key])
