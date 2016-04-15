@@ -23,6 +23,7 @@ if len(sys.argv[1:])<3:
 
 if len(sys.argv[1:]) == 3:
 	file2,chr,outfile=sys.argv[1:]
+	chr = str(chr)
 	skip_kinship=False #generate kinship by default
 elif len(sys.argv[1:]) == 4:
 	file2,chr,outfile,skip_kinship = sys.argv[1:]
@@ -46,6 +47,8 @@ sys.stderr.write('Reading from '+file2+'... ')
 annotation = pd.read_csv(file2,sep='\t',index_col=0,header=None)
 sys.stderr.write('done.\n')
 
+#if not X / Y / MT in list of chromosomes force the indexes to be string
+annotation.index = annotation.index.astype(str)
 chr_subset = annotation[annotation.index.values==chr]
 chr_var_subset = chr_subset[3].values #take names from bed file
 
