@@ -28,7 +28,9 @@ if __name__ == '__main__':
 	#read arguments
 	chr_list,outfile = sys.argv[1:]
 	#open list
-	chr_list = sp.loadtxt(chr_list,dtype = 'S1000')
+	chr_list = open(chr_list,'r')
+	chr_list = chr_list.readlines()
+	chr_list = [i.strip() for i in chr_list]
 	#initialise some empty arrays
 	matrix = ''
 	chromosome = ''
