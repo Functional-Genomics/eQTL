@@ -145,10 +145,15 @@ $(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed4
 	cat $$< | generate_hdf5_mqtl.py  $(var_pos).bed4 $(1) $$@.tmp && mv $$@.tmp $$@
 
 $(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed4
-	grep "^$(1)\s" $(var_pos).bed4|cut -f 4 | sed -E 's/^/^/;s/$$$$/\\\s/' > $$@.tmp1 &&\
-	head -n 1 $$< > $$@.tmp
-	grep $$< -f $$@.tmp1 >> $$@.tmp 
-	mv $$@.tmp $$@ && rm -f $$@.tmp1
+	filter_geno_matrix.py $$^ $$@.tmp &&\
+	mv $$@.tmp $$@
+
+# deprecated
+# $(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed4
+# 	grep "^$(1)\s" $(var_pos).bed4|cut -f 4 | sed -E 's/^/^/;s/$$$$/\\\s/' > $$@.tmp1 &&\
+# 	head -n 1 $$< > $$@.tmp
+# 	grep $$< -f $$@.tmp1 >> $$@.tmp 
+# 	mv $$@.tmp $$@ && rm -f $$@.tmp1
 endef
 
 
