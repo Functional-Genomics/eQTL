@@ -9,7 +9,7 @@ def usage():
 This script reads a table of genotypes with variant names or positions on the first column and compare them with annotations provided in a bed4 file. Only common variants are retained and wrote to the output file.
 
 Usage:
-filter_genotype_metrix.py <genotype.tsv> <chr_pos.bed> <outfile.tsv>
+filter_geno_matrix.py <genotype.tsv> <chr_pos.bed> <outfile.tsv>
 '''
 
 if len(sys.argv[1:]) < 3:
