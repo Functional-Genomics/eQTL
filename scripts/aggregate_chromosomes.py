@@ -52,7 +52,7 @@ if __name__ == '__main__':
 				chromosome = stack_array(chromosome,chr['genotype/col_header/chrom'][:])
 				pos = stack_array(pos,chr['genotype/col_header/pos'][:])
 				if alleles.shape[0] == 0:
-					sys.sdterr.write('No significant genomic variants found for this chromosome!\n')
+					sys.stderr.write('No significant genomic variants found for this chromosome!\n')
 					pass
 				else:
 					alleles = sp.concatenate((alleles,chr['genotype/col_header/alleles'][:]))
