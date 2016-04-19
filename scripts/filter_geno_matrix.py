@@ -24,7 +24,7 @@ bed = pd.read_csv(bedfile,sep='\t',header=None) #read the bed file
 
 #writing output
 header = pd.read_csv(matrixfile,sep='\t',nrows=1,header=None) #read only the first line 
-header = "\t".join(header.values[0].tolist())+"\n" #write header with column names: pos + samples
+header = "\t".join(map(lambda x:str(x),header.values[0].tolist()))+"\n" #write header with column names: pos + samples
 out = open(outfile,'w') #open outfile
 out.write(header) #write header into outfile
 
