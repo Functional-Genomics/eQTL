@@ -131,14 +131,26 @@ LOGS_FOLDER=logs/$JOBNAME_SUF/
 mkdir -p $LOGS_FOLDER
 # submit the jobs
 echo "step0 jobs..."
-submit_job "eqtl0_$JOBNAME_SUF" ""  eqtl_pipeline $EQTL_ARGS step0
+submit_job "step0_$JOBNAME_SUF" ""  eqtl_pipeline $EQTL_ARGS step0
 stop_job "eqtl0_$JOBNAME_SUF"
 
-PREV=eqtl0_$JOBNAME_SUF
+PREV=step0_$JOBNAME_SUF
+echo "set of jobs 0..."
+targets=`eqtl_pipeline $EQTL_ARGS targets0 | tail -n 1`
+eqtl_pipeline $EQTL_ARGS $targets -n -q
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
+    echo skipping submission of jobs...
+else
+    submit_jobs eqtl0_$JOBNAME_SUF  "$PREV" eqtl_pipeline $EQTL_ARGS
+    PREV="eqtl0_$JOBNAME_SUF*"
+fi
+
 echo "set of jobs 1..."
 targets=`eqtl_pipeline $EQTL_ARGS targets1 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
-if [ $? -eq 0 ]; then
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
     echo skipping submission of jobs...
 else
     submit_jobs eqtl1_$JOBNAME_SUF  "$PREV" eqtl_pipeline $EQTL_ARGS
@@ -150,7 +162,8 @@ stop_now 1
 echo "set of jobs 2..."
 targets=`eqtl_pipeline $EQTL_ARGS targets2 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
-if [ $? -eq 0 ]; then
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
     echo skipping  wave of jobs...
 else
     submit_jobs eqtl2_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
@@ -162,7 +175,8 @@ stop_now 2
 echo "set of jobs 3..."
 targets=`eqtl_pipeline $EQTL_ARGS targets3 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
-if [ $? -eq 0 ]; then
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
     echo skipping  wave of jobs...
 else
     submit_jobs eqtl3_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
@@ -174,7 +188,8 @@ stop_now 3
 echo "set of jobs 4..."
 targets=`eqtl_pipeline $EQTL_ARGS targets4 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
-if [ $? -eq 0 ]; then
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
     echo skipping  wave of jobs...
 else
     submit_jobs eqtl4_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
@@ -198,7 +213,8 @@ stop_now 5
 echo "set of jobs 6..."
 targets=`eqtl_pipeline $EQTL_ARGS targets6 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
-if [ $? -eq 0 ]; then
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
     echo skipping  wave of jobs...
 else
     submit_jobs eqtl6_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
@@ -210,7 +226,8 @@ stop_now 6
 echo "set of jobs 7..."
 targets=`eqtl_pipeline $EQTL_ARGS targets7 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
-if [ $? -eq 0 ]; then
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
     echo skipping  wave of jobs...
 else
     submit_jobs eqtl7_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
@@ -222,7 +239,8 @@ stop_now 7
 echo "set of jobs 8..."
 targets=`eqtl_pipeline $EQTL_ARGS targets8 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
-if [ $? -eq 0 ]; then
+status=$?
+if [ ${#targets} -lt 2 ] || [ $status -eq 0 ]; then
     echo skipping  wave of jobs...
 else
     submit_jobs eqtl8_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
