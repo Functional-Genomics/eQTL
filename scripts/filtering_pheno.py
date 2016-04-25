@@ -45,7 +45,7 @@ perc_samples = float(perc_samples)
 samples = pheno.shape[1]
 #apply filters
 samples_threshold=(perc_samples/100.0)*samples
-vector=SP.sum((pheno.values[:]>=threshold), axis=1)
+vector=SP.sum((pheno.values[:]>threshold), axis=1) #strictly greater than the gene expression threshold
 booleanvector=(vector>=samples_threshold)
 indexes=SP.where(booleanvector == True)[0]
 
