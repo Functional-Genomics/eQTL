@@ -6,6 +6,7 @@ import sys, os
 import scipy as sp
 import glob
 import pandas as pd
+import gzip
 
 def usage():
 	print '''
@@ -75,12 +76,12 @@ if __name__ == '__main__':
 	name_keys=['geneID','chrom','pos','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm']
 	header = "\t".join(name_keys)+'\n'
 	#open tsv file
-	out = open(outfile,'w')
+	out = gzip.open(outfile,'wb')
 	metainfo = pd.read_csv(metainfo,sep="\t",header=None,index_col=[0])
 
 	#open hdf5 file with final results
 #	i_file = h5py.File(file,'r')
-	i_file = pd.read_csv(file,sep="\t",na_values='NA')
+	i_file = pd.read_csv(file,sep="\t",na_values='NA',compression='gzip')
 	#check if file is non-empty
 	if i_file.shape[0] == 1 : #file is empty:
 		out.close()
