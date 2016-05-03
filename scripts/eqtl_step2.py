@@ -11,6 +11,7 @@ import pdb
 import glob
 import cPickle
 import pandas as pd
+import gzip
 
 def usage():
 	print '''
@@ -34,11 +35,11 @@ if __name__=='__main__':
 	alpha = float(alpha) #level of significance for trans
 	#nfolds = int(sys.argv[10]) #number of folds used for gene expr matrix
 	in_hdf5 = sys.argv[10] #list of fold_j files
-	summary = open(sys.argv[11],'w') #outfile
+	summary = gzip.open(sys.argv[11],'wb') #outfile
 	metainfo = open(sys.argv[12],'w') #metainformation
 	header = ['geneID','chrom','pos','pv','pv_perm','qv','beta','lambda','lambda_perm','file']
 	header = pd.DataFrame(SP.array(header))
-	header.T.to_csv(summary,mode = 'a',sep='\t',header=None,index=None)
+	header.T.to_csv(summary,mode = 'a',sep='\t',header=None,index=None,compression='gzip')
 	#populate dictionary with data for eqtl
 	import eqtlsettings
 	import data as DATA	
@@ -57,6 +58,10 @@ if __name__=='__main__':
 	#run the analysis					
 	try:
 		f = h5py.File(in_hdf5,'r')
+		if len(f.keys()) == 0:
+			sys.stdout.write('File '+in_hdf5+' is empty\n.')
+			path = '/'.join(SP.array([str(in_hdf5)])[0].split('/')[:-1])
+			pass
 	except:
                 sys.stderr.write('ERROR : unable to open '+in_hdf5+'\n')
 		sys.exit(1)
@@ -71,8 +76,8 @@ if __name__=='__main__':
 			if window > 0: #is cis
 				print "gene {0} kept".format(geneID)
 				temp['geneID'] = SP.array([str(geneID)])
-				temp['file'] = map(lambda x:x.split('/')[-1],SP.array([str(file)]))
-				path = '\t'.join(SP.array([str(file)])[0].split('/')[:-1])
+				temp['file'] = map(lambda x:x.split('/')[-1],SP.array([str(in_hdf5)]))
+				path = '/'.join(SP.array([str(in_hdf5)])[0].split('/')[:-1])
 				temp['lambda'] = map(lambda x:round(x,3),fgene['lambda'][:,0])
 				temp['lambda_perm'] = map(lambda x:round(x,3),fgene['lambda_perm'][:,0])
 				if n_perm > 1 :#if empirical pvalues have been computed			
@@ -97,8 +102,8 @@ if __name__=='__main__':
 				s_idx = sum(idx)
 				if s_idx > 0:
 					temp['geneID'] = SP.tile(SP.array([str(geneID)]),s_idx)
-					temp['file'] = map(lambda x:x.split('/')[-1],SP.tile(SP.array([str(file)]),s_idx))
-					path = '\t'.join((SP.tile(SP.array([str(file)]),s_idx)[0]).split('/')[:-1])
+					temp['file'] = map(lambda x:x.split('/')[-1],SP.tile(SP.array([str(in_hdf5)]),s_idx))
+					path = '/'.join((SP.tile(SP.array([str(in_hdf5)]),s_idx)[0]).split('/')[:-1])
 					if n_perm > 1 : 
 						temp['pv_perm'] = map(lambda x:round(x,3),SP.tile(fgene['pv_perm'][:,0],s_idx))
 					else:
@@ -119,7 +124,7 @@ if __name__=='__main__':
 			print "{0}:  nothing significant in here".format(geneID)
 			pass
 		temp_df = pd.DataFrame(SP.vstack((temp['geneID'][:],temp['chrom'][:],temp['pos'][:],temp['pv'][:],temp['pv_perm'][:],temp['qv'][:],temp['beta'][:],temp['lambda'][:],temp['lambda_perm'][:],temp['file'][:])).T)
-		temp_df.to_csv(summary, mode = 'a',sep='\t',header=None,index=None)
+		temp_df.to_csv(summary, mode = 'a',sep='\t',header=None,index=None,compression='gzip')
 	f.close()
 		#write some meta information
 	metainfo.write('n_tests\t'+str(n_tests)+'\n')
