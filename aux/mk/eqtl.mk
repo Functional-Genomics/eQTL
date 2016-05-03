@@ -18,6 +18,9 @@
 #
 # =========================================================
 
+# complain if a file does not exist and exit
+file_exists=$(if  $(realpath $(1)),,$(error $(1) not found))
+
 ############################################################
 # Limix 
 ifeq ($(eqtl_method),limix)
@@ -52,12 +55,13 @@ $(eqtl_dir)/all_chr/step1/$(n_folds)_%.hdf5: $(step1b_dir)/all_chr.hdf5 $(step2_
 $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv: $(eqtl_dir)/all_chr/step1/%.hdf5 $(step1b_dir)/all_chr.hdf5  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	eqtl_step2.py $(step1b_dir)/all_chr.hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $<  $@.tmp $@.meta && mv $@.meta $@.meta.tsv && mv $@.tmp $@
 
-$(eqtl_dir)/all_chr/step3/%.step3.tsv.gz: $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz  $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
+#$(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
+$(eqtl_dir)/all_chr/step3/%.step3.tsv.gz: $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz  
 	eqtl_step3.py  $< $<.meta.tsv $@.tmp && mv $@.tmp $@
 
-$(eqtl_dir)/all_chr/step4/%.step4.tsv.gz: $(eqtl_dir)/all_chr/step3/%.step3.tsv.gz  $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
-	eqtl_step4.py  $< $<.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
-
+#$(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
+$(eqtl_dir)/all_chr/step4/%.step4.tsv.gz: $(eqtl_dir)/all_chr/step3/%.step3.tsv.gz  
+	eqtl_step4.py  $< $*.step2.tsv.gz.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
 
 $(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
@@ -92,11 +96,14 @@ $(eqtl_dir)/$(1)/%.step2.tsv.gz $(eqtl_dir)/$(1)/%.step2.tsv.gz.meta.tsv: $(eqtl
 	eqtl_step2.py $(step1b_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $$<  $$@.tmp $$@.meta && mv $$@.meta $$@.meta.tsv && mv $$@.tmp $$@
 endef
 
-%.step3.tsv.gz: %.step2.tsv.gz  %.step2.tsv.gz.meta.tsv
+# %.step2.tsv.gz.meta.tsv
+# $(eval $(call file_exists,%.step2.tsv.gz.meta.tsv))
+%.step3.tsv.gz: %.step2.tsv.gz  
 	eqtl_step3.py  $< $<.meta.tsv $@.tmp && mv $@.tmp $@
 
-%.step4.tsv.gz: %.step3.tsv.gz  %.step2.tsv.gz.meta.tsv
-	eqtl_step4.py  $< $<.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
+# %.step2.tsv.gz.meta.tsv
+%.step4.tsv.gz: %.step3.tsv.gz  
+	eqtl_step4.py  $< $*.step2.tsv.gz.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
 
 $(foreach chr,$(chromosomes),$(eval $(call make-qtl-rule-chr,$(chr))))
 
