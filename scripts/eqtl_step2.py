@@ -119,7 +119,7 @@ if __name__=='__main__':
 					temp['lambda_perm'] = map(lambda x:round(x,3),SP.tile(fgene['lambda_perm'][:,0],s_idx))
 				else:
 					print "no pvalues <= alpha"
-					pass
+					continue
 		except:
 			print "{0}:  nothing significant in here".format(geneID)
 			pass
