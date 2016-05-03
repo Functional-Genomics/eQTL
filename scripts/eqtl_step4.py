@@ -107,6 +107,7 @@ if __name__ == '__main__':
 	o = get_res(a,name_keys,fdr)
 	if genes.shape[0] == 0:
 		print 'no significant result found for file {0}'.format(outfile)
+		out.write(header)
 		pass
 	else:	
 

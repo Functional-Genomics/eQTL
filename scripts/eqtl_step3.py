@@ -48,7 +48,7 @@ if __name__ == '__main__':
 	n_genes = int(metainfo[metainfo.index == 'Number_of_phenotypesID_tested'].values[0][0])
 	n_perm = int(metainfo[metainfo.index == 'n_perm'].values[0][0])
 	#open out tsv file
-	out = open(outfile,'w')
+	out = gzip.open(outfile,'w')
 	if file.shape[0] == 1:
 		sys.stdout.write('WARNING: file {0} is empty\n'.format(i))
 	else:
