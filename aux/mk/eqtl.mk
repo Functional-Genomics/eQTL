@@ -1,3 +1,22 @@
+# =========================================================
+# Copyright 2015-2016
+#
+#
+# This is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License.
+# If not, see <http://www.gnu.org/licenses/>.
+#
+#
+# =========================================================
 
 ############################################################
 # Limix 
@@ -12,7 +31,12 @@ $(info trans-EQTL mode)
 # Trans specific
 $(shell mkdir -p $(step1b_dir))
 $(shell mkdir -p $(eqtl_dir)/all_chr/)
+$(shell mkdir -p $(eqtl_dir)/all_chr/step1)
+$(shell mkdir -p $(eqtl_dir)/all_chr/step2)
+$(shell mkdir -p $(eqtl_dir)/all_chr/step3)
+$(shell mkdir -p $(eqtl_dir)/all_chr/step4)
 
+#
 $(step1b_dir)/all_chr.hdf5: $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
@@ -20,28 +44,29 @@ $(step1b_dir)/all_chr.hdf5: $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/ch
 	mv $@.tmp.hdf5 $@ && rm -f $@.lst.txt
 
 # across the whole genome
-All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/all_chr/$(n_folds)_$(j).hdf5)
+All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/all_chr/step4/$(n_folds)_$(j).step4.tsv.gz)
 
-
-$(eqtl_dir)/all_chr/$(n_folds)_%.hdf5: $(step1b_dir)/all_chr.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
+$(eqtl_dir)/all_chr/step1/$(n_folds)_%.hdf5: $(step1b_dir)/all_chr.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
 	mkdir -p $(@D) && eqtl_trans.py $<   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $* $@.tmp && mv $@.tmp $@
 
+$(eqtl_dir)/all_chr/step2/%.step2.tsv.gz: $(eqtl_dir)/all_chr/step1/%.hdf5 $(step1b_dir)/all_chr.hdf5  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+	eqtl_step2.py $(step1b_dir)/all_chr.hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $<  $@.tmp $@.meta && mv $@.meta $@.meta.tsv && mv $@.tmp $@
 
-$(eqtl_dir)/all_chr/summary.hdf5: $(All_QTL_JOBS)  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
-	$(file >$@.lst.txt,$(All_QTL_JOBS)) \
-	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
-	eqtl_summary.py $(step1b_dir)/all_chr.hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha) $(n_folds) $@.lst.txt  $@.tmp && \
-	rm -f $@.lst.txt && \
-	mv $@.tmp $@
+$(eqtl_dir)/all_chr/step3/%.step3.tsv: $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz  $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
+	eqtl_step3.py  $< $<.meta.tsv $@.tmp && mv $@.tmp $@
+
+$(eqtl_dir)/all_chr/step4/%.step4.tsv.gz: $(eqtl_dir)/all_chr/step3/%.step3.tsv.gz  $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
+	eqtl_step4.py  $< $<.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
 
 
-$(eqtl_dir)/summary.hdf5: $(eqtl_dir)/all_chr/summary.hdf5
+$(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
-	eqtl_aggregate.py $@.tmp $(cis_window) $(n_permutations) $@.lst.txt && \
-	mv $@.tmp $@ && rm -f $@.lst.txt
+	zcat $< | head -n 1 > $@.tmp &&\
+	cat $@.lst.txt | while read n; do zcat >> $@.tmp; done &&\
+	mv $@.tmp $@
 
-TARGETS8+=$(eqtl_dir)/summary.hdf5
+TARGETS8+=$(eqtl_dir)/summary.tsv
 
 # Limix trans-eQTL (end)
 ############################################################
@@ -51,51 +76,47 @@ else
 $(info cis-EQTL mode)
 eqtl_cmd1=eqtl_cis.py
 
-
 # foreach chr
-All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(eqtl_dir)/$(chr)/$(n_folds)_$(j).hdf5))
+All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(eqtl_dir)/$(chr)/$(n_folds)_$(j).step4.tsv.gz))
 
 define QTL_JOBS_chr=
-$(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/$(1)/$(n_folds)_$(j).hdf5)
+$(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/$(1)/$(n_folds)_$(j).step4.tsv.gz)
 endef
-
 
 # $(1) = chr
 define make-qtl-rule-chr=
+$(info AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA $(1) $(eqtl_dir)/$(1)/$(n_folds)_%.hdf5)
 $(eqtl_dir)/$(1)/$(n_folds)_%.hdf5: $(step1b_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).hdf5 $(cov_sorted_hdf5)
 	mkdir -p $$(@D) && $(eqtl_cmd1) $(step1b_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
 
-# $(step3_dir)/$(1)/summary.hdf5
-$(eqtl_dir)/$(1).hdf5: $(call QTL_JOBS_chr,$(1))  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
-	$$(file >$$@.lst.txt,$(call QTL_JOBS_chr,$(1))) \
-	sed -i -E "s/^ //;s/ +/\n/g" $$@.lst.txt && \
-	eqtl_summary.py $(step1b_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha) $(n_folds) $$@.lst.txt  $$@.tmp && \
-	rm -f $$@.lst.txt && \
-	mv $$@.tmp $$@
-
+$(eqtl_dir)/$(1)/%.step2.tsv.gz: $(eqtl_dir)/$(1)/%.hdf5 $(step1b_dir)/$(1)/chr$(1).hdf5  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+	eqtl_step2.py $(step1b_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $$<  $$@.tmp $$@.meta && mv $$@.meta $$@.meta.tsv && mv $$@.tmp $$@
 endef
 
+%.step3.tsv.gz: %.step2.tsv.gz  %.step2.tsv.gz.meta.tsv
+	eqtl_step3.py  $< $<.meta.tsv $@.tmp && mv $@.tmp $@
+
+%.step4.tsv.gz: %.step3.tsv.gz  %.step2.tsv.gz.meta.tsv
+	eqtl_step4.py  $< $<.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
 
 $(foreach chr,$(chromosomes),$(eval $(call make-qtl-rule-chr,$(chr))))
 
-$(eqtl_dir)/summary.hdf5: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
+# 
+#
+$(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
-	eqtl_aggregate.py $@.tmp $(cis_window) $(n_permutations) $@.lst.txt && \
-	mv $@.tmp $@ && rm -f $@.lst.txt
+	zcat $< | head -n 1 > $@.tmp &&\
+	cat $@.lst.txt | while read n; do zcat >> $@.tmp; done &&\
+	mv $@.tmp $@
 
-TARGETS8+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).hdf5)
+TARGETS8+=$(eqtl_dir)/summary.tsv
 # Limix cis-eQTL (end)
 ############################################################
 endif
 
 #$(info $(All_QTL_JOBS))
 TARGETS7+=$(All_QTL_JOBS)
-
-
-$(eqtl_dir)/summary.tsv: $(eqtl_dir)/summary.hdf5
-	get_results.py $(fdr_threshold) $@.tmp $^ && mv $@.tmp $@
-
 
 # Limix 
 ############################################################	
