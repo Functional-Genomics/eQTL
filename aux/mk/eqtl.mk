@@ -61,13 +61,13 @@ $(eqtl_dir)/all_chr/step3/%.step3.tsv.gz: $(eqtl_dir)/all_chr/step2/%.step2.tsv.
 
 #$(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
 $(eqtl_dir)/all_chr/step4/%.step4.tsv.gz: $(eqtl_dir)/all_chr/step3/%.step3.tsv.gz  
-	eqtl_step4.py  $< $*.step2.tsv.gz.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
+	eqtl_step4.py  $< $(eqtl_dir)/all_chr/step2/$*.step2.tsv.gz.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
 
 $(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	zcat $< | head -n 1 > $@.tmp &&\
-	cat $@.lst.txt | while read n; do zcat >> $@.tmp; done &&\
+	cat $@.lst.txt | while read n; do zcat $n | tail -n +2 >> $@.tmp; done &&\
 	mv $@.tmp $@
 
 TARGETS8+=$(eqtl_dir)/summary.tsv
@@ -113,7 +113,7 @@ $(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	zcat $< | head -n 1 > $@.tmp &&\
-	cat $@.lst.txt | while read n; do zcat >> $@.tmp; done &&\
+	cat $@.lst.txt | while read n; do zcat $n | tail -n +2 >> $@.tmp; done &&\
 	mv $@.tmp $@
 
 TARGETS8+=$(eqtl_dir)/summary.tsv
