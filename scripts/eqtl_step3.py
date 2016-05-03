@@ -31,16 +31,16 @@ if __name__ == '__main__':
 		usage()
 		sys.exit(1)
 
-	file,metainfo,outfile = sys.argv[1:]
+	i_file,metainfo,outfile = sys.argv[1:]
 
-	if os.path.isfile(file) != True:
-		sys.stderr.write('ERROR: file '+file+' not found\n')
+	if os.path.isfile(i_file) != True:
+		sys.stderr.write('ERROR: file '+i_file+' not found\n')
 		sys.exit(1)
 	elif os.path.isfile(metainfo)!= True:
 		sys.stderr.write('ERROR: file '+metainfo+' not found\n')
 		sys.exit(1)
 
-	file = pd.read_csv(file,sep='\t',compression='gzip')
+	file = pd.read_csv(i_file,sep='\t',compression='gzip')
 	metainfo = pd.read_csv(metainfo,sep='\t',index_col=[0],header=None)
 
 	n_tests = int(metainfo[metainfo.index == 'n_tests'].values[0][0])
@@ -49,8 +49,14 @@ if __name__ == '__main__':
 	n_perm = int(metainfo[metainfo.index == 'n_perm'].values[0][0])
 	#open out tsv file
 	out = gzip.open(outfile,'w')
-	if file.shape[0] == 1:
-		sys.stdout.write('WARNING: file {0} is empty\n'.format(i))
+	if file.shape[0] == 0:
+		sys.stdout.write('WARNING: file {0} is empty\n'.format(i_file))
+		file.insert(0,'g_adj_pval','')
+		file.insert(0,'g_emp_adj_pval','')
+	        file = file[['geneID','chrom','pos','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval',  'beta','lambda','lambda_perm','file']]
+        	file.rename(columns={'pv':'pval','pv_perm':'l_emp_pval','qv':'l_adj_pval','lambda':'lambda_pval'},inplace=True)
+		header = '\t'.join(file.columns.tolist())+'\n'
+		out.write(header)
 	else:
 		pval = file['pv'].astype(float)
 #		l_adj_pval = file['qv'].astype(float)
@@ -76,14 +82,14 @@ if __name__ == '__main__':
 		else: #if trans and empirical pvalues
 			g_adj_pval = (sp.empty((shape_pv,))).astype(str) #fill an empty array with NA values
 			g_emp_adj_pval= sp.array(stats.p_adjust(FloatVector((file['pv_perm'].astype(float)).tolist()),method = 'bonferroni',n=float(n_tests))) #compute bonferroni adjusted across empirical pvalues
-	file.insert(0,'g_adj_pval',pd.DataFrame(g_adj_pval))
-	file.insert(0,'g_emp_adj_pval',pd.DataFrame(g_emp_adj_pval))
-	file = file[['geneID','chrom','pos','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval',	'beta','lambda','lambda_perm','file']]
-	file.rename(columns={'pv':'pval','pv_perm':'l_emp_pval','qv':'l_adj_pval','lambda':'lambda_pval'},inplace=True)
-	file.to_csv(out,sep='\t',header=True,index=None,na_rep='NA',compression='gzip')
+		file.insert(0,'g_adj_pval',pd.DataFrame(g_adj_pval))
+		file.insert(0,'g_emp_adj_pval',pd.DataFrame(g_emp_adj_pval))
+		file = file[['geneID','chrom','pos','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval',	'beta','lambda','lambda_perm','file']]
+		file.rename(columns={'pv':'pval','pv_perm':'l_emp_pval','qv':'l_adj_pval','lambda':'lambda_pval'},inplace=True)
+		file.to_csv(out,sep='\t',header=True,index=None,na_rep='NA',compression='gzip')
+
 	out.close()	
 	
-
 	sys.exit(0)
 
 		
