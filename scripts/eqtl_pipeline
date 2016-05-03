@@ -17,8 +17,8 @@ exec make --warn-undefined-variables -Rf "$0"  ${1+"$@"}
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
-# You should have received a copy of the GNU General Public License
-# along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the GNU General Public License.
+# If not, see <http://www.gnu.org/licenses/>.
 #
 #
 # =========================================================
@@ -396,7 +396,7 @@ endif
 
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
-eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(fdr_threshold)/
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(fdr_threshold)
 report_dir=$(eqtl_dir)/report
 
 # print the folders
@@ -488,7 +488,7 @@ $(cov_hdf5): $(cov_matrix)
 phony_targets+=step0 
 
 step0: $(cov_hdf5)
-	sleep 30
+	sleep 5
 #	$(call p_info,"Step 0 complete")
 
 TARGETS0+=$(cov_hdf5)
