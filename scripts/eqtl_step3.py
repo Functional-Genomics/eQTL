@@ -13,7 +13,7 @@ import readline # because of an error with importing rpy2.robjects
 from rpy2.robjects.packages import importr
 from rpy2.robjects.vectors import FloatVector
 import pandas as pd
-
+import gzip
 
 stats = importr('stats')
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
 		sys.stderr.write('ERROR: file '+metainfo+' not found\n')
 		sys.exit(1)
 
-	file = pd.read_csv(file,sep='\t')
+	file = pd.read_csv(file,sep='\t',compression='gzip')
 	metainfo = pd.read_csv(metainfo,sep='\t',index_col=[0],header=None)
 
 	n_tests = int(metainfo[metainfo.index == 'n_tests'].values[0][0])
@@ -80,7 +80,7 @@ if __name__ == '__main__':
 	file.insert(0,'g_emp_adj_pval',pd.DataFrame(g_emp_adj_pval))
 	file = file[['geneID','chrom','pos','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval',	'beta','lambda','lambda_perm','file']]
 	file.rename(columns={'pv':'pval','pv_perm':'l_emp_pval','qv':'l_adj_pval','lambda':'lambda_pval'},inplace=True)
-	file.to_csv(out,sep='\t',header=True,index=None,na_rep='NA')
+	file.to_csv(out,sep='\t',header=True,index=None,na_rep='NA',compression='gzip')
 	out.close()	
 	
 
