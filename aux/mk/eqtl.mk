@@ -201,6 +201,6 @@ $(eqtl_dir)/step4.complete:  $(eqtl_dir)/summary.tsv
 
 TARGETS9+=$(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete report
 
-phony_targets+= setup setup_files
+phony_targets+= setup setup_files $(eqtl_dir)/step4.complete step4
 
 ###################################################
