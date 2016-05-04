@@ -82,7 +82,8 @@ if __name__=='__main__':
 				temp['lambda_perm'] = map(lambda x:round(x,3),fgene['lambda_perm'][:,0])
 				if n_perm > 1 :#if empirical pvalues have been computed			
 					idx = fgene['pv'][0,:].argmin()
-					temp['pv_perm'] = map(lambda x:round(x,3),fgene['pv_perm'][:])
+					#temp['pv_perm'] = map(lambda x:round(x,3),fgene['pv_perm'][:])
+					temp['pv_perm'] = fgene['pv_perm'][:]
 				else:
 					idx = fgene['qv'][0,:].argmin()
 					temp['pv_perm'] = (SP.empty((1,))).astype(str)
@@ -90,11 +91,10 @@ if __name__=='__main__':
 				pos = fgene['pos'][[idx]]
 				temp['chrom'] = fgene['chrom'][[idx]]
 				temp['pos'] = pos
-				temp['pv'] = map(lambda x:round(x,3),fgene['pv'][:,idx])
-				try:
-					temp['qv'] = map(lambda x:round(x,3),fgene['qv'][:,idx])
-				except:
-					temp['qv'] = fgene['qv'][:,idx]
+				#temp['pv'] = map(lambda x:round(x,3),fgene['pv'][:,idx])
+				temp['pv'] = fgene['pv'][:,idx]
+				#temp['qv'] = map(lambda x:round(x,3),fgene['qv'][:,idx])
+				temp['qv'] = fgene['qv'][:,idx]
 				temp['beta'] = map(lambda x:round(x,3),fgene['beta'][:,idx])
 			else: #is trans
 				print "gene {0} kept".format(geneID)
@@ -105,11 +105,13 @@ if __name__=='__main__':
 					temp['file'] = map(lambda x:x.split('/')[-1],SP.tile(SP.array([str(in_hdf5)]),s_idx))
 					path = '/'.join((SP.tile(SP.array([str(in_hdf5)]),s_idx)[0]).split('/')[:-1])
 					if n_perm > 1 : 
-						temp['pv_perm'] = map(lambda x:round(x,3),SP.tile(fgene['pv_perm'][:,0],s_idx))
+						#temp['pv_perm'] = map(lambda x:round(x,3),SP.tile(fgene['pv_perm'][:,0],s_idx))
+						temp['pv_perm'] = SP.tile(fgene['pv_perm'][:,0],s_idx)
 					else:
 						temp['pv_perm'] = (SP.empty((s_idx,))).astype(str)
 						temp['pv_perm'][:] = 'NA' #no empirical pvalues has been computed
-					temp['pv'] = map(lambda x:round(x,3),fgene['pv'][:][0,idx])
+					#temp['pv'] = map(lambda x:round(x,3),fgene['pv'][:][0,idx])
+					temp['pv'] = fgene['pv'][:][0,idx]
 					temp['qv'] = fgene['qv'][:][0,idx]
 					temp['beta'] = map(lambda x:round(x,3),fgene['beta'][:][0,idx])
 					pos = fgene['pos'][idx]
