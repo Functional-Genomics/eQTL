@@ -25,7 +25,7 @@ file_exists=$(if  $(realpath $(1)),,$(error $(1) not found))
 # Limix 
 ifeq ($(eqtl_method),limix)
 
-step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete
+#step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete
 
 ifeq ($(cis_window),0)
 ############################################################
@@ -67,7 +67,7 @@ $(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	zcat $< | head -n 1 > $@.tmp &&\
-	cat $@.lst.txt | while read n; do zcat $n | tail -n +2 >> $@.tmp; done &&\
+	cat $@.lst.txt | while read n; do zcat $$n | tail -n +2 >> $@.tmp; done &&\
 	mv $@.tmp $@
 
 TARGETS8+=$(eqtl_dir)/summary.tsv
@@ -113,7 +113,7 @@ $(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	zcat $< | head -n 1 > $@.tmp &&\
-	cat $@.lst.txt | while read n; do zcat $n | tail -n +2 >> $@.tmp; done &&\
+	cat $@.lst.txt | while read n; do zcat $$n | tail -n +2 >> $@.tmp; done &&\
 	mv $@.tmp $@
 
 TARGETS8+=$(eqtl_dir)/summary.tsv
@@ -192,7 +192,8 @@ TARGETS8+=$(eqtl_dir)/summary.tsv
 
 endif
 endif
-
+# end if
+##################################################
 step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete report
 
 $(eqtl_dir)/step4.complete:  $(eqtl_dir)/summary.tsv
