@@ -140,6 +140,10 @@ def corr_matrix(matrix,skip_kinship=False):
 		K = SP.dot(matrix,matrix.T)
 	else:
 		#if kinship is not requested
+		matrix -= matrix.mean(0) #0 center the distribution and set standard dev to 1
+		matrix /= matrix.std(0) 
+		nan=SP.isnan(matrix)
+		matrix[nan]=0.0
 		shape=matrix.shape[0]
 		K = SP.empty((shape,shape))
 		K[:] = SP.NAN
