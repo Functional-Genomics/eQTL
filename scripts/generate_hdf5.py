@@ -57,11 +57,12 @@ if matrix.shape[1] == 0:
 	sys.stdout.write('WARNING: 0 variants retained after filtering. No results for chr {0} \n'.format(chr))
 #save a copy of the matrix with burden
 dset = hdf.create_dataset('genotype/burden_matrix',data=matrix)
+#make a copy
 burden = matrix.copy()
-#compute kinship based on optional parameter (skip_kinship)
-matrix,K = corr_matrix(matrix[:],skip_kinship=skip_kinship) #this step overwrite the matrix array (standardised genotypes)
 #change mutation burden into 1
 burden[burden>=1]=1
+#compute kinship based on optional parameter (skip_kinship)
+burden,K = corr_matrix(burden[:],skip_kinship=skip_kinship) #this step overwrite the matrix array (standardised genotypes)
 #set row_header
 row_header= sp.array(var_file.columns.tolist())
 #store indexes of the geno variant in the annotation list
