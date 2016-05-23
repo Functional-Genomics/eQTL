@@ -121,7 +121,7 @@ if [ $? -eq 0 ]; then
 fi
 echo "info: env variables passed to LSF - LSF_PARAMS QUEUE THREADS MEM LSF_GROUP"
 
-EQTL_ARGS=$*
+EQTL_ARGS=$* lsf_mode=1
 
 RAND=`perl -e "print int(rand()*10);"`
 DATE=`date "+%w%H%M%S"`

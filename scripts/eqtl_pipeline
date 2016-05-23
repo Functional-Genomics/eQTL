@@ -488,7 +488,9 @@ $(cov_hdf5): $(cov_matrix)
 phony_targets+=step0 
 
 step0: $(cov_hdf5)
-	sleep 5
+ifdef lsf_mode
+	sleep 35
+endif
 #	$(call p_info,"Step 0 complete")
 
 TARGETS0+=$(cov_hdf5)
