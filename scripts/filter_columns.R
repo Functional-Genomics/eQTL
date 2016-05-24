@@ -1,16 +1,13 @@
 #!/usr/bin/Rscript
 
-version <- "V1"
 
 args <- commandArgs(trailingOnly=TRUE)
 tsv.file <- args[1]
 tsv.ref.file <- args[2]
 out.file <- args[3]
 
-#tsv.file <- "data/freeze3_v2.tophat2.lib.gene.fpkm.gl.donor.tsv.gz"
-#tsv.file2 <- "fqtl_fused_genes.tsv"
 ##################
-# load the fusions
+# load the tsv file
 cat("Loading reference file...\n")
 ref.df<-read.table(tsv.ref.file,sep="\t",header=T,check.names=F,nrows=2)
 ref.df <- ref.df[,-1]
