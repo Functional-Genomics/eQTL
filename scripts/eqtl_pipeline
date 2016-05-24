@@ -198,7 +198,7 @@ endif
 geno_chr?=$(chromosomes)
 pheno_chr?=$(chromosomes)
 pheno_chr_re="^($(shell echo $(pheno_chr)|sed -E "s/\s+/|/g"))\s"
-override chromossomes=$(geno_chr)
+override chromosomes=$(geno_chr)
 
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
