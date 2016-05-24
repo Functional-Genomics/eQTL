@@ -104,14 +104,14 @@ define make-vcf-stats-for-chr=
 	echo -n "$(1) " | tr " " "\t" > $$@.tmp  && grep "records:" $$< | head -n1 | cut -f 4 >> $$@.tmp && mv $$@.tmp $$@
 endef
 
-$(foreach chr,$(chromosomes),$(eval $(call make-vcf-stats-for-chr,$(chr))))
+$(foreach chr,$(geno_chr),$(eval $(call make-vcf-stats-for-chr,$(chr))))
 
-%.vcf.gz.snps: $(foreach chr,$(chromosomes),%.vcf.gz.chr$(chr).snps)
+%.vcf.gz.snps: $(foreach chr,$(geno_chr),%.vcf.gz.chr$(chr).snps)
 	mkdir -p $(@D) && \
 	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
 	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
 # vcf file was already split by chr 
-$(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/%.vcf.gz.chr$(chr).snps)
+$(step1_dir)/%.vcf.gz.chr.snps: $(foreach chr,$(geno_chr),$(step1_dir)/$(chr)/%.vcf.gz.chr$(chr).snps)
 	mkdir -p $(@D) && \
 	echo "Chr $(notdir $*)" | sed -E "s/\s+/\t/g" > $@.tmp.col1 &&\
 	cat $@.tmp.col1  $^ >$@ && rm -f $@.tmp $@.tmp.col1
@@ -141,14 +141,14 @@ $(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	sed -i "s/ /\t/g" $@.tmp && \
 	cat $@.tmp.lst | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
-VCF_STATS_2=$(foreach c,$(chromosomes),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)
+VCF_STATS_2=$(foreach c,$(geno_chr),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)
 vcf_stats_stats+=$(report_dir)/vcf_snps_2.tsv
 
 vcf_stats_targets=$(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv
 
 $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mkdir -p $(@D) && \
-	echo Chr $(chromosomes) |tr " " "\t" > $@.tmp &&\
+	echo Chr $(geno_chr) |tr " " "\t" > $@.tmp &&\
 	mjoin $^ | tail -n +2 |sed -E "s/\s+/\t/g;s/\s$$//">> $@.tmp &&\
 	mv  $@.tmp $@
 

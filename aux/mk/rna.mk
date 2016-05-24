@@ -23,8 +23,8 @@
 step2: $(step2_dir)/complete
 
 # Filtering the pheno matrix based on fpkm threshold and number of samples
-$(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(matched_expr_matrix)
-	filtering_pheno.py $< $(min_expr) $(min_perc_samples) $(snr_threshold) $@.tmp && mv $@.tmp $@
+$(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(matched_expr_matrix) 
+	filtering_pheno.py $< $(min_expr) $(min_perc_samples) $(snr_threshold) $@.tmp &&  mv $@.tmp $@ 
 
 # Quantile normalization per classes/studies/groups
 $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.tsv $(sample2class_file)

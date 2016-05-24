@@ -21,13 +21,16 @@
 # complain if a file does not exist and exit
 file_exists=$(if  $(realpath $(1)),,$(error $(1) not found))
 
+qtl_plots=
 ############################################################
 # Limix 
 ifeq ($(eqtl_method),limix)
 
 #step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete
 
+
 ifeq ($(cis_window),0)
+volcano_title="Trans"
 ############################################################
 # Limix trans-eQTL (start)
 $(info trans-EQTL mode)
@@ -40,7 +43,7 @@ $(shell mkdir -p $(eqtl_dir)/all_chr/step3)
 $(shell mkdir -p $(eqtl_dir)/all_chr/step4)
 
 #
-$(step1b_dir)/all_chr.hdf5: $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
+$(step1b_dir)/all_chr.hdf5: $(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	$(file >$@.lst.txt,$^) \
 	sed -i -E "s/^ //;s/ +/\n/g" $@.lst.txt && \
 	aggregate_chromosomes.py $@.lst.txt $@.tmp.hdf5 && \
@@ -78,10 +81,11 @@ else
 ############################################################
 # Limix cis-eQTL (start)
 $(info cis-EQTL mode)
+volcano_title=Trans
 eqtl_cmd1=eqtl_cis.py
 
 # foreach chr
-All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(chromosomes), $(eqtl_dir)/$(chr)/$(n_folds)_$(j).step4.tsv.gz))
+All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)),$(foreach chr,$(geno_chr), $(eqtl_dir)/$(chr)/$(n_folds)_$(j).step4.tsv.gz))
 
 define QTL_JOBS_chr=
 $(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/$(1)/$(n_folds)_$(j).step4.tsv.gz)
@@ -105,7 +109,7 @@ endef
 %.step4.tsv.gz: %.step3.tsv.gz  
 	eqtl_step4.py  $< $*.step2.tsv.gz.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
 
-$(foreach chr,$(chromosomes),$(eval $(call make-qtl-rule-chr,$(chr))))
+$(foreach chr,$(geno_chr),$(eval $(call make-qtl-rule-chr,$(chr))))
 
 # 
 #
@@ -124,6 +128,13 @@ endif
 #$(info $(All_QTL_JOBS))
 TARGETS7+=$(All_QTL_JOBS)
 
+# volcano plot
+$(eqtl_dir)/volcano_plot.png: $(eqtl_dir)/summary.tsv
+	volcano_plot.R -i $< -s $(fdr_threshold) -t $(volcano_title) -o $@.tmp && mv $@.tmp $@
+
+
+qtl_plots+=$(eqtl_dir)/volcano_plot.png
+TARGETS8+=$(eqtl_dir)/volcano_plot.png
 # Limix 
 ############################################################	
 else
@@ -145,16 +156,16 @@ $(eqtl_dir)/$(1).tsv: $(step1b_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step3_dir)
 endef
 endif
 
-$(foreach chr,$(chromosomes),$(eval $(call make-fastqtl-rule-chr,$(chr))))
+$(foreach chr,$(geno_chr),$(eval $(call make-fastqtl-rule-chr,$(chr))))
 
 
 #TODO nf: complete
-$(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
+$(eqtl_dir)/summary.tsv: $(foreach chr,$(geno_chr),$(eqtl_dir)/$(chr).tsv)
 	head -n 1 $< > $@.tmp && \
 	tail -q -n +2 $^  >> $@.tmp && mv $@.tmp $@
 
 
-TARGETS7+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
+TARGETS7+=$(foreach chr,$(geno_chr),$(eqtl_dir)/$(chr).tsv)
 TARGETS8+=$(eqtl_dir)/summary.tsv
 
 else
@@ -179,15 +190,15 @@ $(eqtl_dir)/$(1).tsv: $(step1b_dir)/$(1)/chr$(1).genotype.tsv $(step3_dir)/$(cor
 endef
 endif
 
-$(foreach chr,$(chromosomes),$(eval $(call make-meqtl-rule-chr,$(chr))))
+$(foreach chr,$(geno_chr),$(eval $(call make-meqtl-rule-chr,$(chr))))
 
 # merge all files into one
-$(eqtl_dir)/summary.tsv: $(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
+$(eqtl_dir)/summary.tsv: $(foreach chr,$(geno_chr),$(eqtl_dir)/$(chr).tsv)
 	head -n 1 $< > $@.tmp && \
 	tail -q -n +2 $^ | grep -v "No significant" >> $@.tmp && mv $@.tmp $@
 
 
-TARGETS7+=$(foreach chr,$(chromosomes),$(eqtl_dir)/$(chr).tsv)
+TARGETS7+=$(foreach chr,$(geno_chr),$(eqtl_dir)/$(chr).tsv)
 TARGETS8+=$(eqtl_dir)/summary.tsv
 
 endif
@@ -196,7 +207,7 @@ endif
 ##################################################
 step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete report
 
-$(eqtl_dir)/step4.complete:  $(eqtl_dir)/summary.tsv
+$(eqtl_dir)/step4.complete:  $(eqtl_dir)/summary.tsv $(qtl_plots)
 	$(call p_info,"Step 4 complete") touch $@
 
 TARGETS9+=$(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(step3_dir)/step4.complete report

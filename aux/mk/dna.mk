@@ -32,8 +32,11 @@ step1_b: fix_vcf_headers
 step1_c: filter_vcfs
 step1_d: $(kpop_file) $(matched_expr_matrix) $(step1a_dir)/data_consistent
 
-$(matched_expr_matrix): $(dna_rna_mapfile) $(expr_matrix)
-	pheno_preprocessing.py $^ $@.tmp && mv $@.tmp $@ 
+# include the samples in the expr matrix that are also in the genotype
+$(matched_expr_matrix): $(dna_rna_mapfile) $(expr_matrix) $(gtf_eqtl_tsv)
+	filter_phenotype.R $(expr_matrix) $(gtf_eqtl_tsv) $@.tmp && \
+	pheno_preprocessing.py $(dna_rna_mapfile) $@.tmp $@.tmp2 &&  \
+	mv $@.tmp2 $@ && rm -f $@.tmp 
 
 # Fix headers if necessary
 FIXEDHEADER_VCFS=$(foreach l,$(vcfs),$(name)/vcf/$(subst .vcf.gz,.fixedheader.vcf.gz,$(l)))
@@ -122,9 +125,9 @@ endif
 endef
 
 # Generate the rules per chr
-$(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
+$(foreach chr,$(geno_chr),$(eval $(call make-rules-for-chr,$(chr))))
 
-STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).genotype.tsv)
+STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(chr).genotype.tsv)
 
 $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 #	check_consistency.py $(dna_rna_mapfile) $(kpop_file) $(expr_matrix) && touch $(step1_dir)/data_consistent
@@ -178,7 +181,7 @@ endef
 
 
 # Generate the rules per chr
-$(foreach chr,$(chromosomes),$(eval $(call make-rules-for-chr,$(chr))))
+$(foreach chr,$(geno_chr),$(eval $(call make-rules-for-chr,$(chr))))
 
 
 #
@@ -188,7 +191,7 @@ endif
 
 # 
 # build_Kpop.py kop.hdf5.tmp samples.hdf5 ...chr1.hdf5 ...chr2.hdf5 ...chr3.hdf5
-$(kpop_file): $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
+$(kpop_file): $(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	build_Kpop.py $(kpop_file).tmp $(samples_hdf5).tmp $^ && \
 	mv $(samples_hdf5).tmp $(samples_hdf5) &&\
 	mv $(kpop_file).tmp $(kpop_file) && \
@@ -197,11 +200,11 @@ $(kpop_file): $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 $(samples_hdf5): $(kpop_file)
 	if [ -e $@ ] ; then touch $(samples_hdf5); fi
 
-$(step1_dir)/filter1/%.filter1.done: $(foreach chr,$(chromosomes),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,%.vcf.gz))	
+$(step1_dir)/filter1/%.filter1.done: $(foreach chr,$(geno_chr),$(step1_dir)/$(chr)/$(subst .vcf.gz,.filter.vcf.gz.tbi,%.vcf.gz))	
 	mkdir -p $(@D) && touch $@
 
 FILTERED_VCF_FILES=$(foreach l,$(vcfs),$(step1_dir)/filter1/$(subst .vcf.gz,.filter1.done,$(l)))
-FILTERED_VCF_FILES2=$(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
+FILTERED_VCF_FILES2=$(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 #$(info $(FILTERED_VCF_FILES))
 filter_vcfs:  $(FILTERED_VCF_FILES)
 filter1: filter_vcfs
@@ -211,7 +214,7 @@ filter2: $(FILTERED_VCF_FILES2)
 TARGETS2+=$(FILTERED_VCF_FILES)
 TARGETS3+=$(FILTERED_VCF_FILES2)
 
-STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(chromosomes),$(step1b_dir)/$(chr)/chr$(chr).genotype.tsv)
+STEP1_TARGETS=$(step1a_dir)/data_consistent $(samples_hdf5) $(matched_expr_matrix) filter2 filter1   $(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(chr).genotype.tsv)
 TARGETS4+=$(STEP1_TARGETS)
 
 
