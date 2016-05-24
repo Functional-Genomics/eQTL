@@ -69,9 +69,7 @@ is_defined=$(if $(subst undefined,,$(origin $(1))),$(1),)
 
 %.gtf: %.gtf.gz
 	gunzip -c $< > $@.tmp && mv $@.tmp $@
-# 
-%.gtf.eqtl.tsv: %.gtf
-	get_annotation.sh $<  /dev/stdout | grep -E $(pheno_chr_re) > $@.tmp  && mv $@.tmp $@
+#
 
 %.tsv: %.tsv.gz
 	gunzip -c $< > $@.tmp && mv $@.tmp $@
