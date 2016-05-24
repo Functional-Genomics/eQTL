@@ -185,6 +185,7 @@ $(info *       sample2class_file  = $(sample2class_file))
 $(call file_exists,$(sample2class_file))
 
 
+#
 # default list of chromosomes
 chromosomes?=1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X Y MT
 
@@ -192,7 +193,12 @@ ifeq ($(strip $(chromosomes)),)
 $(call p_error, no chromosome was provided)
 endif
 
-
+# backwards compatibility
+# chromosomes = geno_chr
+geno_chr?=$(chromosomes)
+pheno_chr?=$(chromosomes)
+pheno_chr_re="^($(shell echo $(pheno_chr)|sed -E "s/\s+/|/g"))\s"
+override chromossomes=$(geno_chr)
 
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
@@ -354,13 +360,13 @@ endif
 
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) $(fix_vcf_cmd) |md5sum|cut -f1 -d' ' 
-step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(use_kinship_option) $(chromosomes) |md5sum|cut -f1 -d' '
+step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(use_kinship_option) $(geno_chr) |md5sum|cut -f1 -d' '
 step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut -f1 -d' ' 
 # end VCF based analysis
 else
 # Matrix based analysis
 step1_hash!=echo $(var_matrix) |md5sum|cut -f1 -d' ' 
-step1a_hash!=echo $(step1_hash)  $(chromosomes) |md5sum|cut -f1 -d' '
+step1a_hash!=echo $(step1_hash)  $(geno_chr) |md5sum|cut -f1 -d' '
 step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut -f1 -d' '
 endif
 
