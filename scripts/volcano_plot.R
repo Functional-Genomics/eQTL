@@ -3,7 +3,6 @@
 # =========================================================
 # Copyright 2012-2016,  Nuno A. Fonseca (nuno dot fonseca at gmail dot com)
 #
-# This file is based on code from iRAP (https://github.com/nunofonseca/irap)
 #
 # This is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with iRAP.  If not, see <http://www.gnu.org/licenses/>.
+# if not, see <http://www.gnu.org/licenses/>.
 #
 #
 # =========================================================
@@ -67,87 +66,6 @@ myParseArgs <- function(usage,option_list,filenames.exist=NULL,multiple.options=
   return(opt)
 }
 
-# load a file with a quant. matrix
-# returns NULL in case of failure
-quant.load <- function(f,clean.cuff=FALSE) {
-  tsv.data <- NULL
-
-  # header is always present
-  tsv.data <- qload.tsv(f,header=TRUE)
-  if(is.null(tsv.data)) return(NULL);
-  rownames(tsv.data) <- as.character(tsv.data[,1])
-  tsv.data <- tsv.data[,-1,drop=FALSE]
-  if (clean.cuff) {
-    sel<-grep("^CUFF.*",rownames(tsv.data),perl=T,invert=TRUE)
-    tsv.data <- tsv.data[sel,,drop=FALSE]
-  }
-  return(tsv.data)
-}
-
-# keep backwards compatibility by using read.table when data.table is not 
-# available
-qload.tsv <- function(f,header,comment.char="") {
-  tsv.data <- NULL
-  if (require("data.table",quietly=TRUE,character.only=TRUE) &&
-      compareVersion(as.character(packageVersion("data.table")),"1.9.6")>=0) {
-    library("data.table")
-    if ( sum(grep(".gz$",f)) ) {
-      f <- paste("zcat ",f,sep="")
-    } else {
-      f <- paste("cat ",f,sep="")
-    }
-    # not optimal, but faster than read.table
-    if ( comment.char!="") {
-      f <- paste(f," | grep -v \"^",comment.char,"\"",sep="")
-    }
-    tryCatch(tsv.data <- fread(input=f,sep = "\t", header=header,check.names=FALSE,data.table=FALSE),error=function(x) NULL)
-  } else 
-    tryCatch(tsv.data <- read.table(f,sep = "\t", header=header, comment.char=comment.char, quote = "\"",check.names=FALSE),error=function(x) NULL)
-  return(tsv.data)
-}
-
-quantile_norm <- function(df,means=NULL){
-  if ( ! is.data.frame(df) ) {
-    perror("Expected a data frame")
-  }  
-  #
-  if ( ! is.null(means)) {
-    l1 <- nrow(df)
-    l2 <- length(means)
-    if ( l1 != l2 ) {
-      pwarning("Number of rows in data frame (",l1,") does not match with the length of quantile normalized means vector (",l2,")")
-      if ( l1 > l2 ) {
-        perror("Unable to proceed")
-      }
-      # l1 <l2
-      offset <- l2-l1
-      means <- means[append(2,seq(offset+2,l2))]
-      #pinfo(length(means),"==",l1)
-    }  
-  }
-  print(dim(df))
-  # increasing
-  ranks <- apply(df,2,rank,ties.method="max")
-  # sort: increasing
-  if (is.null(means) ) {
-    means <- apply(data.frame(apply(df, 2, sort)), 1, mean, na.rm=T)
-  }
-  df_qn<- apply(ranks, 2, quantile_norm_vect, means)
-  rownames(df_qn) <- rownames(df)
-  return(list(qn=df_qn,means=means))
-}
-
-quantile_norm_vect <- function(v,qn_values) {
-  lv <- length(v)
-  lqn <- length(qn_values)
-  if ( lv!=lqn ) {
-    perror("length of vector v (",lv,") is different from qn_means' length (",lqn,")")
-  }
-  
-  p <- rank(v,ties.method="max")
-  return(qn_values[p])
-}
-
 ###############################################################
 
 usage <- "volcano_plot -i summary_file -m mapping_tsv_file -o output_tsv_file"
@@ -155,6 +73,7 @@ option_list <- list(
   make_option(c("-o","--out"),type="character",default=NULL,help="Output quantification file"),
   make_option(c("-i","--in"),type="character",default=NULL,dest="tsv_file",help="Quantification matrix"),
   make_option(c("-t","--title"),type="character",default="",dest="title",help="Plot title"),
+  make_option(c("--save_image"),action="store_true",dest="save.image",default=FALSE,help="Save the R image"),  
   make_option(c("-s","--sig"),type="numeric",default=0.05,dest="sign.threshold",help=""))
 
 multiple.options = list()
@@ -223,4 +142,7 @@ text(x=max(data$beta),y=-log10(0.5),labels=paste("P<0.5",sep=""),pos=1,cex=0.8)
 ##      pos=c(3,4))
 dev.off()
 
+if ( opt$save.image ) { 
+    save.image(paste(opt$out,".Rdata",sep=""))
+}
 q(status=0)

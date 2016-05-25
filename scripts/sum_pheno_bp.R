@@ -73,6 +73,7 @@ option_list <- list(
   make_option(c("-o","--out"),type="character",default=NULL,dest="out",help="Output quantification file"),
   make_option(c("-s","--sum"),type="character",default=NULL,dest="sum_file",help="Quantification matrix"),
   make_option(c("-p","--pheno"),type="character",default=NULL,dest="pheno_file",help="Phenotype"),
+  make_option(c("--save_image"),action="store_true",dest="save.image",default=FALSE,help="Save the R image"),  
   make_option(c("-t","--title"),type="character",default="",dest="title",help="Plot title"),
   make_option(c("--sig"),type="numeric",default=0.05,dest="sign.threshold",help=""))
 
@@ -143,6 +144,8 @@ par(bty="l")
 boxplot(list("All genes"=all.e,"e-genes"=egenes.e,"Not e-genes"=not.egenes.e),outline=F,ylab="Expression",main=opt$title)
 dev.off()
 #
+if ( opt$save.image ) { 
+    save.image(paste(opt$out,".Rdata",sep=""))
+}
 q(status=0)
-save.image("l.Rdata")
-load("l.Rdata")
+

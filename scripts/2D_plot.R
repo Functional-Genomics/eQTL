@@ -78,6 +78,7 @@ option_list <- list(
   make_option(c("-c","--chr"),type="character",default=NULL,dest="chr_file",help="Phenotype information"),
   make_option(c("-x","--xlab"),type="character",default="Variant",dest="xlab",help="x-label"),
   make_option(c("-t","--title"),type="character",default="",dest="title",help="Plot title"),
+  make_option(c("--save_image"),action="store_true",dest="save.image",default=FALSE,help="Save the R image"),  
   make_option(c("--sig"),type="numeric",default=0.05,dest="sign.threshold",help=""))
 
 multiple.options = list()
@@ -240,5 +241,7 @@ axis(2, at=cumsum(chr.length)-chr.length/2, labels=rownames(rects), las=2,col="d
 legend("right",inset=c(-0.1,0),title="Effect\nsize",c(">0.5","<0.5","~0"),pch=20,col=c("red","blue","black"),bty="n")
 dev.off()
 
-
+if ( opt$save.image ) { 
+    save.image(paste(opt$out,".Rdata",sep=""))
+}
 q(status=0)
