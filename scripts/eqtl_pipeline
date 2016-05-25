@@ -238,7 +238,7 @@ minGQ?=50
 minRD?=20
 limix_use_peer_covariates?=n
 cis_window?=1000000
-# signal-to-noise ration threshold
+# signal-to-noise ratio threshold
 snr_threshold?=75
 vcf_filter_pass?=n
 # vcf_filter="TP > 0.95 ....."
@@ -264,6 +264,15 @@ mac=$(call get_mac)
 $(info *	mac=$(mac) (maf=$(maf)))
 else
 maf=not defined
+endif
+
+
+# cutoff applied to the adjusted p-values
+# e-genes with a adj. p-value below or equal to the cutoff
+# are included in the eqtl results file (summary.tsv)
+# 
+ifndef qtl_threshold
+qtl_threshold=$(fdr_threshold)
 endif
 
 $(info * )
@@ -407,7 +416,7 @@ endif
 
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
-eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(fdr_threshold)
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(qtl_threshold)
 report_dir=$(eqtl_dir)/report
 
 # print the folders

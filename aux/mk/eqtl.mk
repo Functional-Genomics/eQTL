@@ -64,7 +64,7 @@ $(eqtl_dir)/all_chr/step3/%.step3.tsv.gz: $(eqtl_dir)/all_chr/step2/%.step2.tsv.
 
 #$(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv
 $(eqtl_dir)/all_chr/step4/%.step4.tsv.gz: $(eqtl_dir)/all_chr/step3/%.step3.tsv.gz  
-	eqtl_step4.py  $< $(eqtl_dir)/all_chr/step2/$*.step2.tsv.gz.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
+	eqtl_step4.py  $< $(eqtl_dir)/all_chr/step2/$*.step2.tsv.gz.meta.tsv $(qtl_threshold) $@.tmp && mv $@.tmp $@
 
 $(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	$(file >$@.lst.txt,$^) \
@@ -107,7 +107,7 @@ endef
 
 # %.step2.tsv.gz.meta.tsv
 %.step4.tsv.gz: %.step3.tsv.gz  
-	eqtl_step4.py  $< $*.step2.tsv.gz.meta.tsv $(fdr_threshold) $@.tmp && mv $@.tmp $@
+	eqtl_step4.py  $< $*.step2.tsv.gz.meta.tsv $(qtl_threshold) $@.tmp && mv $@.tmp $@
 
 $(foreach chr,$(geno_chr),$(eval $(call make-qtl-rule-chr,$(chr))))
 
@@ -128,14 +128,14 @@ endif
 #$(info $(All_QTL_JOBS))
 TARGETS7+=$(All_QTL_JOBS)
 
-qtl_plots+=$(eqtl_dir)/sum_expr_bp.png
-$(eqtl_dir)/sum_expr_bp.png: $(eqtl_dir)/summary.tsv $(step2_dir)/$(expr_matrix_filename).filtered.tsv
-	sum_pheno_bp.R -s $< -p $(step2_dir)/$(expr_matrix_filename).filtered.tsv -o $@.tmp && mv $@.tmp $@
+qtl_plots+=$(eqtl_dir)/sum_expr_bp_$(fdr_threshold).png
+$(eqtl_dir)/sum_expr_bp_$(fdr_threshold).png: $(eqtl_dir)/summary.tsv $(step2_dir)/$(expr_matrix_filename).filtered.tsv
+	sum_pheno_bp.R --sig $(fdr_threshold) -s $< -p $(step2_dir)/$(expr_matrix_filename).filtered.tsv -o $@.tmp && mv $@.tmp $@
 
 # volcano plot
-$(eqtl_dir)/volcano_plot.png: $(eqtl_dir)/summary.tsv
+$(eqtl_dir)/volcano_plot_$(fdr_threshold).png: $(eqtl_dir)/summary.tsv
 	volcano_plot.R -i $< -s $(fdr_threshold) -t $(volcano_title) -o $@.tmp && mv $@.tmp $@
-qtl_plots+=$(eqtl_dir)/volcano_plot.png
+qtl_plots+=$(eqtl_dir)/volcano_plot_$(fdr_threshold).png
 
 # only make the plot if chr_sizes file is provided
 ifneq ($(chr_sizes_file),none)
@@ -143,12 +143,12 @@ ifneq ($(chr_sizes_file),none)
 2d_plot_xlab=Variant
 
 $(eqtl_dir)/2D_plot.png: $(eqtl_dir)/summary.tsv $(chr_sizes_file) $(gtf_eqtl_tsv)
-	2D_plot.R -o $@.tmp  -s $(eqtl_dir)/summary.tsv  -p $(gtf_eqtl_tsv) -c $(chr_sizes_file)  -t "$(2d_plot_title)" -x "$(2d_plot_xlab)" && mv $@.tmp $@
+	2D_plot.R -o $@.tmp  -s $(eqtl_dir)/summary.tsv  -p $(gtf_eqtl_tsv) -c $(chr_sizes_file)  -t "$(2d_plot_title)" -x "$(2d_plot_xlab)" --sig $(fdr_threshold) && mv $@.tmp $@
 
-qtl_plots+=$(eqtl_dir)/2D_plot.png
+qtl_plots+=$(eqtl_dir)/2D_plot_$(fdr_threshold).png
 endif
 
-TARGETS8+=$(eqtl_dir)/volcano_plot.png
+TARGETS8+=$(qtl_plots)
 # Limix 
 ############################################################	
 else
@@ -159,14 +159,14 @@ ifeq ($(eqtl_method),fastqtl)
 ifeq ($(corr_method),none)
 define make-fastqtl-rule-chr=
 $(eqtl_dir)/$(1).tsv: $(step1b_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step2_dir)/$(expr_matrix_filename).filtered.bed.gz.tbi $(step1b_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.tbi
-	mkdir -p $$(@D) && fastqtl --vcf $$< --bed $(step2_dir)/$(expr_matrix_filename).filtered.bed.gz --window $(cis_window) --threshold  $(fdr_threshold) --permute $(n_permutations) --region "$(1):1-100000000000"   --out $$@.tmp && mv $$@.tmp $$@
+	mkdir -p $$(@D) && fastqtl --vcf $$< --bed $(step2_dir)/$(expr_matrix_filename).filtered.bed.gz --window $(cis_window) --threshold  $(qtl_threshold) --permute $(n_permutations) --region "$(1):1-100000000000"   --out $$@.tmp && mv $$@.tmp $$@
 endef
 
 else
 # correction method used
 define make-fastqtl-rule-chr=
 $(eqtl_dir)/$(1).tsv: $(step1b_dir)/$(1)/chr$(1)_merged.filt.vcf.gz $(step3_dir)/$(corr_method)/$(corr_method).bed.gz.tbi $(step1b_dir)/$(1)/chr$(1)_merged.filt.vcf.gz.tbi
-	mkdir -p $$(@D) && fastqtl --vcf $$< --bed $(step3_dir)/$(corr_method)/$(corr_method).bed.gz --window $(cis_window) --threshold $(fdr_threshold) --permute $(n_permutations) --region "$(1):1-100000000000"   --out $$@.tmp && mv $$@.tmp $$@
+	mkdir -p $$(@D) && fastqtl --vcf $$< --bed $(step3_dir)/$(corr_method)/$(corr_method).bed.gz --window $(cis_window) --threshold $(qtl_threshold) --permute $(n_permutations) --region "$(1):1-100000000000"   --out $$@.tmp && mv $$@.tmp $$@
 endef
 endif
 
@@ -191,7 +191,7 @@ else
 ifeq ($(corr_method),none)
 define make-meqtl-rule-chr=
 $(eqtl_dir)/$(1).tsv: $(step1b_dir)/$(1)/chr$(1).genotype.tsv $(step2_dir)/$(expr_matrix_filename).filtered.tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
-	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step2_dir)/$(expr_matrix_filename).filtered.tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
+	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step2_dir)/$(expr_matrix_filename).filtered.tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(qtl_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
 endef
 
 else
@@ -200,7 +200,7 @@ else
 
 define make-meqtl-rule-chr=
 $(eqtl_dir)/$(1).tsv: $(step1b_dir)/$(1)/chr$(1).genotype.tsv $(step3_dir)/$(corr_method)/$(corr_method).tsv $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv)
-	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step3_dir)/$(corr_method)/$(corr_method).tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(fdr_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
+	mkdir -p $$(@D) && run_matrix_eqtl $$< $(step3_dir)/$(corr_method)/$(corr_method).tsv  $(cov_sorted_hdf5).tsv $(gtf_eqtl_tsv) $(cis_window) $(qtl_threshold) $$@.tmp && rename ".tmp" "" $$@.tmp*
 endef
 endif
 
