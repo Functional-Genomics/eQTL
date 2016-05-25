@@ -203,6 +203,11 @@ override chromosomes:=$(geno_chr)
 # LIMIX binary folder
 LIMIX_BINARY=$(EPIPELINE_DIR)/anaconda/bin
 
+ifdef chr_sizes_file
+$(call file_exists,$(chr_sizes_file))
+endif
+# file with chr\tlength
+chr_sizes_file?=none
 
 #####################
 # Other Optional parameters
@@ -460,9 +465,6 @@ space:=$(empty) $(empty)#
 # AUXILIARY FUNCTIONS
 ################################################################################
 
-ifdef var_pos
-endif
-
 
 # create the folders
 $(foreach f,$(name)/vcf $(step1_dir) $(report_dir) $(step1a_dir) $(step2_dir) $(eqtl_dir),$(shell if [ ! -e $f ]; then mkdir -p $f; fi))
@@ -501,6 +503,8 @@ phony_targets+=step0
 step0: $(cov_hdf5)
 ifdef lsf_mode
 	sleep 35
+else
+	sleep 1
 endif
 #	$(call p_info,"Step 0 complete")
 

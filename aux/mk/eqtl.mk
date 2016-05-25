@@ -128,12 +128,26 @@ endif
 #$(info $(All_QTL_JOBS))
 TARGETS7+=$(All_QTL_JOBS)
 
+qtl_plots+=$(eqtl_dir)/sum_expr_bp.png
+$(eqtl_dir)/sum_expr_bp.png: $(eqtl_dir)/summary.tsv $(step2_dir)/$(expr_matrix_filename).filtered.tsv
+	sum_pheno_bp.R -s $< -p $(step2_dir)/$(expr_matrix_filename).filtered.tsv -o $@.tmp && mv $@.tmp $@
+
 # volcano plot
 $(eqtl_dir)/volcano_plot.png: $(eqtl_dir)/summary.tsv
 	volcano_plot.R -i $< -s $(fdr_threshold) -t $(volcano_title) -o $@.tmp && mv $@.tmp $@
-
-
 qtl_plots+=$(eqtl_dir)/volcano_plot.png
+
+# only make the plot if chr_sizes file is provided
+ifneq ($(chr_sizes_file),none)
+2d_plot_title=
+2d_plot_xlab=Variant
+
+$(eqtl_dir)/2D_plot.png: $(eqtl_dir)/summary.tsv $(chr_sizes_file) $(gtf_eqtl_tsv)
+	2D_plot.R -o $@.tmp  -s $(eqtl_dir)/summary.tsv  -p $(gtf_eqtl_tsv) -c $(chr_sizes_file)  -t "$(2d_plot_title)" -x "$(2d_plot_xlab)" && mv $@.tmp $@
+
+qtl_plots+=$(eqtl_dir)/2D_plot.png
+endif
+
 TARGETS8+=$(eqtl_dir)/volcano_plot.png
 # Limix 
 ############################################################	
