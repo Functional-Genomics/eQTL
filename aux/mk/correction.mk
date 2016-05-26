@@ -20,23 +20,57 @@
 
 step3: $(step3_dir)/complete
 
-TARGETS6+= $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+TARGETS6+= $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5
 # kpop - ktot
 $(step3_dir)/panama/panama.hdf5: $(kpop_file) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	mkdir -p $(@D) && \
 	runpanama.py  $(kpop_file) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(hidden_k) $(snr_threshold) $@.tmp &&\
 	mv $@.tmp  $@
 
+
 $(step3_dir)/peer/peer.hdf5 $(step3_dir)/peer/peer_factors.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(if $(subst y,,$(limix_use_peer_covariates)),,$(cov_sorted_hdf5))
 	mkdir -p $(@D) && \
 	run_peer.sh $<  $(hidden_k) $(peer_iterations)  $@.tmp $(@D)/peer_factors.hdf5 $(if $(subst y,,$(limix_use_peer_covariates)),,$(cov_sorted_hdf5)) && \
 	mv $@.tmp  $@
+
 
 $(step3_dir)/none/none.hdf5: $(kpop_file)
 	mkdir -p $(@D) && \
 	cp $< $@.tmp && \
 	mv $@.tmp  $@
 
-#$(step3_dir)/$(corr_method)/$(corr_method).hdf5
-$(step3_dir)/complete: $(step1b_dir)/complete $(step2_dir)/complete   $(step3_dir)/$(corr_method)/$(corr_method).clus.png
+
+################################
+# Convert HDF5 <-> TSV
+# matrix/dataset kpop,ktot,phenotype
+# row/col are switched?
+$(step3_dir)/peer/peer.$(expr_corr_transform).hdf5: $(step3_dir)/peer/peer.$(expr_corr_transform).tsv
+	tsv2hdf5.py $< 'phenotype' 'row_header/sample_ID' 'col_header/phenotype_ID'  'y' $@.tmp && mv $@.tmp $@
+
+$(step3_dir)/panama/panama.$(expr_corr_transform).hdf5: $(step3_dir)/panama/panama.$(expr_corr_transform).tsv
+	tsv2hdf5.py $< 'Ktot' 'row_header/sample_ID' 'col_header/sample_ID'  'y' $@.tmp && mv $@.tmp $@
+
+
+$(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
+	hdf52tsv $< "Kpop" "/row_header/sample_ID" "/col_header/sample_ID"  $@.tmp  n && mv $@.tmp $@
+
+$(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
+	hdf52tsv $< "/phenotype" "/row_header/sample_ID" "/col_header/phenotype_ID" $@.tmp y && mv $@.tmp $@
+
+$(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
+	hdf52tsv $< "Ktot" "/row_header/sample_ID" "/col_header/sample_ID" $@.tmp y && mv $@.tmp $@
+
+
+##########################################
+# Transform the values after correcting...
+$(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).tsv: $(step3_dir)/$(corr_method)/$(corr_method).tsv
+	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
+
+# no transformation
+$(step3_dir)/$(corr_method)/$(corr_method).none.hdf5: $(step3_dir)/$(corr_method)/$(corr_method).hdf5
+	cp $< $@.tmp && mv $@.tmp $@
+
+
+############################################
+$(step3_dir)/complete: $(step1b_dir)/complete $(step2_dir)/complete   $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).clus.png 
 	$(call p_info,"Step 3 complete") touch $@

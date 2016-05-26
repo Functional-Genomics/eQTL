@@ -19,22 +19,8 @@
 # =========================================================
 
 # get a matrix from a specific .hdf5 file
-# matrix/dataset kpop,ktot,phenotype
-# row/col are switched?
 $(cov_sorted_hdf5).tsv:  $(cov_sorted_hdf5)
 	hdf52tsv $< "/covariates" "/row_header/sample_ID" "-"   $@.tmp y && mv $@.tmp $@
-
-#$(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-#	hdf52tsv $< "phenotype/Ytransformed" "phenotype/row_header/sample_ID" "/phenotype/col_header/phenotype_ID"   $@.tmp y && mv $@.tmp $@
-
-$(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
-	hdf52tsv $< "Kpop" "/row_header/sample_ID" "/col_header/sample_ID"  $@.tmp  n && mv $@.tmp $@
-
-$(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
-	hdf52tsv $< "/phenotype" "/row_header/sample_ID" "/col_header/phenotype_ID" $@.tmp y && mv $@.tmp $@
-
-$(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
-	hdf52tsv $< "Ktot" "/row_header/sample_ID" "/col_header/sample_ID" $@.tmp y && mv $@.tmp $@
 
 
 %.clus.png: %.tsv $(sample2class_file)
@@ -58,7 +44,7 @@ $(report_dir)/settings.tsv: $(conf)
 	( $(foreach v,$(settings_vars), echo $v:::$($v);) echo num_vcfs:::$(words $(vcfs)); )  | sed "s/:::/\t/" > $@.tmp && mv $@.tmp $@
 
 # Copy the plots and tsv file to the report folder
-$(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_qn_clus.png $(report_dir)/expr_filtered_qn_pca.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png $(report_dir)/expr_filtered_qn_trans_clus.png $(report_dir)/expr_filtered_qn_trans_pca.png $(report_dir)/$(expr_matrix_filename)_pca.png $(report_dir)/$(expr_matrix_filename)_clus.png
+$(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_qn_clus.png $(report_dir)/expr_filtered_qn_pca.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png $(report_dir)/expr_filtered_qn_trans_clus.png $(report_dir)/expr_filtered_qn_trans_pca.png $(report_dir)/$(expr_matrix_filename)_pca.png $(report_dir)/$(expr_matrix_filename)_clus.png $(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_clus.png $(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_pca.png
 
 $(report_dir)/$(expr_matrix_filename)_clus.png: $(matched_expr_matrix_no_ext).clus.png
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
@@ -87,6 +73,12 @@ $(report_dir)/expr_filtered_corrected_clus.png: $(step3_dir)/$(corr_method)/$(co
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
 
 $(report_dir)/expr_filtered_corrected_pca.png: $(step3_dir)/$(corr_method)/$(corr_method).pca.png $(step3_dir)/$(corr_method)/$(corr_method).pca_13.png $(step3_dir)/$(corr_method)/$(corr_method).tsv
+	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
+
+$(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_clus.png: $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).clus.png $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).tsv
+	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
+
+$(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_pca.png: $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).pca.png $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).pca_13.png $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).tsv
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
 
 
