@@ -47,8 +47,8 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 $(step3_dir)/peer/peer.$(expr_corr_transform).hdf5: $(step3_dir)/peer/peer.$(expr_corr_transform).tsv
 	tsv2hdf5.py $< 'phenotype' 'row_header/sample_ID' 'col_header/phenotype_ID'  'y' $@.tmp && mv $@.tmp $@
 
-$(step3_dir)/panama/panama.$(expr_corr_transform).hdf5: $(step3_dir)/panama/panama.$(expr_corr_transform).tsv
-	tsv2hdf5.py $< 'Ktot' 'row_header/sample_ID' 'col_header/sample_ID'  'y' $@.tmp && mv $@.tmp $@
+$(step3_dir)/panama/panama.$(expr_corr_transform).hdf5: $(step3_dir)/panama/panama.hdf5
+	cp $< $@.tmp && mv $@.tmp $@
 
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
@@ -57,14 +57,18 @@ $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
 $(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
 	hdf52tsv $< "/phenotype" "/row_header/sample_ID" "/col_header/phenotype_ID" $@.tmp y && mv $@.tmp $@
 
-$(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
-	hdf52tsv $< "Ktot" "/row_header/sample_ID" "/col_header/sample_ID" $@.tmp y && mv $@.tmp $@
+# $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
+# 	hdf52tsv $< "Ktot" "/row_header/sample_ID" "/col_header/sample_ID" $@.tmp y && mv $@.tmp $@
 
 
 ##########################################
 # Transform the values after correcting...
 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).tsv: $(step3_dir)/$(corr_method)/$(corr_method).tsv
 	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
+
+$(step3_dir)/panama/panama.$(expr_corr_transform).tsv: $(step3_dir)/panama/panama.tsv
+	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
+
 
 # no transformation
 $(step3_dir)/$(corr_method)/$(corr_method).none.hdf5: $(step3_dir)/$(corr_method)/$(corr_method).hdf5
