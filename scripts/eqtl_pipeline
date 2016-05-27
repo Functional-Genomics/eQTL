@@ -389,7 +389,7 @@ step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut 
 endif
 
 
-step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform)  |md5sum|cut -f1 -d' '
+step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(pheno_chr)  |md5sum|cut -f1 -d' '
 
 
 ifeq ($(corr_method),peer)
