@@ -46,6 +46,7 @@ sys.stderr.write('Reading from '+file2+'... ')
 annotation = pd.read_csv(file2,sep='\t',index_col=0,header=None)
 sys.stderr.write('done.')
 
+annotation.index=annotation.index.astype(str)
 chr_subset = annotation[annotation.index.values==chr]
 chr_var_subset = chr_subset[3].values #take names from bed file
 
