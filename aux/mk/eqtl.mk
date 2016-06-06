@@ -31,6 +31,7 @@ ifeq ($(eqtl_method),limix)
 
 ifeq ($(cis_window),0)
 volcano_title="Trans"
+
 ############################################################
 # Limix trans-eQTL (start)
 $(info trans-EQTL mode)
@@ -81,7 +82,7 @@ else
 ############################################################
 # Limix cis-eQTL (start)
 $(info cis-EQTL mode)
-volcano_title=Trans
+volcano_title=Cis
 eqtl_cmd1=eqtl_cis.py
 
 # foreach chr
@@ -148,7 +149,7 @@ $(eqtl_dir)/2D_plot.png: $(eqtl_dir)/summary.tsv $(chr_sizes_file) $(gtf_eqtl_ts
 qtl_plots+=$(eqtl_dir)/2D_plot_$(fdr_threshold).png
 endif
 
-TARGETS8+=$(qtl_plots)
+TARGETS9+=$(qtl_plots)
 # Limix 
 ############################################################	
 else
