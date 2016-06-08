@@ -132,7 +132,7 @@ mkdir -p $LOGS_FOLDER
 # submit the jobs
 echo "step0 jobs..."
 submit_job "step0_$JOBNAME_SUF" ""  eqtl_pipeline $EQTL_ARGS step0
-stop_job "eqtl0_$JOBNAME_SUF"
+stop_job "step0_$JOBNAME_SUF"
 
 PREV=step0_$JOBNAME_SUF
 echo "set of jobs 0..."
