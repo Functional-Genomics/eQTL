@@ -6,7 +6,7 @@ function usage()
         cat<<EOF
 Usage:
 
-filter_vcf.sh -i <invcf.gz> -o <outvcf.gz> -c <chromosome> -g <minGQ> -d <minDP>  
+annai_filter_vcf.sh -i <invcf.gz> -o <outvcf.gz> -c <chromosome> -g <minGQ> -d <minDP>  
 
 Options:
 
