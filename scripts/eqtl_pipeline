@@ -515,7 +515,7 @@ phony_targets+=step0
 
 step0: $(cov_hdf5)
 ifdef lsf_mode
-	sleep 60
+	sleep 120
 else
 	sleep 1
 endif
