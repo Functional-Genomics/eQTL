@@ -127,14 +127,15 @@ RAND=`perl -e "print int(rand()*10);"`
 DATE=`date "+%w%H%M%S"`
 JOBNAME_SUF="$DATE$RAND"
 
+JOB0="eqtl0_$JOBNAME_SUF"
 LOGS_FOLDER=logs/$JOBNAME_SUF/
 mkdir -p $LOGS_FOLDER
 # submit the jobs
 echo "step0 jobs..."
-submit_job "step0_$JOBNAME_SUF" ""  eqtl_pipeline $EQTL_ARGS step0
-stop_job "step0_$JOBNAME_SUF"
+submit_job $JOB0 ""  eqtl_pipeline $EQTL_ARGS step0
+stop_job $JOB0
 
-PREV=step0_$JOBNAME_SUF
+PREV=$JOB0
 echo "set of jobs 0..."
 targets=`eqtl_pipeline $EQTL_ARGS targets0 | tail -n 1`
 eqtl_pipeline $EQTL_ARGS $targets -n -q
@@ -259,5 +260,5 @@ submit_jobs eqtl9_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
 targets=step4
 submit_job_get_email  eqtl8_$JOBNAME_SUF "eqtl9_$JOBNAME_SUF*" eqtl_pipeline $EQTL_ARGS
 
-resume_job "eqtl0_$JOBNAME_SUF"
+resume_job $JOB0
 exit 0
