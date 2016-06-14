@@ -117,19 +117,31 @@ plot(data$beta,-log10(data$g_adj_pval),
      main=opt$title,
      xlab="Beta",ylab="-log2(adj. pvalue)",pch=20,
      ylim=c(0,1+max(-log10(data$g_adj_pval))))
+
+pos.sig.beta <- NULL
+neg.sig.beta <- NULL
 pos.sig.beta <- data$beta>0 & signif
 neg.sig.beta <- data$beta<0 & signif
-points(data$beta[pos.sig.beta],-log10(data$g_adj_pval[pos.sig.beta]),col="red",pch=20)
-points(data$beta[neg.sig.beta],-log10(data$g_adj_pval[neg.sig.beta]),col="blue",pch=20)
+if ( sum(pos.sig.beta)>0 ) {
+  points(data$beta[pos.sig.beta],-log10(data$g_adj_pval[pos.sig.beta]),col="red",pch=20)
+}
+if ( sum(neg.sig.beta)>0 ) {
+  points(data$beta[neg.sig.beta],-log10(data$g_adj_pval[neg.sig.beta]),col="blue",pch=20)
+}
 abline(h=-log10(opt$sign.threshold),lty=2,col="grey")
 abline(h=-log10(0.5),lty=2,col="black")
 abline(v=0,lty=2,col="grey")
+par(xpd=TRUE)
 # add a few labels
-sel.neg <- head(order(data$g_adj_pval[neg.sig.beta]),n=2)
-sel.pos <- head(order(data$g_adj_pval[pos.sig.beta]),n=2)
+if ( sum(neg.sig.beta)>0 ) {
+  sel.neg <- head(order(data$g_adj_pval[neg.sig.beta]),n=2)
+}
+if ( sum(pos.sig.beta)>0 ) {
+  sel.pos <- head(order(data$g_adj_pval[pos.sig.beta]),n=2)
+}
 #labels1 <- apply(data[neg.sig.beta,c("GenoName","GeneName")][sel.neg,],MARGIN=1,FUN=paste,collapse="/")
 #labels2 <- apply(data[pos.sig.beta,c("GenoName","GeneName")][sel.pos,],MARGIN=1,FUN=paste,collapse="/")
-par(xpd=TRUE)
+
 text(x=max(data$beta),y=-log10(opt$sign.threshold),labels=paste("P<",opt$sign.threshold,sep=""),pos=1,cex=0.8)
 text(x=max(data$beta),y=-log10(0.5),labels=paste("P<0.5",sep=""),pos=1,cex=0.8)
 ## text(data$beta[neg.sig.beta][sel.neg],-log10(data$g_adj_pval[neg.sig.beta][sel.neg]),
