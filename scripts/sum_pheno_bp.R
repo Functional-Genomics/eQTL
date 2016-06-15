@@ -129,15 +129,20 @@ rownames(pheno) <- as.character(pheno[,1])
 mean.pheno <- rowMeans(pheno[,-1,drop=FALSE])
 print(head(mean.pheno))
 pinfo("Data loaded.")
-pinfo("Generating 2D plot ",opt$out,"...")
+pinfo("Generating plot ",opt$out,"...")
 
 head(data)
 egenes <- unique(as.character(data[signif,"geneID"]))
-not.egenes <- unique(as.character(data[!signif,"geneID"]))
+# sum_file may contain only genes with significant associations
+# not.egenes <- unique(as.character(data[!signif,"geneID"]))
+not.egenes <- names(mean.pheno)[!names(mean.pheno)%in%egenes]
 
 egenes.e <- mean.pheno[egenes]
 not.egenes.e <- mean.pheno[not.egenes]
 all.e <- mean.pheno[append(egenes,not.egenes)]
+
+cat("#egenes:",length(egenes),"\n")
+cat("#not egenes:",length(not.egenes),"\n")
 
 png(filename=opt$out,width=900,height=900,res=150)
 par(bty="l")
