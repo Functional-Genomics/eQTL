@@ -320,6 +320,12 @@ ifeq (,$(filter $(corr_method),$(SUPPORTED_CORR_METHODS) none))
 $(error corr_method value $(corr_method) not supported)
 endif
 
+# does not make sense to transform after correcting when
+# there is no correction :|
+ifeq ($(corr_method),none)
+override expr_corr_transf=none
+endif
+
 
 #ifeq ($(corr_method),peer) 
 $(info *	corr_method=$(corr_method))
@@ -422,6 +428,7 @@ step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
 eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(qtl_threshold)
 report_dir=$(eqtl_dir)/report
+
 
 # print the folders
 $(info * )
@@ -529,8 +536,6 @@ include $(script_path)/../aux/mk/dna.mk
 
 ################################################################################
 # RNA
-# step 2 need the kpop file
-TARGETS5+=step1 step2
 include $(script_path)/../aux/mk/rna.mk
 
 ################################################################################

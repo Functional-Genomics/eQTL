@@ -62,3 +62,6 @@ $(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 # $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 $(step2_dir)/complete:  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
 	$(call p_info,"Step 2 complete") touch $@
+
+# step 2 needs the kpop file
+TARGETS5+=step2

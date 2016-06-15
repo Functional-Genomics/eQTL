@@ -20,7 +20,8 @@
 
 step3: $(step3_dir)/complete
 
-TARGETS6+= $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5
+TARGETS6+= $(step3_dir)/complete
+#$(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5
 # kpop - ktot
 $(step3_dir)/panama/panama.hdf5: $(kpop_file) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
 	mkdir -p $(@D) && \
@@ -73,7 +74,6 @@ $(step3_dir)/panama/panama.$(expr_corr_transform).tsv: $(step3_dir)/panama/panam
 # no transformation
 $(step3_dir)/$(corr_method)/$(corr_method).none.hdf5: $(step3_dir)/$(corr_method)/$(corr_method).hdf5
 	cp $< $@.tmp && mv $@.tmp $@
-
 
 ############################################
 $(step3_dir)/complete: $(step1b_dir)/complete $(step2_dir)/complete   $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).clus.png 
