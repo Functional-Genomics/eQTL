@@ -58,8 +58,8 @@ $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
 $(step3_dir)/peer/peer.tsv: $(step3_dir)/peer/peer.hdf5
 	hdf52tsv $< "/phenotype" "/row_header/sample_ID" "/col_header/phenotype_ID" $@.tmp y && mv $@.tmp $@
 
-# $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
-# 	hdf52tsv $< "Ktot" "/row_header/sample_ID" "/col_header/sample_ID" $@.tmp y && mv $@.tmp $@
+$(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
+	hdf52tsv $< "Ktot" "/row_header/sample_ID" "/col_header/sample_ID" $@.tmp y && mv $@.tmp $@
 
 
 ##########################################
