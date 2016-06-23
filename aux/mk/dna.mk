@@ -141,8 +141,10 @@ step1_d: $(kpop_file) $(matched_expr_matrix) $(step1a_dir)/data_consistent
 
 
 # filter the columns in the matrix based on their names
-$(matched_expr_matrix): $(expr_matrix) $(var_matrix) 
-	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
+# Fix this
+$(matched_expr_matrix): $(expr_matrix) $(var_matrix) $(gtf_eqtl_tsv) 
+	filter_phenotype.R $(expr_matrix) $(gtf_eqtl_tsv) $@.tmp.tsv && \
+	filter_columns.R $@.tmp.tsv $(var_matrix) $@.tmp && mv $@.tmp $@ 
 
 $(matched_var_matrix): $(var_matrix) $(expr_matrix)
 	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
