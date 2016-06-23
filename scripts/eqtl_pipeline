@@ -111,6 +111,9 @@ ifdef aggr_bed_file
 $(error incompatible options: aggr_bed_file and var_matrix)
 endif
 
+# not used
+override dna_rna_mapfile=
+
 CHANGE_BETA_SIGN=n
 # var_matrix 
 ##########################
@@ -323,7 +326,7 @@ endif
 # does not make sense to transform after correcting when
 # there is no correction :|
 ifeq ($(corr_method),none)
-override expr_corr_transf=none
+override expr_corr_transform=none
 endif
 
 
