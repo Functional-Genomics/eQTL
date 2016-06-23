@@ -44,10 +44,11 @@ function python_2_7_installed {
 	pprint_msg "OK."
     fi
 }
-
+# scipy scikit-learn pandas h5py pkgconfig matplotlib numpy Cython
+# python-scikit-learn
 # include whatever is necessary to install and compile the programs
 function check_dependencies {
-    DEVEL_LIBRARIES_REQUIRED="python-devel python cmake python-pip"
+    DEVEL_LIBRARIES_REQUIRED="cmake gcc-gfortran lapack-devel  swig  gcc-c++ redhat-rpm-config"
     MISSING=0
     pprint_msg "If installation fails then please check if the following libraries are installed:"
     pprint_msg "$DEVEL_LIBRARIES_REQUIRED"
@@ -106,24 +107,23 @@ function make_install {
     pprint_msg "Installing make...done."
 }
 
-# since the overall pipeline has been tested with python 2.7 and
+# overall pipeline has been tested with python 2.7 and
 # imports many python modules available in Anaconda
-# (https://www.continuum.io/downloads), I would suggest to install it
-# first
-ANACONDA_VERSION=2.3.0
+# (https://www.continuum.io/downloads)
+ANACONDA_VERSION=4.0.0
 # TODO: add powered by Anaconda to the github repo and initial output of the pipeline
 function anaconda_install {
     
     pprint_msg "Installing anaconda..."
-    file=Anaconda-$ANACONDA_VERSION-Linux-x86_64.sh
+    file=Anaconda2-$ANACONDA_VERSION-Linux-x86_64.sh
     if [ "$OS" == "mac" ]; then
-	file=Anaconda-$ANACONDA_VERSION-MacOSX-x86_64.sh
+	file=Anaconda2-$ANACONDA_VERSION-MacOSX-x86_64.sh
     fi
     #MAC OS X
     download https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/$file $file
     chmod +x $file
-    mkdir -p $EPIPELINE_DIR/anaconda
-    ./$file -p $EPIPELINE_DIR/anaconda -b -f
+    mkdir -p $EPIPELINE_DIR/anaconda    
+    PYTHONPATH=  ./$file -p $EPIPELINE_DIR/anaconda -b -f
     pprint_msg "Installing anaconda...done."
 }
 #export PATH="/path/to/anaconda/bin:$PATH"
@@ -162,12 +162,13 @@ function limix_install {
 # gcc version > 4.2.1
 # LIMIX recommended installation
     pprint_msg "Installing Limix..."
-    #pip install  --user  limix==0.7.12
-    git clone https://github.com/PMBio/limix.git
-    cd limix
-    $EPIPELINE_DIR/anaconda/bin/python setup.py install
-    pip install  --user  rpy2
-    pip install  --user  progressbar
+    pip install scipy scikit-learn pandas h5py pkgconfig matplotlib numpy Cython rpy2 progressbar
+    pip install limix==0.8.0.dev0
+    ##git clone https://github.com/PMBio/limix.git
+    ##cd limix
+    ##$EPIPELINE_DIR/anaconda/bin/python setup.py install
+    #pip install  --user  rpy2
+    #pip install  --user  progressbar
     pprint_msg "Installing Limix...done."
 }
 
