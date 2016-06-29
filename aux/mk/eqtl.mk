@@ -30,7 +30,7 @@ ifeq ($(eqtl_method),limix)
 
 
 ifeq ($(cis_window),0)
-volcano_title="Trans"
+volcano_title?="Trans"
 
 ############################################################
 # Limix trans-eQTL (start)
@@ -134,9 +134,10 @@ $(eqtl_dir)/sum_expr_bp_$(fdr_threshold).png: $(eqtl_dir)/summary.tsv $(step2_di
 	sum_pheno_bp.R --sig $(fdr_threshold) -s $< -p $(step2_dir)/$(expr_matrix_filename).filtered.tsv -o $@.tmp && mv $@.tmp $@
 
 # volcano plot
-$(eqtl_dir)/volcano_plot_$(fdr_threshold).png: $(eqtl_dir)/summary.tsv
-	volcano_plot.R -i $< -s $(fdr_threshold) -t $(volcano_title) -o $@.tmp && mv $@.tmp $@
-qtl_plots+=$(eqtl_dir)/volcano_plot_$(fdr_threshold).png
+volcano_fdr?=$(fdr_threshold)
+$(eqtl_dir)/volcano_plot_$(volcano_fdr).png: $(eqtl_dir)/summary.tsv
+	volcano_plot.R -i $< -s $(volcano_fdr) -t $(volcano_title) -o $@.tmp && mv $@.tmp $@
+qtl_plots+=$(eqtl_dir)/volcano_plot_$(volcano_fdr).png
 
 # only make the plot if chr_sizes file is provided
 ifneq ($(chr_sizes_file),none)
