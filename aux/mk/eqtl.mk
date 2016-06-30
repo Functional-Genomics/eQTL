@@ -82,7 +82,7 @@ else
 ############################################################
 # Limix cis-eQTL (start)
 $(info cis-EQTL mode)
-volcano_title=Cis
+volcano_title?=Cis
 eqtl_cmd1=eqtl_cis.py
 
 # foreach chr
