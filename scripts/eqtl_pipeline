@@ -219,7 +219,7 @@ $(info * )
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_fdr volcano_title qtl_threshold
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold
 
 # optional: bed file to aggregate the variants
 aggr_bed_file?=
