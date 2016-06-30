@@ -140,10 +140,10 @@ qtl_plots+=$(eqtl_dir)/volcano_plot_$(fdr_threshold).png
 
 # only make the plot if chr_sizes file is provided
 ifneq ($(chr_sizes_file),none)
-2d_plot_title=
-2d_plot_xlab=Variant
+2d_plot_title?=
+2d_plot_xlab?=Variant
 
-$(eqtl_dir)/2D_plot.png: $(eqtl_dir)/summary.tsv $(chr_sizes_file) $(gtf_eqtl_tsv)
+$(eqtl_dir)/2D_plot_$(fdr_threshold).png: $(eqtl_dir)/summary.tsv $(chr_sizes_file) $(gtf_eqtl_tsv)
 	2D_plot.R -o $@.tmp  -s $(eqtl_dir)/summary.tsv  -p $(gtf_eqtl_tsv) -c $(chr_sizes_file)  -t "$(2d_plot_title)" -x "$(2d_plot_xlab)" --sig $(fdr_threshold) && mv $@.tmp $@
 
 qtl_plots+=$(eqtl_dir)/2D_plot_$(fdr_threshold).png
