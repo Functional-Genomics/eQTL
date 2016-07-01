@@ -135,7 +135,7 @@ $(step1a_dir)/data_consistent: $(dna_rna_mapfile) $(samples_hdf5)
 
 else
 #############################################
-# Variant matrix based analysis
+# Variants provided as a matrix
 
 step1_d: $(kpop_file) $(matched_expr_matrix) $(step1a_dir)/data_consistent
 
@@ -160,25 +160,23 @@ $(var_pos).bed4: $(var_pos)
 	tail -n +2 $< | awk  'BEGIN {OFS="\t";} {print $$2,$$3,$$3,$$1;}'  >> $@.tmp && \
 	mv $@.tmp $@
 
+$(var_pos).filt.bed4: $(var_pos).bed4 $(matched_var_matrix).filt.tsv
+	cut -f 1 $(matched_var_matrix).filt.tsv| grep -F -f /dev/stdin pcawg3_fusions_v0_merge_filtered.fqtli_pos.tsv > $@.tmp && mv $@.tmp $@
+
+
 # var_min_freq [0,1]
 $(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
 	cat $< | geno_filtering.py $(geno_threshold) > $@.tmp && mv $@.tmp $@
 
 define make-rules-for-chr=
 $(shell mkdir -p $(step1b_dir)/$(1))
-$(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).bed4 
-	cat $$< | generate_hdf5_mqtl.py  $(var_pos).bed4 $(1) $$@.tmp && mv $$@.tmp $$@
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).filt.bed4 
+	cat $$< | generate_hdf5_mqtl.py  $(var_pos).filt.bed4 $(1) $$@.tmp && mv $$@.tmp $$@
 
-$(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed4
+$(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).filt.bed4
 	filter_geno_matrix.py $$^ $$@.tmp &&\
 	mv $$@.tmp $$@
 
-# deprecated
-# $(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).bed4
-# 	grep "^$(1)\s" $(var_pos).bed4|cut -f 4 | sed -E 's/^/^/;s/$$$$/\\\s/' > $$@.tmp1 &&\
-# 	head -n 1 $$< > $$@.tmp
-# 	grep $$< -f $$@.tmp1 >> $$@.tmp 
-# 	mv $$@.tmp $$@ && rm -f $$@.tmp1
 endef
 
 

@@ -45,6 +45,7 @@ script_path!=dirname "`which eqtl_pipeline`"
 # load the different components
 include $(script_path)/../aux/mk/utils.mk
 
+
 ################################################################################
 # Variables
 ################################################################################
@@ -212,14 +213,23 @@ endif
 # file with chr\tlength
 chr_sizes_file?=none
 
+
 #####################
 # Other Optional parameters
 #####################
 $(info * )
 
+expr_corr_transform?=none
+geno_chr?=
+
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab
+
+
+volcano_title?=
+2d_plot_xlab?=
+2d_plot_title?=
 
 # optional: bed file to aggregate the variants
 aggr_bed_file?=
@@ -315,6 +325,7 @@ SUPPORTED_CORR_METHODS=peer panama
 ifndef corr_method
 corr_method=none
 endif
+
 
 #corr_method expr_corr_method?
 ifeq (,$(filter $(corr_method),$(SUPPORTED_CORR_METHODS) none))
@@ -544,12 +555,11 @@ include $(script_path)/../aux/mk/rna.mk
 include $(script_path)/../aux/mk/correction.mk
 
 ################################################################################
+# 
 include $(script_path)/../aux/mk/eqtl.mk
 
 ################################################################################
 # Reports/plots
-################################################################################
-
 include $(script_path)/../aux/mk/reports.mk
 
 ###################################################
