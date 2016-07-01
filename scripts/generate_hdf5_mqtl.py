@@ -84,8 +84,10 @@ chrom = chr_subset.index[i].values.astype(int).astype(str)
 #set array of allele. TODO: is empty for now.
 allele = sp.zeros(pos.shape) 
 #append the matrix, row_header,col_header (with subkeys)
-
+var_file_subset = var_file_subset.astype(str)
 dset = hdf.create_dataset('genotype/Kpop',data=K)
+dset = hdf.create_dataset('genotype/var_names',data=var_file_subset.tolist())
+dset = hdf.create_dataset('genotype/var_names',data=var_file_subset)
 dset = hdf.create_dataset('genotype/row_header/sample_ID', data=row_header)
 dset = hdf.create_dataset('genotype/col_header/alleles',data=allele)
 dset = hdf.create_dataset('genotype/col_header/chrom',data=chrom)
