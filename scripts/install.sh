@@ -255,6 +255,22 @@ function bedtools_install {
     pprint_msg "Installing bedtools...done."
 }
 
+function R_packages_install {
+
+    pprint_msg "Installing R packages..."
+    cat <<EOF | R --no-save
+source("http://bioconductor.org/biocLite.R")
+biocLite("data.table",ask=FALSE, suppressUpdates=TRUE)
+biocLite("optparse",ask=FALSE, suppressUpdates=TRUE)
+biocLite("lattice",ask=FALSE, suppressUpdates=TRUE)
+biocLite("gplots",ask=FALSE, suppressUpdates=TRUE)
+biocLite("rdhf5",ask=FALSE, suppressUpdates=TRUE)	
+biocLite("RColorBrewer",ask=FALSE, suppressUpdates=TRUE)
+q(status=0)
+EOF
+    pprint_msg "Installing R packages...done."
+}
+
 function vcftools_install {
     pprint_msg "Installing vcftools..."
     
@@ -471,6 +487,7 @@ bedtools_install
 #samtools_install
 #tabix_install
 plink_install
+R_packages_install
 #fastqtl_install
 popd
 exit 0
