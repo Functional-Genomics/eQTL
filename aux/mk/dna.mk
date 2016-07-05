@@ -164,7 +164,7 @@ $(var_pos).bed4: $(var_pos)
 # The (.filt.)bed4 file should only contain the entries that are in $(matched_var_matrix).filt.tsv
 $(var_pos).filt.bed4: $(var_pos).bed4 $(matched_var_matrix).filt.tsv
 	cut -f 1 $(matched_var_matrix).filt.tsv | tail -n +2 > $(matched_var_matrix).filt.tsv.tmp && \
-	if [ `ls -s $(matched_var_matrix).filt.tsv.tmp|cut -f 1 -d\ ` -eq 0 ]; then echo "ERROR: No variants after filtering - unable to continue"; exit 1; fi 
+	if [ `wc -l $(matched_var_matrix).filt.tsv.tmp|cut -f 1 -d\ ` -eq 0 ]; then echo "ERROR: No variants after filtering - unable to continue"; exit 1; fi 
 	grep -F -f $(matched_var_matrix).filt.tsv.tmp $< > $@.tmp && mv $@.tmp $@ && rm -f $(matched_var_matrix).filt.tsv.tmp
 
 
