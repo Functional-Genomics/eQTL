@@ -402,7 +402,7 @@ step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut 
 else
 # Matrix based analysis
 step1_hash!=echo $(var_matrix) |md5sum|cut -f1 -d' ' 
-step1a_hash!=echo $(step1_hash)  $(geno_chr) |md5sum|cut -f1 -d' '
+step1a_hash!=echo $(step1_hash) $(geno_threshold) $(geno_chr) |md5sum|cut -f1 -d' '
 step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut -f1 -d' '
 endif
 
@@ -432,7 +432,7 @@ step1b_dir:=$(step1a_dir)/$(step1b_hash)
 endif
 else
 # var_matrix
-step1a_dir:=$(step1_dir)
+step1a_dir:=$(step1_dir)/$(step1a_hash)
 step1b_dir:=$(step1a_dir)
 endif
 

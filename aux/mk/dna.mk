@@ -160,8 +160,12 @@ $(var_pos).bed4: $(var_pos)
 	tail -n +2 $< | awk  'BEGIN {OFS="\t";} {print $$2,$$3,$$3,$$1;}'  >> $@.tmp && \
 	mv $@.tmp $@
 
+#
+# The (.filt.)bed4 file should only contain the entries that are in $(matched_var_matrix).filt.tsv
 $(var_pos).filt.bed4: $(var_pos).bed4 $(matched_var_matrix).filt.tsv
-	cut -f 1 $(matched_var_matrix).filt.tsv| grep -F -f /dev/stdin pcawg3_fusions_v0_merge_filtered.fqtli_pos.tsv > $@.tmp && mv $@.tmp $@
+	cut -f 1 $(matched_var_matrix).filt.tsv | tail -n +2 > $(matched_var_matrix).filt.tsv.tmp && \
+	if [ `ls -s $(matched_var_matrix).filt.tsv.tmp|cut -f 1 -d\ ` -eq 0 ]; then echo "ERROR: No variants after filtering - unable to continue"; exit 1; fi 
+	grep -F -f $(matched_var_matrix).filt.tsv.tmp $< > $@.tmp && mv $@.tmp $@ && rm -f $(matched_var_matrix).filt.tsv.tmp
 
 
 # var_min_freq [0,1]
