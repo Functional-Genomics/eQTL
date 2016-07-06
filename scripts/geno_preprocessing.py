@@ -2,6 +2,7 @@
 
 import os, sys
 import scipy as SP
+import pandas as pd
 import h5py
 
 #usage
@@ -75,16 +76,22 @@ if __name__ == '__main__':
 		matrix,K = corr_matrix(geno_matrix,skip_kinship)
 	#substitute matrix of imputed values with standardise matrix
 	genofile['genotype/matrix'][:]=matrix[:]
+	#set a dataset with var_names
+	chrom = pd.Series(genofile['genotype/col_header/chrom'][:]).astype(int).astype(str)
+	pos = pd.Series(genofile['genotype/col_header/pos'][:]).astype(str)
+	var_names = chrom.str.cat(pos,sep='_').values
 	#populate dataset with Kpop
         Kshape=K.shape
         kpop=genofile.create_dataset('genotype/Kpop',Kshape,dtype="float64")
         kpop[...]=K[:]
+	dset = genofile.create_dataset('genotype/col_header/var_names',data=var_names.tolist())
 	print 'check if file {0} has 4 keys: Kpop, col_header, row_header, matrix\n'.format(geno)
 	for dset in genofile.keys():
     		for key in genofile[dset].keys():
         		print key
-	print 'OK'
-
+	print 'OK...all the keys found'
+	
+	
 	genofile.close()
 
 	sys.exit(0)

@@ -53,7 +53,7 @@ if __name__ == '__main__':
 		sys.stdout.write('WARNING: file {0} is empty\n'.format(i_file))
 		file.insert(0,'g_adj_pval','')
 		file.insert(0,'g_emp_adj_pval','')
-	        file = file[['geneID','chrom','pos','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval',  'beta','lambda','lambda_perm','file']]
+	        file = file[['geneID','chrom','pos','var_name','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval', 'beta','lambda','lambda_perm','file']]
         	file.rename(columns={'pv':'pval','pv_perm':'l_emp_pval','qv':'l_adj_pval','lambda':'lambda_pval'},inplace=True)
 		header = '\t'.join(file.columns.tolist())+'\n'
 		out.write(header)
@@ -84,7 +84,7 @@ if __name__ == '__main__':
 			g_emp_adj_pval= sp.array(stats.p_adjust(FloatVector((file['pv_perm'].astype(float)).tolist()),method = 'bonferroni',n=float(n_tests))) #compute bonferroni adjusted across empirical pvalues
 		file.insert(0,'g_adj_pval',pd.DataFrame(g_adj_pval))
 		file.insert(0,'g_emp_adj_pval',pd.DataFrame(g_emp_adj_pval))
-		file = file[['geneID','chrom','pos','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval',	'beta','lambda','lambda_perm','file']]
+		file = file[['geneID','chrom','pos','var_name','pv','pv_perm','g_emp_adj_pval','qv','g_adj_pval','beta','lambda','lambda_perm','file']]
 		file.rename(columns={'pv':'pval','pv_perm':'l_emp_pval','qv':'l_adj_pval','lambda':'lambda_pval'},inplace=True)
 		file.to_csv(out,sep='\t',header=True,index=None,na_rep='NA',compression='gzip')
 

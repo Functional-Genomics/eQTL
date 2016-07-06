@@ -37,7 +37,7 @@ if __name__=='__main__':
 	in_hdf5 = sys.argv[10] #list of fold_j files
 	summary = gzip.open(sys.argv[11],'wb') #outfile
 	metainfo = open(sys.argv[12],'w') #metainformation
-	header = ['geneID','chrom','pos','pv','pv_perm','qv','beta','lambda','lambda_perm','file']
+	header = ['geneID','chrom','pos','var_name','pv','pv_perm','qv','beta','lambda','lambda_perm','file']
 	header = pd.DataFrame(SP.array(header))
 	header.T.to_csv(summary,mode = 'a',sep='\t',header=None,index=None,compression='gzip')
 	#populate dictionary with data for eqtl
@@ -89,6 +89,7 @@ if __name__=='__main__':
 					temp['pv_perm'] = (SP.empty((1,))).astype(str)
 					temp['pv_perm'][:] = 'NA' #no empirical pvalues has been computed
 				pos = fgene['pos'][[idx]]
+				temp['var_names']=fgene['var_names'][[idx]]
 				temp['chrom'] = fgene['chrom'][[idx]]
 				temp['pos'] = pos
 				#temp['pv'] = map(lambda x:round(x,3),fgene['pv'][:,idx])
@@ -117,6 +118,7 @@ if __name__=='__main__':
 					pos = fgene['pos'][idx]
 					temp['chrom'] = fgene['chrom'][idx]
 					temp['pos'] = pos
+					temp['var_names']=fgene['var_names'][idx]
 					temp['lambda'] = map(lambda x:round(x,3),SP.tile(fgene['lambda'][:,0],s_idx))
 					temp['lambda_perm'] = map(lambda x:round(x,3),SP.tile(fgene['lambda_perm'][:,0],s_idx))
 				else:
@@ -126,7 +128,7 @@ if __name__=='__main__':
 		except:
 			print "{0}:  nothing significant in here".format(geneID)
 			pass
-		temp_df = pd.DataFrame(SP.vstack((temp['geneID'][:],temp['chrom'][:],temp['pos'][:],temp['pv'][:],temp['pv_perm'][:],temp['qv'][:],temp['beta'][:],temp['lambda'][:],temp['lambda_perm'][:],temp['file'][:])).T)
+		temp_df = pd.DataFrame(SP.vstack((temp['geneID'][:],temp['chrom'][:],temp['pos'][:],temp['var_names'][:],temp['pv'][:],temp['pv_perm'][:],temp['qv'][:],temp['beta'][:],temp['lambda'][:],temp['lambda_perm'][:],temp['file'][:])).T)
 		temp_df.to_csv(summary, mode = 'a',sep='\t',header=None,index=None,compression='gzip')
 	f.close()
 		#write some meta information

@@ -35,6 +35,7 @@ if __name__ == '__main__':
 	matrix = ''
 	chromosome = ''
 	pos = ''
+	var_name = ''
 	samples = ''
 	alleles = ''
 
@@ -45,17 +46,19 @@ if __name__ == '__main__':
 			sys.exit(1)
 		else:
 			chr = h5py.File(chr,'r')
-			if matrix == '' and chromosome == '' and pos == '' and samples == '' and alleles == '' :
-				matrix,chromosome,pos,samples,alleles = chr['genotype/matrix'][:],chr['genotype/col_header/chrom'][:],chr['genotype/col_header/pos'][:],chr['genotype/row_header/sample_ID'][:],chr['genotype/col_header/alleles'][:]
+			if matrix == '' and chromosome == '' and pos == '' and var_name == '' and samples == '' and alleles == '' :
+				matrix,chromosome,pos,var_name,samples,alleles = chr['genotype/matrix'][:],chr['genotype/col_header/chrom'][:],chr['genotype/col_header/pos'][:],chr['genotype/col_header/var_names'][:],chr['genotype/row_header/sample_ID'][:],chr['genotype/col_header/alleles'][:]
 			else:
 				matrix = stack_array(matrix,chr['genotype/matrix'][:])
 				chromosome = stack_array(chromosome,chr['genotype/col_header/chrom'][:])
 				pos = stack_array(pos,chr['genotype/col_header/pos'][:])
+				var_name = stack_array(var_name,chr['genotype/col_header/var_names'][:])
 				if alleles.shape[0] == 0:
 					sys.stderr.write('No significant genomic variants found for this chromosome!\n')
 					pass
 				else:
 					alleles = sp.concatenate((alleles,chr['genotype/col_header/alleles'][:]))
+					
 
 
 	outfile = h5py.File(outfile,'w')
@@ -64,6 +67,7 @@ if __name__ == '__main__':
 	dset = outfile.create_dataset('genotype/col_header/pos',data = pos[:])
 	dset = outfile.create_dataset('genotype/col_header/chrom',data = chromosome[:])
 	dset = outfile.create_dataset('genotype/col_header/alleles',data = alleles[:])
+	dset = outfile.create_dataset('genotype/col_header/var_names',data = var_name[:])
 
 	outfile.close()
 	sys.exit(0)

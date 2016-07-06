@@ -15,14 +15,15 @@ This script generates a list of significant eqtls based on fdr threshold. The li
 1)GeneID
 2)Chr
 3)Position
-4)p-value (nominal)
-5)q-value (nominal, SNPs level correction)
-6)q-value2 (nominal, gene level)
-7)p-value_empirical (empirical, permutation) ['NA' if n_perm <=1 ]
-8)q-value_empirical (empirical, gene level correction) ['NA' if n_perm <=1 ]
-9)Effect size (nominal)
-10)Lambda (nominal pvalues)
-11)Lambda_perm (pvalues of the first permutation)
+4)Variant name
+5)p-value (nominal)
+6)q-value (nominal, SNPs level correction)
+7)q-value2 (nominal, gene level)
+8)p-value_empirical (empirical, permutation) ['NA' if n_perm <=1 ]
+9)q-value_empirical (empirical, gene level correction) ['NA' if n_perm <=1 ]
+10)Effect size (nominal)
+11)Lambda (nominal pvalues)
+12)Lambda_perm (pvalues of the first permutation)
 
 
 Usage:
@@ -30,22 +31,23 @@ Usage:
 eqtl_step4.py <file_res.tsv> <metainfo.tsv> <fdr_threshold> <outfile.tsv>'''
 
 def get_res(a,l,fdr):
-	global genes,chromosome,position,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm
+	global genes,chromosome,position,var_name,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm
 	boolvector = (a<=fdr)
 	genes = l[0][boolvector]
 	chromosome = l[1][boolvector]
 	chromosome = chromosome.astype(int)
 	position = l[2][boolvector]
 	position = position.astype(int)
-	pvalue = l[3][boolvector]
-	qvalue = l[4][boolvector]
-	qvalue_genes = l[5][boolvector]
-	pvalue_empirical=l[6][boolvector]
-	qvalue_empirical=l[7][boolvector]
-	beta =l[8][boolvector]
-	gen_control=l[9][boolvector]
-	gen_control_perm=l[10][boolvector]
-	return genes,chromosome,position,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm
+	var_name = l[3][boolvector]
+	pvalue = l[4][boolvector]
+	qvalue = l[5][boolvector]
+	qvalue_genes = l[6][boolvector]
+	pvalue_empirical=l[7][boolvector]
+	qvalue_empirical=l[8][boolvector]
+	beta =l[9][boolvector]
+	gen_control=l[10][boolvector]
+	gen_control_perm=l[11][boolvector]
+	return genes,chromosome,position,var_name,pvalue,qvalue,qvalue_genes,pvalue_empirical,qvalue_empirical,beta,gen_control,gen_control_perm
 
 
 if __name__ == '__main__':
@@ -73,7 +75,7 @@ if __name__ == '__main__':
 		sys.stderr.write('ERROR: file '+metainfo+' not found\n')
 		sys.exit(1)
 
-	name_keys=['geneID','chrom','pos','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm']
+	name_keys=['geneID','chrom','pos','var_name','pval','l_adj_pval','g_adj_pval','l_emp_pval','g_emp_adj_pval','beta','lambda_pval','lambda_perm']
 	header = "\t".join(name_keys)+'\n'
 	#open tsv file
 	out = gzip.open(outfile,'wb')

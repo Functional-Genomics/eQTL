@@ -135,7 +135,7 @@ $(eqtl_dir)/sum_expr_bp_$(fdr_threshold).png: $(eqtl_dir)/summary.tsv $(step2_di
 
 # volcano plot
 $(eqtl_dir)/volcano_plot_$(fdr_threshold).png: $(eqtl_dir)/summary.tsv
-	volcano_plot.R -i $< -s $(fdr_threshold) -t $(volcano_title) -o $@.tmp && mv $@.tmp $@
+	volcano_plot.R -i $< -s $(fdr_threshold) -t "$(volcano_title)"  -o $@.tmp && mv $@.tmp $@
 qtl_plots+=$(eqtl_dir)/volcano_plot_$(fdr_threshold).png
 
 # only make the plot if the chr_sizes file is provided
