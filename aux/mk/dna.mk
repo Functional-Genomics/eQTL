@@ -77,7 +77,7 @@ $(step1_dir)/$(1)/%.filter.vcf.gz: $(name)/vcf/%.fixedheader.vcf.gz
 
 ##select MAC >=5, allow max missing sites in 20 percent of samples
 $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz
-	vcftools --gzvcf $$< --max-missing $$(max_missing) --mac $$(mac)  --temp $$(@D) --recode --recode-INFO-all --out $$@.tmp && bgzip -c $$@.tmp.recode.vcf > $$@.tmp && mv $$@.tmp  $$@
+	vcftools --gzvcf $$< --max-missing-count $$(max_missing) --mac $$(mac)  --temp $$(@D) --recode --recode-INFO-all --out $$@.tmp && bgzip -c $$@.tmp.recode.vcf > $$@.tmp && mv $$@.tmp  $$@
 
 $(step1a_dir)/$(1)/chr$(1).genotype.tsv: $(step1a_dir)/$(1)/chr$(1)_merged.filt.vcf.gz
 	vcftools --012 --gzvcf $$< --out $$@.tmp &&
@@ -87,9 +87,9 @@ $(step1a_dir)/$(1)/chr$(1).genotype.tsv: $(step1a_dir)/$(1)/chr$(1)_merged.filt.
 
 $(step1a_dir)/$(1)/chr$(1)_merged.filt.FILTER.summary: $(step1a_dir)/$(1)/chr$(1)_merged.vcf.gz
 	mkdir -p $$(@D) && \
-	vcftools --gzvcf $$< --max-missing $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp1 &&  \
+	vcftools --gzvcf $$< --max-missing-count $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp1 &&  \
 	vcftools --gzvcf $$< --mac $$(mac)  --temp $$(@D) --FILTER-summary --out $$@.tmp2 && \
-	vcftools --gzvcf $$< --mac $$(mac)  --max-missing $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp3 && \
+	vcftools --gzvcf $$< --mac $$(mac)  --max-missing-count $$(max_missing)  --temp $$(@D) --FILTER-summary --out $$@.tmp3 && \
 	head -n 1 $$@.tmp1.FILTER.summary   | cut -f 1,2> $$@.tmp && \
 	sum_tsv_col.sh $$@.tmp1.FILTER.summary 2 Missing  >> $$@.tmp && \
 	sum_tsv_col.sh $$@.tmp2.FILTER.summary 2 Mac  >> $$@.tmp && \
