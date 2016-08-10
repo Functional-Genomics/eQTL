@@ -112,7 +112,11 @@ pinfo("Generating volcano plot...")
 png(opt$out,width=900,height=900,res=150)
 par(bty="l")
 
-head(data$g_adj_pval)
+###
+pinfo("pvalues=0: ",sum(data$g_adj_pval==0),"\n")
+data$g_adj_pval[data$g_adj_pval==0] <- .Machine$double.xmin
+
+
 plot(data$beta,-log10(data$g_adj_pval),
      main=opt$title,
      xlab="Beta",ylab="-log2(adj. pvalue)",pch=20,
