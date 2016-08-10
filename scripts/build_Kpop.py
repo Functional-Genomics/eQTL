@@ -14,7 +14,7 @@ Usage: build_Kpop.py <Kpop.hdf5> <samples.hdf5> <chr1.hdf5> [<chr2.hdf5> ... ] '
 
 
 def build_kpop(chrmatrix,Kpop):
-	if Kpop == '':
+	if Kpop is None:
 		#populate the Kpop matrix with 0s
 		Kpop=np.zeros(chrmatrix.shape,dtype='float64')
 		#add the first chr kinship matrix		
@@ -50,15 +50,14 @@ if __name__ == "__main__":
 	hdf5_samples = h5py.File(sys.argv[2],'w')
 
  	#populating Kpop matrix and vector of samples
-	samples = ''
-	Kpop = ''
-	samples_vector = 0
+	Kpop = None
+	samples_vector = None
 	for file in chr:
                 print "Processing file:",file                                
     		X=h5py.File(file,'r' ) #catch warning if file is corrupted
 		matrix = X['genotype/Kpop'][:]
 		Kpop = build_kpop(matrix,Kpop)
-		if samples_vector == 0:
+		if samples_vector is None:
 			samples_vector = X['genotype/row_header/sample_ID'][:] #get samples from chr file
 		X.close()
 	
