@@ -67,8 +67,8 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).tsv: $(step3_dir)/$(corr_method)/$(corr_method).tsv
 	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
 
-$(step3_dir)/panama/panama.$(expr_corr_transform).tsv: $(step3_dir)/panama/panama.tsv
-	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
+#$(step3_dir)/panama/panama.$(expr_corr_transform).tsv: $(step3_dir)/panama/panama.tsv
+#	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
 
 
 # no transformation
