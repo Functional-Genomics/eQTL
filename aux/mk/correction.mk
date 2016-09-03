@@ -48,9 +48,6 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 $(step3_dir)/peer/peer.$(expr_corr_transform).hdf5: $(step3_dir)/peer/peer.$(expr_corr_transform).tsv
 	tsv2hdf5.py $< 'phenotype' 'row_header/sample_ID' 'col_header/phenotype_ID'  'y' $@.tmp && mv $@.tmp $@
 
-$(step3_dir)/panama/panama.$(expr_corr_transform).hdf5: $(step3_dir)/panama/panama.hdf5
-	cp $< $@.tmp && mv $@.tmp $@
-
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
 	hdf52tsv $< "Kpop" "/row_header/sample_ID" "/col_header/sample_ID"  $@.tmp  n && mv $@.tmp $@
