@@ -28,7 +28,7 @@ except:
 #read file from stdin
 file1 = sys.stdin
 #read the tsv file
-matrix = pd.read_csv(file1,sep='\t',index_col=0)
+matrix = pd.read_csv(file1,sep='\t',index_col=0,na_values='NA')
 #change index type into string 
 if matrix.index.dtype == (float):
 	matrix.index=matrix.index.values.astype(int).astype(str)
@@ -45,7 +45,7 @@ filt_matrix = matrix[matrix.gt(0,axis='rows').sum(1) >= sample_threshold]
 if filt_matrix.shape[0] == 0:
 	sys.stderr.write('WARNING: 0 variants retained after filtering. No possible eQTL result with this set of parameters\n')
 #write to stdout
-filt_matrix.to_csv(sys.stdout,sep='\t',header=True,index=True)
+filt_matrix.to_csv(sys.stdout,sep='\t',header=True,index=True,na_rep='NA')
 
 sys.exit(0)
 
