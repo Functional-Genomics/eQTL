@@ -15,6 +15,20 @@ cat <var_filtered_stdin> | generate_hdf.py <var_annotation.bed> <chr> <chr.hdf5>
 Optional parameter: <skip_kinship>
 '''
 
+def impute_missing(matrix):
+
+	'''this function imputes missing genotypes based on non-missing ones 
+		for the same SNP across all the samples N '''
+
+	for i in xrange(matrix.shape[0]):
+		Imiss= SP.isnan(matrix[i,:])
+		if not Imiss.any():
+			continue
+		else:
+			mean = matrix[i,~Imiss].mean()
+			matrix[i,Imiss] = mean
+	return matrix
+
 
 if len(sys.argv[1:])<3:
 	usage()
@@ -40,12 +54,17 @@ hdf = h5py.File(outfile,'w')
 
 sys.stderr.write('\nReading from stdin... ')
 file1 = sys.stdin
-var_file=pd.read_csv(file1,sep='\t',index_col=0)
+var_file_tmp=pd.read_csv(file1,sep='\t',index_col=0,na_values='NA')
 sys.stderr.write('complete.\n')
 
 sys.stderr.write('Reading from '+file2+'... ')
 annotation = pd.read_csv(file2,sep='\t',index_col=0,header=None)
 sys.stderr.write('done.\n')
+
+#impute missing genotypes
+new_var_file = impute_missing(var_file_tmp.values[:])
+var_file = pd.DataFrame(new_var_file,index=var_file_tmp.index,columns=var_file_tmp.columns)
+
 
 #if not X / Y / MT in list of chromosomes force the indexes to be string
 annotation.index = annotation.index.astype(str)
