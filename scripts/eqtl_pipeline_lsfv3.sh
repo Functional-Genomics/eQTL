@@ -76,7 +76,7 @@ function submit_job_get_email {
     if [ "$LSF_GROUP-" != "-" ]; then
 	GROUP="-g $LSF_GROUP"
     fi
-    $ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]" -w "ended($waitforids)"  -cwd `pwd` -J $jobname  $cmd2e
+    $ECHO bsub $LSF_PARAMS -q $QUEUE  $GROUP -n $THREADS -R "span[hosts=1]"  -M $MEM -R "select[mem>=$MEM]  rusage[mem=$MEM]" -w "ended($waitforids)"  -cwd `pwd` -J $jobname  $cmd2e -n -q
 }
 
 
@@ -97,7 +97,7 @@ function stop_now {
     cur_status=$1
     if [ "$wave-" == "$cur_status-" ]; then
 	targets=`eqtl_pipeline $EQTL_ARGS targets$wave | tail -n 1`
-	submit_job_get_email  eqtl8_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS $targets
+	submit_job_get_email  eqtll_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS $targets
 	resume_job "eqtl0_$JOBNAME_SUF"
 	exit
     fi
@@ -258,7 +258,9 @@ submit_jobs eqtl9_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
     
 # final job
 targets=step4
-submit_job_get_email  eqtl8_$JOBNAME_SUF "eqtl9_$JOBNAME_SUF*" eqtl_pipeline $EQTL_ARGS
+submit_jobs  eqtl10_$JOBNAME_SUF "eqtl9_$JOBNAME_SUF*" eqtl_pipeline $EQTL_ARGS
+
+submit_job_get_email  eqtll_$JOBNAME_SUF "eqtl9_$JOBNAME_SUF*" eqtl_pipeline $EQTL_ARGS $targets
 
 resume_job $JOB0
 exit 0
