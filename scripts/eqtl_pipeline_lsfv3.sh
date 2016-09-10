@@ -97,6 +97,10 @@ function stop_now {
     cur_status=$1
     if [ "$wave-" == "$cur_status-" ]; then
 	targets=`eqtl_pipeline $EQTL_ARGS targets$wave | tail -n 1`
+	if [ "-$targets" == "-" ]; then
+	    # there is nothing to do 
+	    targets=targets$wave
+	fi	
 	submit_job_get_email  eqtll_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS $targets
 	resume_job "eqtl0_$JOBNAME_SUF"
 	exit
