@@ -370,7 +370,7 @@ $(info *	eqtl_method=$(eqtl_method))
 # TARGETS6=
 # TARGETS7=
 # TARGETS8=
-TARGETS9=
+#TARGETS9=
 
 #
 # ${name}
