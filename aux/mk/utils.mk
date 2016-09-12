@@ -74,6 +74,8 @@ is_defined=$(if $(subst undefined,,$(origin $(1))),$(1),)
 %.tsv: %.tsv.gz
 	gunzip -c $< > $@.tmp && mv $@.tmp $@
 
+# no operation - do nothing :)
+nop:
 
 #
 ###############################################
@@ -91,14 +93,14 @@ endif
 
 
 
-#
-TARGETS0=
-TARGETS1=
-TARGETS2=
-TARGETS3=
-TARGETS4=
-TARGETS5=
-TARGETS6=
-TARGETS7=
-TARGETS8=
-TARGETS9=
+# include nop - ensure that no set of targets is empty
+TARGETS0=nop
+TARGETS1=nop
+TARGETS2=nop
+TARGETS3=nop
+TARGETS4=nop
+TARGETS5=nop
+TARGETS6=nop
+TARGETS7=nop
+TARGETS8=nop
+TARGETS9=nop
