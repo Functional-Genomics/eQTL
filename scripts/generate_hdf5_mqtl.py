@@ -2,7 +2,7 @@
 
 import sys,os
 import h5py
-import scipy as sp
+import scipy as SP
 from utils import corr_matrix
 import pandas as pd
 
@@ -71,15 +71,15 @@ annotation.index = annotation.index.astype(str)
 chr_subset = annotation[annotation.index.values==chr]
 chr_var_subset = chr_subset[3].values #take names from bed file
 
-var_file_subset = var_file.index.values[sp.in1d(var_file.index.values,chr_var_subset)]
+var_file_subset = var_file.index.values[SP.in1d(var_file.index.values,chr_var_subset)]
 #set array of geno values and transpose (samples X var)
-matrix = var_file.values[sp.in1d(var_file.index.values,var_file_subset)].T.astype(float)
+matrix = var_file.values[SP.in1d(var_file.index.values,var_file_subset)].T.astype(float)
 #msg if the matrix is empty
 if matrix.shape[1] == 0:
 	sys.stdout.write('WARNING: 0 variants retained after filtering. No results for chr {0} \n'.format(chr))
 
 #check if the matrix contains binary values. In this case do not compute kinship.
-check_matrix = sp.unique(matrix[:])
+check_matrix = SP.unique(matrix[:])
 
 if check_matrix.shape[0] == 2:
 	sys.stdout.write('matrix provided contains binary values. Do not standardise and do not compute NA kinship matrix.\n')
@@ -94,14 +94,14 @@ else:
 #output the matrix of 0/1 or 0/1/2 standardised into the hdf5 file
 dset = hdf.create_dataset('genotype/matrix',data=matrix)
 #set row_header
-row_header= sp.array(var_file.columns.tolist())
+row_header= SP.array(var_file.columns.tolist())
 #store indexes of the geno variant in the annotation list
 i = map(lambda x:chr_var_subset.tolist().index(x),var_file_subset.tolist())
 #set array of var positions (mean point of the annotation interval) and chromosome
-pos = sp.mean(chr_subset.iloc[i,[0,1]],axis=1).values.astype(float)
+pos = SP.mean(chr_subset.iloc[i,[0,1]],axis=1).values.astype(float)
 chrom = chr_subset.index[i].values.astype(int).astype(str)
 #set array of allele. TODO: is empty for now.
-allele = sp.zeros(pos.shape) 
+allele = SP.zeros(pos.shape) 
 #append the matrix, row_header,col_header (with subkeys)
 var_file_subset = var_file_subset.astype(str)
 dset = hdf.create_dataset('genotype/Kpop',data=K)
