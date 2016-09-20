@@ -45,8 +45,10 @@ $(step3_dir)/none/none.hdf5: $(kpop_file)
 # Convert HDF5 <-> TSV
 # matrix/dataset kpop,ktot,phenotype
 # row/col are switched?
+ifneq ($(expr_corr_transform),none)
 $(step3_dir)/peer/peer.$(expr_corr_transform).hdf5: $(step3_dir)/peer/peer.$(expr_corr_transform).tsv
 	tsv2hdf5.py $< 'phenotype' 'row_header/sample_ID' 'col_header/phenotype_ID'  'y' $@.tmp && mv $@.tmp $@
+endif
 
 
 $(step3_dir)/none/none.tsv: $(step3_dir)/none/none.hdf5
@@ -61,10 +63,9 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 ##########################################
 # Transform the values after correcting...
-#ifneq ($(expr_corr_transform),none)
 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).tsv: $(step3_dir)/$(corr_method)/$(corr_method).tsv
 	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
-#endif
+
 #$(step3_dir)/panama/panama.$(expr_corr_transform).tsv: $(step3_dir)/panama/panama.tsv
 #	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
 
