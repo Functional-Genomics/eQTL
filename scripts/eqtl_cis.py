@@ -96,6 +96,8 @@ Icv = SP.floor(nfolds*SP.arange(n_genes)/n_genes)
 I = Icv==fold_j
 #grab the genes in chunk j
 genes = list(genes[I])
+#check if Kpop or Ktot contains Nan
+booleanK=SP.isnan(K)
 #set the widget for the progressbar
 bar = progressbar.ProgressBar(maxval=n_perm, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
 #execute analysis for each gene in chunk j
@@ -114,8 +116,7 @@ for gene in genes:
 	
 	print "+"
 	
-	#check if Kpop or Ktot contains Nan
-	booleanK=SP.isnan(K)
+	
 	#run the linear mixed model to get nominal pvalues
 	lmm = run_lmm(booleanK,peer_cov,Xc,Y,cov,K)
 	pv = lmm.getPv() #store nominal pv
