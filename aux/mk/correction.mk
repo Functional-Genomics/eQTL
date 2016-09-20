@@ -61,9 +61,10 @@ $(step3_dir)/panama/panama.tsv: $(step3_dir)/panama/panama.hdf5
 
 ##########################################
 # Transform the values after correcting...
+#ifneq ($(expr_corr_transform),none)
 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).tsv: $(step3_dir)/$(corr_method)/$(corr_method).tsv
 	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
-
+#endif
 #$(step3_dir)/panama/panama.$(expr_corr_transform).tsv: $(step3_dir)/panama/panama.tsv
 #	normalise_pheno.py $< $(expr_corr_transform) $@.tmp && mv $@.tmp $@
 

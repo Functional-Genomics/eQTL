@@ -74,6 +74,9 @@ is_defined=$(if $(subst undefined,,$(origin $(1))),$(1),)
 %.tsv: %.tsv.gz
 	gunzip -c $< > $@.tmp && mv $@.tmp $@
 
+# default rule
+go: all
+
 # no operation - do nothing :)
 nop:
 

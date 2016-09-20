@@ -26,16 +26,22 @@ step2: $(step2_dir)/complete
 $(step2_dir)/$(expr_matrix_filename).filtered.tsv: $(matched_expr_matrix) 
 	filtering_pheno.py $< $(min_expr) $(min_perc_samples) $(snr_threshold) $@.tmp &&  mv $@.tmp $@ 
 
+ifeq ($(internal_expr_qn),y)
+qn_ext=.qn
+else
+qn_ext=
+endif
+
 # Quantile normalization per classes/studies/groups
 $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.tsv $(sample2class_file)
 	irap_qn -i $< -m $(sample2class_file) -o $@.tmp && mv $@.tmp $@
 
 # Transform expression values of each gene across all the samples.
-$(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv
+$(step2_dir)/$(expr_matrix_filename).filtered$(qn_ext).trans.tsv: $(step2_dir)/$(expr_matrix_filename).filtered$(qn_ext).tsv
 	normalise_pheno.py $< $(expr_transform) $@.tmp && mv $@.tmp $@
 
 
-$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv $(gtf_eqtl_tsv)  $(samples_hdf5) $(cov_hdf5)
+$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered$(qn_ext).trans.tsv $(gtf_eqtl_tsv)  $(samples_hdf5) $(cov_hdf5)
 	rm -f $@.tmp &&\
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< -T && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \

@@ -44,7 +44,15 @@ $(report_dir)/settings.tsv: $(conf)
 	( $(foreach v,$(settings_vars), echo $v:::$($v);) echo num_vcfs:::$(words $(vcfs)); )  | sed "s/:::/\t/" > $@.tmp && mv $@.tmp $@
 
 # Copy the plots and tsv file to the report folder
-$(report_dir)/plots:  $(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_qn_clus.png $(report_dir)/expr_filtered_qn_pca.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/vcf_filtering.png $(report_dir)/expr_filtered_qn_trans_clus.png $(report_dir)/expr_filtered_qn_trans_pca.png $(report_dir)/$(expr_matrix_filename)_pca.png $(report_dir)/$(expr_matrix_filename)_clus.png $(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_clus.png $(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_pca.png copy_qtl_plots
+PLOTS_TARGETS=$(report_dir)/expr_filtered_clus.png $(report_dir)/expr_filtered_corrected_clus.png $(report_dir)/expr_filtered_pca.png $(report_dir)/expr_filtered_corrected_pca.png $(report_dir)/$(expr_matrix_filename)_pca.png $(report_dir)/vcf_filtering.png  $(report_dir)/$(expr_matrix_filename)_clus.png $(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_clus.png $(report_dir)/expr_filtered_corrected_$(expr_corr_transform)_pca.png copy_qtl_plots
+
+ifeq ($(expr_qn),y)
+PLOTS_TARGETS+=$(report_dir)/expr_filtered_qn_clus.png $(report_dir)/expr_filtered_qn_pca.png $(report_dir)/expr_filtered_qn_trans_clus.png $(report_dir)/expr_filtered_qn_trans_pca.png 
+else
+PLOTS_TARGETS+=$(report_dir)/expr_filtered_trans_clus.png $(report_dir)/expr_filtered_trans_pca.png
+endif
+
+$(report_dir)/plots:  $(PLOTS_TARGETS)
 
 copy_qtl_plots: $(foreach p,$(qtl_plots),$(report_dir)/$(notdir $(p)))
 

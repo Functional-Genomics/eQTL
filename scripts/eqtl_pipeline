@@ -224,8 +224,10 @@ geno_chr?=
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn
 
+# Quantile normalize the expression
+expr_qn=y
 
 volcano_title?=
 2d_plot_xlab?=
@@ -358,7 +360,14 @@ endif
 $(info *	eqtl_method=$(eqtl_method))
 #endif
 
-
+# used for backwards compatibility
+# this way the hash does not change when the QN is enabled
+# 
+ifeq ($(expr_qn),y)
+internal_expr_qn=
+else
+internal_expr_qn=
+endif
 
 #
 # TARGETS0=
@@ -407,7 +416,7 @@ step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut 
 endif
 
 
-step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(pheno_chr)  |md5sum|cut -f1 -d' '
+step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(pheno_chr) $(internal_expr_qn)  |md5sum|cut -f1 -d' '
 
 
 ifeq ($(corr_method),peer)
