@@ -4,6 +4,7 @@ function usage()
 {
         cat<<EOF
 
+This script just copy the input vcf file
 Usage:
 
 fix_merged_vcf_header.sh <filename.vcf.gz> <filename.fixedheader.vcf.gz>
@@ -31,11 +32,7 @@ if [ "$vcfout-" == "-" ]; then
     exit 1
 fi
 
-
-sample_name=$(echo $vcfin | cut -f 1 -d . ); subst_line=$(zcat $vcfin | grep '#CHROM' | sed "s/$/\t$sample_name/"); zcat $vcfin | sed "s/#CHROM.*$/$subst_line/g" |  bgzip -c > $vcfout.tmp && 
-
-mv $vcfout.tmp $vcfout
-rm -f $vcfout.tmp
+cp $vcfin $vcfout
 
 exit 0
 
