@@ -364,7 +364,7 @@ $(info *	eqtl_method=$(eqtl_method))
 # this way the hash does not change when the QN is enabled
 # 
 ifeq ($(expr_qn),y)
-internal_expr_qn=
+internal_expr_qn=y
 else
 internal_expr_qn=
 endif
