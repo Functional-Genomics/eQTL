@@ -54,7 +54,7 @@ $(step1b_dir)/all_chr.hdf5: $(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(
 All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/all_chr/step4/$(n_folds)_$(j).step4.tsv.gz)
 
 $(eqtl_dir)/all_chr/step1/$(n_folds)_%.hdf5: $(step1b_dir)/all_chr.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5 $(cov_sorted_hdf5)
-	mkdir -p $(@D) && eqtl_trans.py $<   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $* $@.tmp && mv $@.tmp $@
+	mkdir -p $(@D) && eqtl_trans.py $<   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(use_kinship) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $* $@.tmp && mv $@.tmp $@
 
 $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv: $(eqtl_dir)/all_chr/step1/%.hdf5 $(step1b_dir)/all_chr.hdf5  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5
 	eqtl_step2.py $(step1b_dir)/all_chr.hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $<  $@.tmp $@.meta && mv $@.meta $@.meta.tsv && mv $@.tmp $@
