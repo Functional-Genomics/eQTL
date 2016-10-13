@@ -541,8 +541,18 @@ all: step0 step1 step2 step3 step4 plots
 %.bed.gz.tbi: %.bed.gz
 	tabix -p bed $< || (rm -f $@ && exit 1)
 
+ifndef var_matrix
+# ensure that the samples in the cov matrix are the same that are in the 
+$(cov_hdf5).tsv:  $(cov_matrix) $(expr_matrix)
+	filter_rows.R $^ $@.tmp && mv $@.tmp $@
+else
+# variants are provided as a matrix
+ $(cov_hdf5).tsv: $(cov_matrix) $(matched_expr_matrix)
+	filter_rows.R $^ $@.tmp && mv $@.tmp $@
 
-$(cov_hdf5): $(cov_matrix)
+endif
+
+$(cov_hdf5): $(cov_hdf5).tsv
 	get_covariates.py $< $@.tmp && mv $@.tmp $@ 
 
 $(gtf_eqtl_tsv): $(subst .gz,,$(gtf_file))
