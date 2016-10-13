@@ -151,10 +151,21 @@ $(report_dir)/vcf_snps_1.tsv: $(VCF_STATS_1)
 	sed -i "s/ /\t/g" $@.tmp && \
 	cat $@.tmp.lst | mjoin -stdin  | tail -n +2 |tr " " "\t">> $@.tmp  && mv $@.tmp $@
 
-VCF_STATS_2=$(foreach c,$(geno_chr),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)
-vcf_stats_stats+=$(report_dir)/vcf_snps_2.tsv
 
 vcf_stats_targets=$(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_0.tsv
+TARGETS4+=$(VCF_STATS_0) $(VCF_STATS_1)
+###############
+## FILTER stats
+
+
+target_reports_vcfs1=$(VCF_STATS_0) $(VCF_STATS_1)
+
+ifeq ($(collect_filter_summary_stats),y)
+
+VCF_STATS_2=$(foreach c,$(geno_chr),$(step1a_dir)/$(c)/chr$(c)_merged.filt.FILTER.summary)
+vcf_stats_targets+=$(report_dir)/vcf_snps_2.tsv
+TARGETS4+=$(VCF_STATS_2)
+target_reports_vcfs1+=$(VCF_STATS_2)
 
 $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mkdir -p $(@D) && \
@@ -162,15 +173,15 @@ $(report_dir)/vcf_snps_2.tsv: $(VCF_STATS_2)
 	mjoin $^ | tail -n +2 |sed -E "s/\s+/\t/g;s/\s$$//">> $@.tmp &&\
 	mv  $@.tmp $@
 
-TARGETS4+=$(VCF_STATS_0) $(VCF_STATS_1) $(VCF_STATS_2)
+endif
+
 
 vcf_stats: $(vcf_stats_targets)
 
-$(report_dir)/vcf_filtering.png: $(report_dir)/vcf_snps_0.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_2.tsv  
+#$(report_dir)/vcf_snps_0.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_2.tsv  
+$(report_dir)/vcf_filtering.png: $(vcf_stats_targets)
 	get_barplot.py $^ $@.tmp && mv $@.tmp $@
 
-
-target_reports_vcfs1=$(VCF_STATS_0) $(VCF_STATS_1) $(VCF_STATS_2)
 
 endif
 

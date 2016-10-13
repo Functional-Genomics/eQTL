@@ -150,6 +150,14 @@ $(foreach l,$(vcfs),$(call file_exists,$(vcf_toplevel_dir)/$(l)))
 # needed due to plink
 CHANGE_BETA_SIGN=y
 
+merged_vcfs?=n
+# merged vcfs
+ifeq ($(merged_vcfs),y)
+fix_vcf_cmd?=fix_somatic_merged_vcf_header.sh
+vcf_filter_cmd?=merged_somatic_filter_vcf.sh
+# disable the gneration of stats
+override collect_filter_summary_stats:=n
+endif
 endif
 
 #
@@ -224,11 +232,15 @@ geno_chr?=
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn collect_filter_summary_stats
+
+# Generate summary statistics of the filters applied to the VCFs
+collect_filter_summary_stats?=y
 
 # Quantile normalize the expression
 expr_qn?=y
 
+# Plots
 volcano_title?=
 2d_plot_xlab?=
 2d_plot_title?=
