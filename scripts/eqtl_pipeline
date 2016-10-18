@@ -542,12 +542,17 @@ all: step0 step1 step2 step3 step4 plots
 	tabix -p bed $< || (rm -f $@ && exit 1)
 
 ifndef var_matrix
-# ensure that the samples in the cov matrix are the same that are in the 
-$(cov_hdf5).tsv:  $(cov_matrix) $(expr_matrix)
+# ensure that the samples in the cov matrix are the same that are in the expr. matrix
+# TODO: change filter rows to accept a parameter!
+$(cov_hdf5).tsv:  $(cov_matrix) $(dna_rna_mapfile).samples
 	filter_rows.R $^ $@.tmp && mv $@.tmp $@
+
+$(dna_rna_mapfile).samples: $(dna_rna_mapfile)
+	cut -f 1 $< | tr "\n" "\t" > $@.tmp && mv $@.tmp $@
+
 else
 # variants are provided as a matrix
- $(cov_hdf5).tsv: $(cov_matrix) $(matched_expr_matrix)
+$(cov_hdf5).tsv: $(cov_matrix) $(matched_expr_matrix)
 	filter_rows.R $^ $@.tmp && mv $@.tmp $@
 
 endif
