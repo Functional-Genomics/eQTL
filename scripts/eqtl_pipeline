@@ -549,6 +549,7 @@ $(cov_hdf5).tsv:  $(cov_matrix) $(dna_rna_mapfile).samples
 
 $(dna_rna_mapfile).samples: $(dna_rna_mapfile)
 	cut -f 1 $< | tr "\n" "\t" > $@.tmp && mv $@.tmp $@
+	echo "" >> $@
 
 else
 # variants are provided as a matrix
