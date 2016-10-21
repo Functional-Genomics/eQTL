@@ -3,6 +3,7 @@
 import sys,os
 import pandas as pd
 import scipy as sp
+import numpy.lib.arraysetops as aso
 
 def usage():
 	print '''
@@ -26,20 +27,21 @@ elif os.path.isfile(file2) != True:
         sys.exit(1)
 
 #open the 2 files
-var_file=pd.read_csv(file1,sep='\t',index_col=0)
-annotation = pd.read_csv(file2,sep='\t',index_col=0)
+var_file=pd.read_csv(file1,sep='\t',usecols=[0],chunksize=1000000)
+annotation = pd.read_csv(file2,sep='\t',usecols=[0])
 
+print 'Chunking the var matrix...'
+for c in var_file:
 #check if all the var in the var_file are in the geno_annotation file
-bv=sp.in1d(var_file.index.values,annotation.index.values)
-
-print 'Check consistency between the var_file and the annotation file'
+	diff = aso.setdiff1d(c.values,annotation.values)
+	print 'Check consistency between the var_file colnames chunk and the annotation file colnames'
 #check consistency between var_file and geno_annotation file
-if sum(bv) != var_file.index.values.shape[0]:
-       for var in var_file.index.values[~bv]:
-               sys.stderr.write('\nERROR: variant '+var+' not found in the annotation file\n')
-       sys.exit(1)
-else:
-	print 'OK!'
+	if diff.shape[0] != 0:
+	       for var in diff:
+	               sys.stderr.write('\nERROR: variant '+var+' not found in the annotation file\n')
+	       sys.exit(1)
+	else:
+		print 'OK!'
 
 
 sys.exit(0)
