@@ -5,7 +5,7 @@ import sys, os
 
 def usage():
 	print """
-This script filters by VAF and LOWSUPPORT and adds one new column to the original vcf file with the VAF value and print to stdout
+This script filters by VAF and HIGH-SUPPORT/NORMALPANEL filter flags of the vcf
 
 Usage:
 filter_somatic_merged_vcf.py <file.vcf.gz> <VAF_threshold> <chr> <use_pass> > filtered.vcf
@@ -46,8 +46,10 @@ if __name__ == "__main__":
 			else:
 				filter=lines[-2]
 				if use_pass == 'y':
-					if filter == 'LOWSUPPORT':
+					#if the FILTER flag is not about high-support or normal panel than continue
+					if filter != 'NORMALPANEL' and filter !='.':
 						continue
+				#everything passes
 				else:
 					pass
 				info=lines[-1]
