@@ -94,12 +94,12 @@ fi
 set -e
 if [ $usePass == true ]
 then
-	echo 'keeping only HIGH SUPPORT variants according to the variant calling pipeline filters' > /dev/stderr
+	echo 'keeping variants with HIGHSUPPORT and NORMALPANEL flag according to the variant calling pipeline filters' > /dev/stderr
 	filter_somatic_vcf.py $input 0.0 $chr y
 	echo 'Done' > /dev/stderr
 
 else
-	echo 'retaining variants with LOW and HIGH SUPPORT FILTER field' > /dev/stderr
+	echo 'keeping all the variants' > /dev/stderr
 	filter_somatic_vcf.py $input 0.0 $chr n
         echo 'Done' > /dev/stderr
 
