@@ -14,7 +14,7 @@ Options:
         -c    chromosome [INT; mandatory]
         -g    define minGQ [default=50]
         -d    define minDP [default=20]
-        -f    retaining also variants with LOW AND HIGH support [optional; default=filter only HIGH SUPPORT]
+        -f    retaining also variants with HIGH-support and NORMALPANEL as flag [optional; default=disable filters]
 	-h    show this help message
 
 EOF
@@ -28,7 +28,7 @@ then
 fi
 
 
-usePass=true
+usePass=false
 #useProb=false
 minGQ=50
 minDP=20
@@ -52,7 +52,7 @@ while getopts ":i:o:c:g:d:fh" opt; do
                         minDP=$OPTARG
                         ;;
                 f)
-                        usePass=false
+                        usePass=true
                         ;;
                 h)
                         usage
@@ -92,15 +92,15 @@ then
 fi
 
 set -e
-if [ $usePass == true ]
+if [ $usePass == false ]
 then
-	echo 'keeping variants with HIGHSUPPORT and NORMALPANEL flag according to the variant calling pipeline filters' > /dev/stderr
-	filter_somatic_vcf.py $input 0.0 $chr y
+	echo 'keeping all the variants' > /dev/stderr
+	filter_somatic_vcf.py $input 0.0 $chr n
 	echo 'Done' > /dev/stderr
 
 else
-	echo 'keeping all the variants' > /dev/stderr
-	filter_somatic_vcf.py $input 0.0 $chr n
+	echo 'keeping variants with HIGHSUPPORT and NORMALPANEL flag according to the variant calling pipeline filters' > /dev/stderr
+	filter_somatic_vcf.py $input 0.0 $chr y
         echo 'Done' > /dev/stderr
 
 fi
