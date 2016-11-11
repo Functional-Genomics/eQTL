@@ -37,7 +37,8 @@ if os.path.isfile(pheno) != True:
 	usage()
 	sys.exit(1)
 
-pheno = pd.read_csv(pheno, sep='\t', index_col=[0])
+pheno = pd.read_csv(pheno, sep='\t', index_col=[0],na_values='NA')
+pheno[pd.isnull(pheno)]=0
 threshold = float(threshold)
 perc_samples = float(perc_samples)
 
