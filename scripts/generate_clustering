@@ -117,11 +117,12 @@ if ( has.genes) {
   data <- cor(expr.df,method="spearman")
 } else {
   expr.df
-  data <- as.matrix(data.frame(expr.df))
+  data <- as.matrix(data.frame(expr.df,check.names=FALSE))
 }
 # remove NA
 data[is.na(data)] <- 0
-ncolors <- max(max(data,na.rm=T)-min(data,na.rm=T),50)
+#length(unique(round(as.vector(data),1)))
+ncolors <- round(max(max(data,na.rm=T)-min(data,na.rm=T),20),0)
 cat("Colors:",ncolors,"\n")
 labCol=NULL
 labRow=NULL
@@ -133,7 +134,8 @@ if ( nrow(data) > 250 ) {
 }
 colors <- topo.colors(ncolors)
 png(filename=out.file,width=900,height=900,res=150)
-
+options(expressions=10000)
+#head(data)
 heatmap.2(data,col=colors,scale="none",cexCol=0.8,cexRow=0.8,trace="none",keysize=1,ColSideColors= samples2colour[colnames(expr.df)],srtCol=45,na.rm=TRUE,labRow=labRow,labCol=labCol)
 dev.off()
 
