@@ -23,7 +23,7 @@ This script runs the eqtl analysis on a chunk of the gene expression matrix VS a
 
 Usage:
 
-eqtl_trans.py <allchr.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename>
+eqtl_trans.py <allchr.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename> <info_perm_file>
 
 peer_cov values = n | y [default=n] 
 use_kinship = n| y
@@ -48,7 +48,7 @@ def run_lmm(use_kinship,peer_cov,Xc,Y,cov,K):
 	return lmm
 
 
-if len(sys.argv[1:]) < 14:
+if len(sys.argv[1:]) < 15:
 	usage()
 	sys.stderr.write('ERROR: missing parameters\n')
 	sys.exit(1)
@@ -63,7 +63,6 @@ n_perm=int(n_perm)
 #take nfold and j to name the out file for each j
 nfolds = int(sys.argv[12])
 fold_j = int(sys.argv[13])
-
 
 if type(nfolds) != (int):
         usage()
@@ -86,8 +85,9 @@ elif use_kinship !='y' and use_kinship !='n':
 	sys.stderr.write('\nERROR: Please use either y or n for use_kinship\n')
 	sys.exit(1)
 
-#open outfile 
+#open outfiles 
 fout  = h5py.File(sys.argv[14],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
+info_out = h5py.File(sys.argv[15],'w')
 
 sys.stderr.write('\nParameters set in the association analysis:\ngenotype={0}; phenotype={1}; correction_metho={2}; correction_method_file={3}; Kinship_file={4}; covariates_file={5}; use_kinship={6}; peer_covariates={7}; cis_window={8}; number_permutation={9}; change_beta_sign={10}; n_folds={11}; fold_j={12}; outfile={13}'.format(geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign,nfolds,fold_j,fout))
 
@@ -121,7 +121,7 @@ bar = progressbar.ProgressBar(maxval=n_perm, widgets=[progressbar.Bar('=', '[', 
 #execute analysis for each gene in chunk j
 for gene in genes:
 
-	print ".. gene %s"%gene
+	print "\n.. gene %s"%gene
 
 	#1. get geno and pheno data
 	Y = data.getGeneExpression(gene,standardize=False)
@@ -139,11 +139,11 @@ for gene in genes:
 	lmm = run_lmm(use_kinship,peer_cov,Xc,Y,cov,K)
 	pv = lmm.getPv() #store nominal pv
 	RV={} #open empty dictionary to store results
-	
+	INFO = {} #open empty dictionary to store permuted pvalues
 	#permutation
 	r = 0
-	if n_perm > 1:
-		print 'number of permutations is set > 1; empirical pvalues will be computed.'
+	if n_perm > 100:
+		print '\nnumber of permutations is set > 100; empirical pvalues will be computed.'
 		#initilize the bar
 		bar.start()
 		SP.random.seed(0) #set random seed for each gene
@@ -160,10 +160,30 @@ for gene in genes:
 			bar.update(perm_i+1)
 		bar.finish()
 	else:
-		print 'number of permutations is set = 1; empirical pvalues will not be computed.'
-		idx = SP.random.permutation(Xc.shape[0]) #take indexes
-		Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
-		lmm_perm =run_lmm(use_kinship,peer_cov,Xc_perm,Y,cov,K)
+		print '\nnumber of permutations is set <= 100; empirical pvalues will not be computed.'
+		SP.random.seed(0)
+		list_perm_pvalues = []
+		list_perm_lambdas = []
+		for perm_i in xrange(int(n_perm)):		
+			idx = SP.random.permutation(Xc.shape[0]) #take indexes
+			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
+			lmm_perm =run_lmm(use_kinship,peer_cov,Xc_perm,Y,cov,K)
+			perm_pv = lmm_perm.getPv()
+			if perm_i == 0:
+				perm_pv_tmp_array = perm_pv
+			else:
+				perm_pv_tmp_array = SP.concatenate((perm_pv_tmp_array,perm_pv),axis=0)
+			pv0_min = perm_pv[0,:].min()
+			list_perm_pvalues.append(pv0_min)
+			list_perm_lambdas.append(getLambda(perm_pv[:])[0][0])
+		list_perm_pvalues = SP.array(list_perm_pvalues)
+		min_perm_pvalue = list_perm_pvalues.min()
+		list_perm_lambdas = SP.array(list_perm_lambdas)
+		mean_perm_lambda = list_perm_lambdas.mean()
+		std_perm_lambda = list_perm_lambdas.std()
+		INFO['all_pv_perm'] = perm_pv_tmp_array[:]
+		INFO['all_lambda_perm'] = list_perm_lambdas[:]
+	
 
 	# run the linear mixed model
 	RV['pv'] = pv
@@ -171,20 +191,23 @@ for gene in genes:
 	RV['qv'] = (SP.empty((1,pv.shape[1]))).astype(str)
 	RV['qv'][:] = 'NA' #fill the local adjusted pvalues with NAN since multiple test correction will be applied globally
 	#compute empirical pvalues if n_perm > 1
-	if n_perm > 1:
+	if n_perm > 100:
 		#compute how many MINIMUM permuted pvalues for each permutation are greater than each nominal pvalue and store the value
 		RV['pv_perm'] = SP.array([((r+1)/(float(n_perm)+1))],dtype=float) #generate array with one empirical pvaluee per gene
 		RV['pv_perm'] = RV['pv_perm'].reshape((1,len(RV['pv_perm']))) #reshape
-	else:
-		perm_pv = lmm_perm.getPv() #do not get empirical pvalue but just permuted ones
-		perm_pv_min = perm_pv[:].min()
-		RV['pv_perm'] = SP.array([perm_pv_min])
+	else: #if n_perm <=100
+		#perm_pv = lmm_perm.getPv() #do not get empirical pvalue but just permuted ones
+		#perm_pv_min = perm_pv[:].min()
+		#RV['pv_perm'] = SP.array([perm_pv_min])
+		RV['pv_perm'] = SP.array([min_perm_pvalue])
+
 
 	
 	#compute lambda
 	RV['lambda'] = getLambda(pv) # compute lambda on nominal pvalues
-	if n_perm ==  1: #no empirical pvalues
-		RV['lambda_perm'] = getLambda(perm_pv[:]) #get lambda for permuted pvalues
+	if n_perm <= 100: #no empirical pvalues
+		#RV['lambda_perm'] = getLambda(perm_pv[:]) #get lambda for permuted pvalues
+		RV['lambda_perm'] = SP.array([mean_perm_lambda,std_perm_lambda])
 
 	#compute beta
 	if change_beta_sign == 'y':
@@ -198,8 +221,10 @@ for gene in genes:
 
 	# export
 	gene_group = fout.create_group(gene)
+	gene_group2 = info_out.create_group(gene)
 	dumpDictHdf5(RV,gene_group)
-	print "gene kept %s"%gene
+	dumpDictHdf5(INFO,gene_group2)
+	print "\ngene kept %s"%gene
 
 fout.close()
 

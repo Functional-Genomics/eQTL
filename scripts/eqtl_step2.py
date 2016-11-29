@@ -37,7 +37,7 @@ if __name__=='__main__':
 	in_hdf5 = sys.argv[10] #list of fold_j files
 	summary = gzip.open(sys.argv[11],'wb') #outfile
 	metainfo = open(sys.argv[12],'w') #metainformation
-	header = ['geneID','chrom','pos','var_name','pv','pv_perm','qv','beta','lambda','lambda_perm','file']
+	header = ['geneID','chrom','pos','var_name','pv','pv_perm','qv','beta','lambda','lambda_perm_mean','lambda_perm_std','file']
 	header = pd.DataFrame(SP.array(header))
 	header.T.to_csv(summary,mode = 'a',sep='\t',header=None,index=None,compression='gzip')
 	#populate dictionary with data for eqtl
@@ -63,6 +63,7 @@ if __name__=='__main__':
 			path = '/'.join(SP.array([str(in_hdf5)])[0].split('/')[:-1])
 			pass
 	except:
+		print 'shape of perm_pv_tmp_array',perm_pv_tmp_array.shapi
                 sys.stderr.write('ERROR : unable to open '+in_hdf5+'\n')
 		sys.exit(1)
 
@@ -79,8 +80,10 @@ if __name__=='__main__':
 				temp['file'] = map(lambda x:x.split('/')[-1],SP.array([str(in_hdf5)]))
 				path = '/'.join(SP.array([str(in_hdf5)])[0].split('/')[:-1])
 				temp['lambda'] = map(lambda x:round(x,3),fgene['lambda'][:,0])
-				temp['lambda_perm'] = map(lambda x:round(x,3),fgene['lambda_perm'][:,0])
-				if n_perm > 1 :#if empirical pvalues have been computed			
+				lambda_perm = map(lambda x:round(x,3),fgene['lambda_perm'][:])
+				temp['lambda_perm_mean']=[lambda_perm[0]]
+				temp['lambda_perm_std'] =[lambda_perm[1]]
+				if n_perm > 100 :#if empirical pvalues have been computed			
 					idx = fgene['pv'][0,:].argmin()
 					#temp['pv_perm'] = map(lambda x:round(x,3),fgene['pv_perm'][:])
 					temp['pv_perm'] = fgene['pv_perm'][:]
@@ -105,7 +108,7 @@ if __name__=='__main__':
 					temp['geneID'] = SP.tile(SP.array([str(geneID)]),s_idx)
 					temp['file'] = map(lambda x:x.split('/')[-1],SP.tile(SP.array([str(in_hdf5)]),s_idx))
 					path = '/'.join((SP.tile(SP.array([str(in_hdf5)]),s_idx)[0]).split('/')[:-1])
-					if n_perm > 1 : 
+					if n_perm > 100 : 
 						#temp['pv_perm'] = map(lambda x:round(x,3),SP.tile(fgene['pv_perm'][:,0],s_idx))
 						temp['pv_perm'] = SP.tile(fgene['pv_perm'][:,0],s_idx)
 					else:
@@ -120,7 +123,8 @@ if __name__=='__main__':
 					temp['pos'] = pos
 					temp['var_names']=fgene['var_names'][idx]
 					temp['lambda'] = map(lambda x:round(x,3),SP.tile(fgene['lambda'][:,0],s_idx))
-					temp['lambda_perm'] = map(lambda x:round(x,3),SP.tile(fgene['lambda_perm'][:,0],s_idx))
+					temp['lambda_perm_mean'] = map(lambda x:round(x,3),SP.tile(fgene['lambda_perm'][:][0],s_idx))
+					temp['lambda_perm_std'] = map(lambda x:round(x,3),SP.tile(fgene['lambda_perm'][:][1],s_idx))
 				else:
 					print "no pvalues <= alpha"
 					path = '/'.join(SP.array([str(in_hdf5)])[0].split('/')[:-1])
@@ -128,7 +132,7 @@ if __name__=='__main__':
 		except:
 			print "{0}:  nothing significant in here".format(geneID)
 			pass
-		temp_df = pd.DataFrame(SP.vstack((temp['geneID'][:],temp['chrom'][:],temp['pos'][:],temp['var_names'][:],temp['pv'][:],temp['pv_perm'][:],temp['qv'][:],temp['beta'][:],temp['lambda'][:],temp['lambda_perm'][:],temp['file'][:])).T)
+		temp_df = pd.DataFrame(SP.vstack((temp['geneID'][:],temp['chrom'][:],temp['pos'][:],temp['var_names'][:],temp['pv'][:],temp['pv_perm'][:],temp['qv'][:],temp['beta'][:],temp['lambda'][:],temp['lambda_perm_mean'][:],temp['lambda_perm_std'][:],temp['file'][:])).T)
 		temp_df.to_csv(summary, mode = 'a',sep='\t',header=None,index=None,compression='gzip')
 	f.close()
 		#write some meta information
