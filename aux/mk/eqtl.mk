@@ -38,7 +38,7 @@ $(info trans-EQTL mode)
 # Trans specific
 $(shell mkdir -p $(step1b_dir))
 $(shell mkdir -p $(eqtl_dir)/all_chr/)
-$(shell mkdir -p $(eqtl_dir)/all_chr/step1)
+$(shell mkdir -p $(eqtl_dir)/all_chr/step1/aux)
 $(shell mkdir -p $(eqtl_dir)/all_chr/step2)
 $(shell mkdir -p $(eqtl_dir)/all_chr/step3)
 $(shell mkdir -p $(eqtl_dir)/all_chr/step4)
@@ -53,8 +53,8 @@ $(step1b_dir)/all_chr.hdf5: $(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(
 # across the whole genome
 All_QTL_JOBS=$(foreach j,$(shell seq $(n_folds)), $(eqtl_dir)/all_chr/step4/$(n_folds)_$(j).step4.tsv.gz)
 
-$(eqtl_dir)/all_chr/step1/$(n_folds)_%.hdf5: $(step1b_dir)/all_chr.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5 $(cov_sorted_hdf5)
-	mkdir -p $(@D) && eqtl_trans.py $<   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(use_kinship) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $* $@.tmp && mv $@.tmp $@
+$(eqtl_dir)/all_chr/step1/$(n_folds)_%.hdf5 $(eqtl_dir)/all_chr/step1/aux/$(n_folds)_%.hdf5: $(step1b_dir)/all_chr.hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5 $(cov_sorted_hdf5)
+	mkdir -p $(@D) && eqtl_trans.py $<   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(use_kinship) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $* $@.tmp $(subst step1/,step1/aux/,$@) && mv $@.tmp $@
 
 $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz $(eqtl_dir)/all_chr/step2/%.step2.tsv.gz.meta.tsv: $(eqtl_dir)/all_chr/step1/%.hdf5 $(step1b_dir)/all_chr.hdf5  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5
 	eqtl_step2.py $(step1b_dir)/all_chr.hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $<  $@.tmp $@.meta && mv $@.meta $@.meta.tsv && mv $@.tmp $@
@@ -94,8 +94,8 @@ endef
 
 # $(1) = chr
 define make-qtl-rule-chr=
-$(eqtl_dir)/$(1)/$(n_folds)_%.hdf5: $(step1b_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5 $(cov_sorted_hdf5)
-	mkdir -p $$(@D) && $(eqtl_cmd1) $(step1b_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(use_kinship) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $$* $$@.tmp && mv $$@.tmp $$@
+$(eqtl_dir)/$(1)/$(n_folds)_%.hdf5 $(eqtl_dir)/$(1)/aux/$(n_folds)_%.hdf5: $(step1b_dir)/$(1)/chr$(1).hdf5 $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(kpop_file) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5 $(cov_sorted_hdf5)
+	mkdir -p $$(@D)/aux && $(eqtl_cmd1) $(step1b_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(use_kinship) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $$* $$@.tmp  $$(subst /$(1)/,/$(1)/aux/,$$@) $(1) && mv $$@.tmp $$@
 
 $(eqtl_dir)/$(1)/%.step2.tsv.gz $(eqtl_dir)/$(1)/%.step2.tsv.gz.meta.tsv: $(eqtl_dir)/$(1)/%.hdf5 $(step1b_dir)/$(1)/chr$(1).hdf5  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5
 	eqtl_step2.py $(step1b_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $$<  $$@.tmp $$@.meta && mv $$@.meta $$@.meta.tsv && mv $$@.tmp $$@
