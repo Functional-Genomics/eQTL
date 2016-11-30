@@ -75,6 +75,13 @@ $(report_dir)/expr_filtered_qn_clus.png:  $(step2_dir)/$(expr_matrix_filename).f
 $(report_dir)/expr_filtered_qn_trans_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.clus.png $(step2_dir)/$(expr_matrix_filename).filtered.qn.trans.tsv
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
 
+$(report_dir)/expr_filtered_trans_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.trans.clus.png $(step2_dir)/$(expr_matrix_filename).filtered.trans.tsv
+	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
+
+$(report_dir)/expr_filtered_trans_pca.png:  $(step2_dir)/$(expr_matrix_filename).filtered.trans.pca.png $(step2_dir)/$(expr_matrix_filename).filtered.trans.tsv
+	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
+
+
 $(report_dir)/expr_filtered_clus.png:  $(step2_dir)/$(expr_matrix_filename).filtered.clus.png $(step2_dir)/$(expr_matrix_filename).filtered.tsv
 	mkdir -p $(@D) && cp $^ $(@D) && cp $< $@
 
