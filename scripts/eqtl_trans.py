@@ -23,10 +23,11 @@ This script runs the eqtl analysis on a chunk of the gene expression matrix VS a
 
 Usage:
 
-eqtl_trans.py <allchr.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename> <info_perm_file>
+eqtl_trans.py <allchr.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename> <info_perm_file> <gene_cov.hdf5>
 
 peer_cov values = n | y [default=n] 
 use_kinship = n| y
+gene_cov.hdf5 is optional [default=n]
 '''
 
 def run_lmm(use_kinship,peer_cov,Xc,Y,cov,K):
@@ -89,7 +90,16 @@ elif use_kinship !='y' and use_kinship !='n':
 fout  = h5py.File(sys.argv[14],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 info_out = h5py.File(sys.argv[15],'w')
 
-sys.stderr.write('\nParameters set in the association analysis:\ngenotype={0}; phenotype={1}; correction_metho={2}; correction_method_file={3}; Kinship_file={4}; covariates_file={5}; use_kinship={6}; peer_covariates={7}; cis_window={8}; number_permutation={9}; change_beta_sign={10}; n_folds={11}; fold_j={12}; outfile={13}'.format(geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign,nfolds,fold_j,fout))
+if len(sys.argv[1:]) == 16:
+        gene_cov = h5py.File(sys.argv[16],'r')
+        gene_cov_matrix = gene_cov['covariates'][:] #get matrix of covariates
+        gene_cov_genes = gene_cov['col_header/phenotype_ID'][:] #get phenotype names from gene covariates
+        g_cov_used = 'y'
+else:
+        g_cov_used = 'n'
+
+
+sys.stderr.write('\nParameters set in the association analysis:\ngenotype={0}; phenotype={1}; correction_metho={2}; correction_method_file={3}; Kinship_file={4}; covariates_file={5}; use_kinship={6}; peer_covariates={7}; cis_window={8}; number_permutation={9}; change_beta_sign={10}; n_folds={11}; fold_j={12}; outfile={13}; gene_covariates_used={14}'.format(geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign,nfolds,fold_j,fout,g_cov_used))
 
 # load data 
 import data as DATA
@@ -134,9 +144,14 @@ for gene in genes:
 #		print "...excluding gene %s %s" %(gene,e)
 
         print "+"
-
+        if g_cov_used == 'y': #if gene covariates are used
+                i = SP.in1d(gene_cov_genes[:],gene)
+                igene_cov_matrix = gene_cov_matrix[:,i]
+                g_cov = SP.hstack((cov[:],igene_cov_matrix[:]))
+        else:
+                g_cov = cov[:]
  	#run the linear mixed model to get nominal pvalues
-	lmm = run_lmm(use_kinship,peer_cov,Xc,Y,cov,K)
+	lmm = run_lmm(use_kinship,peer_cov,Xc,Y,g_cov,K)
 	pv = lmm.getPv() #store nominal pv
 	RV={} #open empty dictionary to store results
 	INFO = {} #open empty dictionary to store permuted pvalues
@@ -150,7 +165,7 @@ for gene in genes:
 		for perm_i in xrange(int(n_perm)):
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
 			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
-			lmm_perm =run_lmm(use_kinship,peer_cov,Xc_perm,Y,cov,K) #run the lmm model on permuted genotype
+			lmm_perm =run_lmm(use_kinship,peer_cov,Xc_perm,Y,g_cov,K) #run the lmm model on permuted genotype
 			pv_perm = lmm_perm.getPv()# get pvalues 
 			pv0_min = pv_perm[0,:].min() #get minimum permuted pvalue
 			if pv0_min <= pv[:].min():
@@ -167,7 +182,7 @@ for gene in genes:
 		for perm_i in xrange(int(n_perm)):		
 			idx = SP.random.permutation(Xc.shape[0]) #take indexes
 			Xc_perm = Xc[idx,:] #shuffle the samples of the genome matrix
-			lmm_perm =run_lmm(use_kinship,peer_cov,Xc_perm,Y,cov,K)
+			lmm_perm =run_lmm(use_kinship,peer_cov,Xc_perm,Y,g_cov,K)
 			perm_pv = lmm_perm.getPv()
 			if perm_i == 0:
 				perm_pv_tmp_array = perm_pv
