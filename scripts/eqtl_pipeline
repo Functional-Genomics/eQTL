@@ -169,6 +169,14 @@ $(call file_exists,$(cov_matrix))
 $(info *	cov_matrix=$(cov_matrix))
 # eqtl_pipeline vcfs=`ls mydir/*.vcf.gz`
 
+# 
+ifndef pheno_cov_matrix
+pheno_cov_matrix=none
+else
+$(call file_exists,$(pheno_cov_matrix))
+endif
+
+$(info *	pheno_cov_matrix=$(pheno_cov_matrix))
 
 #********* 
 # GTF file?
@@ -441,6 +449,9 @@ step3_hash!=echo $(step1b_hash) $(step2_hash)|md5sum|cut -f1 -d' '
 endif
 endif
 
+# qtl/step4 hash
+step4_hash!=echo $(step3_hash) $(eqtl_method) $(cis_window) $(n_permutations) $(snp_alpha) $(qtl_threshold) $(pheno_cov_matrix)|md5sum|cut -f 1 -d' '
+
 ##########
 # Folders
 step1_dir:=$(name)/dna_$(step1_hash)
@@ -459,7 +470,8 @@ endif
 
 step2_dir:=$(name)/$(subfolder_name)rna_$(step2_hash)
 step3_dir:=$(name)/$(subfolder_name)$(corr_method)_$(step3_hash)
-eqtl_dir:=$(step3_dir)/$(corr_method)/$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(qtl_threshold)
+eqtl_dir:=$(step3_dir)/$(corr_method)/$(step4_hash)
+#$(eqtl_method)_$(cis_window)_$(n_permutations)_$(snp_alpha)_$(qtl_threshold)
 report_dir=$(eqtl_dir)/report
 
 
@@ -479,7 +491,8 @@ ifneq ($(aggr_bed_file),)
 $(info * Genotype folder - burden and hdf5 files=$(step1b_dir))
 endif
 $(info * Phenotype folder (step2_dir)=$(step2_dir))
-$(info * QTL folder (step3_dir)=$(eqtl_dir))
+$(info * Phenotype folder (step3_dir)=$(step3_dir))
+$(info * QTL folder (step4_dir)=$(eqtl_dir))
 $(info * Report/plots folder =$(report_dir))
 $(info * )
 ###############
@@ -499,11 +512,26 @@ matched_expr_matrix_no_ext=$(step1a_dir)/$(expr_matrix_filename).matched
 samples_hdf5=$(step1b_dir)/samples.hdf5
 kpop_file=$(step1b_dir)/Kpop.hdf5
 
+# pheno covariates
+pheno_cov_hdf5=$(step2_dir)/$(notdir $(basename $(pheno_cov_matrix))).hdf5
+pheno_cov_hdf5_sorted=$(step2_dir)/$(notdir $(basename $(pheno_cov_matrix))).sorted.hdf5
+
 # 
 ifdef var_matrix
 var_matrix_filename=$(notdir $(basename $(var_matrix)))
 matched_var_matrix=$(step1a_dir)/$(var_matrix_filename).matched.tsv
 
+endif
+
+
+##############################
+# limix wrappers need a filename as a option
+ifeq ($(pheno_cov_matrix),none)
+pheno_cov_option=n
+pheno_cov_hdf5=
+pheno_cov_hdf5_sorted=
+else
+pheno_cov_option=$(pheno_cov_matrix)
 endif
 
 
@@ -560,6 +588,10 @@ endif
 
 $(cov_hdf5): $(cov_hdf5).tsv
 	get_covariates.py $< $@.tmp && mv $@.tmp $@ 
+# can we replace the above command with tsv2hdf5.py?
+
+$(pheno_cov_hdf5): $(pheno_cov_matrix)
+	tsv2hdf5.py  $<  'covariates' 'row_header/sample_ID' 'col_header/phenotype_ID' 'n'  $@.tmp && mv $@.tmp $@ 
 
 $(gtf_eqtl_tsv): $(subst .gz,,$(gtf_file))
 	get_annotation.sh $<  /dev/stdout | grep -E $(pheno_chr_re) > $@.tmp  && mv $@.tmp $@
@@ -572,8 +604,6 @@ phony_targets+=step0
 step0: $(cov_hdf5)
 ifdef lsf_mode
 	sleep 120
-else
-	sleep 1
 endif
 #	$(call p_info,"Step 0 complete")
 

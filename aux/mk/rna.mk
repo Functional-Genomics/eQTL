@@ -36,19 +36,32 @@ endif
 $(step2_dir)/$(expr_matrix_filename).filtered.qn.tsv: $(step2_dir)/$(expr_matrix_filename).filtered.tsv $(sample2class_file)
 	irap_qn -i $< -m $(sample2class_file) -o $@.tmp && mv $@.tmp $@
 
-# Transform expression values of each gene across all the samples.
+# Transforms the expression values of each gene across all the samples.
 $(step2_dir)/$(expr_matrix_filename).filtered$(qn_ext).trans.tsv: $(step2_dir)/$(expr_matrix_filename).filtered$(qn_ext).tsv
 	normalise_pheno.py $< $(expr_transform) $@.tmp && mv $@.tmp $@
 
+############################################
+# Sort the ids based on the sample file
+$(step2_dir)/hdf5_sort_files: $(pheno_cov_hdf5_sorted) $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
+	$(call p_info,"Sorting $^ complete") touch $@
 
-$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).filtered$(qn_ext).trans.tsv $(gtf_eqtl_tsv)  $(samples_hdf5) $(cov_hdf5)
-	rm -f $@.tmp &&\
+$(pheno_cov_hdf5_sorted): $(pheno_cov_hdf5) $(samples_hdf5)
+	sort_ids.py $(samples_hdf5) sample_ID $< $@.tmp p_covariates &&
+	mv $@.tmp $@
+
+$(cov_sorted_hdf5): $(cov_hdf5) $(samples_hdf5)
+	sort_ids.py $(samples_hdf5) sample_ID $< $@.tmp s_covariates &&
+	mv $@.tmp $@
+
+# phenotype
+$(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).hdf5 $(samples_hdf5)
+	sort_ids.py $(samples_hdf5) sample_ID $< $@.tmp phenotype &&
+	mv $@.tmp $@
+
+$(step2_dir)/$(expr_matrix_filename).hdf5: $(step2_dir)/$(expr_matrix_filename).filtered$(qn_ext).trans.tsv $(gtf_eqtl_tsv)  
 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< -T && \
 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
-	cp $(cov_hdf5) $(cov_sorted_hdf5).tmp && \
-	sort_ids.py $@.tmp $(cov_sorted_hdf5).tmp $(samples_hdf5) &&\
-	mv $(cov_sorted_hdf5).tmp $(cov_sorted_hdf5) && \
-	mv $@.tmp $@ 
+	mv $@.tmp $@
 
 # $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_filename).limix.hdf5  $(samples_hdf5) $(cov_hdf5)
 # 	cp $(cov_hdf5) $(cov_sorted_hdf5).tmp && \
@@ -60,13 +73,11 @@ $(step2_dir)/$(expr_matrix_filename).filtered.hdf5: $(step2_dir)/$(expr_matrix_f
 # 	$(LIMIX_BINARY)/limix_converter --outfile=$@.tmp --csv=$< && \
 # 	hdf_annotation.py $(gtf_eqtl_tsv) $@.tmp && \
 # 	mv $@.tmp $@ 
-
-
-$(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-	if [ -e $@ ] ; then sleep 1; touch $@; fi
+#$(cov_sorted_hdf5): $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
+#	if [ -e $@ ] ; then sleep 1; touch $@; fi
 
 # $(step2_dir)/$(expr_matrix_filename).filtered.hdf5
-$(step2_dir)/complete:  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
+$(step2_dir)/complete: $(step2_dir)/hdf5_sort_files $(step2_dir)/$(expr_matrix_filename).filtered.clus.png
 	$(call p_info,"Step 2 complete") touch $@
 
 # step 2 needs the kpop file
