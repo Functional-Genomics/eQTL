@@ -531,7 +531,7 @@ pheno_cov_option=n
 pheno_cov_hdf5=
 pheno_cov_hdf5_sorted=
 else
-pheno_cov_option=$(pheno_cov_matrix)
+pheno_cov_option=$(pheno_cov_hdf5_sorted)
 endif
 
 
