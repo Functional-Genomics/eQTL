@@ -587,7 +587,8 @@ $(cov_hdf5).tsv: $(cov_matrix) $(matched_expr_matrix)
 endif
 
 $(cov_hdf5): $(cov_hdf5).tsv
-	get_covariates.py $< $@.tmp && mv $@.tmp $@ 
+#	get_covariates.py $< $@.tmp && mv $@.tmp $@
+	tsv2hdf5.py  $<  'covariates' 'row_header/sample_ID' 'col_header/phenotype_ID' 'n'  $@.tmp && mv $@.tmp $@ 
 # can we replace the above command with tsv2hdf5.py?
 
 $(pheno_cov_hdf5): $(pheno_cov_matrix)
