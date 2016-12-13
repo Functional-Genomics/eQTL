@@ -80,14 +80,10 @@ if tag == 'phenotype':
 	dset = out.create_dataset('phenotype/row_header/sample_ID',data=f['phenotype/row_header/sample_ID'][:][ip])
 	dset = out.create_dataset('phenotype/matrix',data=f['phenotype/matrix'][:][ip,:])
 	dset = out.create_dataset('phenotype/col_header/phenotype_ID',data=f['phenotype/col_header/phenotype_ID'][:])
-	#dset = out.create_dataset('phenotype/Ytransformed',data=pheno['phenotype/Ytransformed'][:][ip,:])
-	#pheno['phenotype/row_header/sample_ID'][:]=pheno['phenotype/row_header/sample_ID'][:][ip]
-	#pheno['phenotype/matrix'][:] = pheno['phenotype/matrix'][:][ip,:]
-	#pheno['phenotype/Ytransformed'][:] = pheno['phenotype/Ytransformed'][:][ip,:]
-elif tag == 's_covariates': #for sample covariates
-	dset = out.create_dataset('row_header/sample_ID',data=f['row_header/sample_ID'][:][ic])
-	dset = out.create_dataset('covariates',data = f['covariates'][:][ic,:])
-else: #for gene covariates
+	dset = out.create_dataset('phenotype/chrom',data=f['phenotype/chrom'][:])
+	dset = out.create_dataset('phenotype/end',data=f['phenotype/end'][:])
+	dset = out.create_dataset('phenotype/start',data=f['phenotype/start'][:])
+else: #for all other  covariates
 	dset = out.create_dataset('row_header/sample_ID',data=f['row_header/sample_ID'][:][ic])
 	dset = out.create_dataset('covariates',data = f['covariates'][:][ic,:])
 	dset = out.create_dataset('col_header/phenotype_ID',data=f['col_header/phenotype_ID'][:])
