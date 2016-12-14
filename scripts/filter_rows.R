@@ -29,6 +29,10 @@ stop = FALSE
 # TODO: add checks
 f = file(tsv.file, "r")
 write.con = file(out.file, "w")
+# Manual - print header
+header = readLines(f, n = 1)
+writeLines(header,write.con,useBytes=TRUE)
+
 while(!stop) {
     next.line = unlist(strsplit(readLines(f, n = 1),split="\t",fixed=T),recursive=FALSE,use.names=F)
     
