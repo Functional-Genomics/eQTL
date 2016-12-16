@@ -186,9 +186,13 @@ endif
 vcf_stats: $(vcf_stats_targets)
 
 #$(report_dir)/vcf_snps_0.tsv $(report_dir)/vcf_snps_1.tsv $(report_dir)/vcf_snps_2.tsv  
+ifeq ($(words $(vcf_stats_targets)),3)
 $(report_dir)/vcf_filtering.png: $(vcf_stats_targets)
 	get_barplot.py $^ $@.tmp && mv $@.tmp $@
-
+else
+$(report_dir)/vcf_filtering.png: $(vcf_stats_targets)
+	echo Skipping the generation of $@ && touch $@
+endif
 
 endif
 
