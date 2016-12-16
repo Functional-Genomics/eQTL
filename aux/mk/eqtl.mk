@@ -43,6 +43,7 @@ $(shell mkdir -p $(eqtl_dir)/all_chr/step2)
 $(shell mkdir -p $(eqtl_dir)/all_chr/step3)
 $(shell mkdir -p $(eqtl_dir)/all_chr/step4)
 
+TARGETS6+=$(step1b_dir)/all_chr.hdf5
 #
 $(step1b_dir)/all_chr.hdf5: $(foreach chr,$(geno_chr),$(step1b_dir)/$(chr)/chr$(chr).hdf5)
 	$(file >$@.lst.txt,$^) \
@@ -73,6 +74,7 @@ $(eqtl_dir)/summary.tsv: $(All_QTL_JOBS)
 	zcat $< | head -n 1 > $@.tmp &&\
 	cat $@.lst.txt | while read n; do zcat $$n | tail -n +2 >> $@.tmp; done &&\
 	mv $@.tmp $@
+
 
 TARGETS8+=$(eqtl_dir)/summary.tsv
 
