@@ -209,6 +209,7 @@ endif
 
 $(foreach chr,$(geno_chr),$(eval $(call make-meqtl-rule-chr,$(chr))))
 
+
 # merge all files into one
 $(eqtl_dir)/summary.tsv: $(foreach chr,$(geno_chr),$(eqtl_dir)/$(chr).tsv)
 	head -n 1 $< > $@.tmp && \
@@ -223,6 +224,8 @@ endif
 # end if
 ##################################################
 step4: $(step1b_dir)/complete $(step2_dir)/complete $(step3_dir)/complete $(eqtl_dir)/step4.complete report
+
+eqtl_summary:  $(eqtl_dir)/summary.tsv
 
 $(eqtl_dir)/step4.complete:  $(eqtl_dir)/summary.tsv $(qtl_plots)
 	$(call p_info,"Step 4 complete") touch $@
