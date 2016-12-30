@@ -33,7 +33,7 @@ else
     if "-$feature" == "-transcript"; then
 	awk '$3 == "transcript" {print $1,$4,$5,$12,$7}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g;s/\"//g" > $out
     else
-	echo "INVALID feature $feature: supported" > /dev/stderr
+	echo "INVALID feature $feature: supported features - gene, transcript" > /dev/stderr
     fi
 fi
 
