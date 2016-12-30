@@ -3,13 +3,14 @@
 function usage() {
 
     cat<<EOF    
-Usage: get_annotation.sh <infile.gtf> <outfile.csv>
+Usage: get_annotation.sh <infile.gtf> feature <outfile.csv>
 EOF
 
 }
 
 gtf=$1
-out=$2
+feature=$2
+out=$3
 
 if [ "$gtf-" == "-" ]; then
     echo "ERROR: missing infile.gtf"
@@ -26,7 +27,7 @@ if [ "$out-" == "-" ]; then
     exit 1
 fi
 
-awk '$3 == "gene" {print $1,$4,$5,$10,$7}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g;s/\"//g" > $out
+awk '$3 == "$feature" {print $1,$4,$5,$10,$7}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g;s/\"//g" > $out
 
 exit 0
 

@@ -182,6 +182,9 @@ endif
 $(info *       gtf_file  = $(gtf_file))
 $(call file_exists,$(gtf_file))
 
+# feature in the gtf file for which we want to get the annotations. E.g, gene, exon, transcript (default: gene)
+gtf_feature?=gene
+
 #********
 #
 ifndef class2colours_file
@@ -236,7 +239,7 @@ geno_chr?=
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn collect_filter_summary_stats
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn collect_filter_summary_stats gtf_feature
 
 # Generate summary statistics of the filters applied to the VCFs
 collect_filter_summary_stats?=y
@@ -591,8 +594,9 @@ $(cov_hdf5): $(cov_hdf5).tsv
 $(pheno_cov_hdf5): $(pheno_cov_matrix)
 	tsv2hdf5.py  $<  'covariates' 'row_header/sample_ID' 'col_header/phenotype_ID' 'n'  $@.tmp && mv $@.tmp $@ 
 
+
 $(gtf_eqtl_tsv): $(subst .gz,,$(gtf_file))
-	get_annotation.sh $<  /dev/stdout | grep -E $(pheno_chr_re) > $@.tmp  && mv $@.tmp $@
+	get_annotation.sh $<  $(gtf_feature)  /dev/stdout | grep -E $(pheno_chr_re) > $@.tmp  && mv $@.tmp $@
 
 ################################################################################
 #
