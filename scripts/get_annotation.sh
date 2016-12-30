@@ -27,7 +27,16 @@ if [ "$out-" == "-" ]; then
     exit 1
 fi
 
-awk '$3 == "$feature" {print $1,$4,$5,$10,$7}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g;s/\"//g" > $out
+if "-$feature" == "-gene"; then
+    awk '$3 == "gene" {print $1,$4,$5,$10,$7}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g;s/\"//g" > $out
+else
+    if "-$feature" == "-transcript"; then
+	awk '$3 == "transcript" {print $1,$4,$5,$12,$7}' $gtf | sed "s/chr//g;s/\;//g;s/ /\t/g;s/\"//g" > $out
+    else
+	echo "INVALID feature $feature: supported" > /dev/stderr
+    fi
+fi
+
 
 exit 0
 
