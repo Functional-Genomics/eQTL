@@ -90,7 +90,7 @@ elif use_kinship !='y' and use_kinship !='n':
 fout  = h5py.File(sys.argv[14],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 info_out = h5py.File(sys.argv[15],'w')
 
-if len(sys.argv[1:]) == 16:
+if sys.argv[16]!='n':
         gene_cov = h5py.File(sys.argv[16],'r')
         gene_cov_matrix = gene_cov['covariates'][:] #get matrix of covariates
         gene_cov_genes = gene_cov['col_header/phenotype_ID'][:] #get phenotype names from gene covariates
