@@ -56,6 +56,8 @@ $(report_dir)/plots:  $(PLOTS_TARGETS)
 
 copy_qtl_plots: $(foreach p,$(qtl_plots),$(report_dir)/$(notdir $(p)))
 
+phony_targets+=copy_qtl_plots $(report_dir)/plots plots report  
+
 define make-cp-rule=
 $(report_dir)/$(notdir $(1)): $(1)
 	cp -a $$< $$@
