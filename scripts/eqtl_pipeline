@@ -169,7 +169,12 @@ $(info *	cov_matrix=$(cov_matrix))
 ifndef pheno_cov_matrix
 pheno_cov_matrix=none
 else
+ifeq ($(pheno_cov_matrix),)
+pheno_cov_matrix=none
+endif
+ifneq ($(pheno_cov_matrix),none)
 $(call file_exists,$(pheno_cov_matrix))
+endif
 endif
 
 $(info *	pheno_cov_matrix=$(pheno_cov_matrix))
