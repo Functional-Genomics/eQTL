@@ -126,6 +126,8 @@ fi
 echo "info: env variables passed to LSF - LSF_PARAMS QUEUE THREADS MEM LSF_GROUP"
 
 EQTL_ARGS="$* lsf_mode=1"
+# remove --trace
+EQTL_ARGS=$(echo $EQTL_ARGS|sed "s/\s--trace\s/ /")
 
 RAND=`perl -e "print int(rand()*10);"`
 DATE=`date "+%w%H%M%S"`
@@ -264,7 +266,7 @@ submit_jobs eqtl9_$JOBNAME_SUF "$PREV" eqtl_pipeline $EQTL_ARGS
 targets=step4
 submit_jobs  eqtl10_$JOBNAME_SUF "eqtl9_$JOBNAME_SUF*" eqtl_pipeline $EQTL_ARGS
 
-submit_job_get_email  eqtll_$JOBNAME_SUF "eqtl9_$JOBNAME_SUF*" eqtl_pipeline $EQTL_ARGS $targets
+submit_job_get_email  eqtll_$JOBNAME_SUF "eqtl10_$JOBNAME_SUF*" eqtl_pipeline $EQTL_ARGS $targets
 
 resume_job $JOB0
 exit 0
