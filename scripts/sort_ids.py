@@ -30,7 +30,7 @@ if os.path.isfile(filename)!=True:
 	sys.exit(1)
 
 if os.path.isfile(ref) != True:
-	sys.sderr.write('ERROR: '+ref+' not found\n')
+	sys.stderr.write('ERROR: '+ref+' not found\n')
 	sys.exit(1)
 
 if tag not in ['phenotype','s_covariates', 'p_covariates']:
