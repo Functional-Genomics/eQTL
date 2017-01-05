@@ -10,6 +10,10 @@ import progressbar
 import limix.modules.qtl as QTL
 import limix.stats.fdr as FDR
 
+import readline # because of an error with importing rpy2.robjects
+from rpy2.robjects.packages import importr
+from rpy2.robjects.vectors import FloatVector
+
 import scipy as SP
 import scipy.linalg as LA
 import os
@@ -18,17 +22,20 @@ import pdb
 import time
 import h5py
 
+stats = importr('stats')
+
 def usage():
         print '''
 This script runs the eqtl analysis on a chunk of the gene expression matrix.
 
 Usage:
 
-eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename> <info_perm_file> <gene_cov.hdf5>
+eqtl_cis.py <chr1.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename> <info_perm_file> <multiple_test_correction> <gene_cov.hdf5> 
 
 peer_cov values = n | y [default=n] 
 use_kinship = n | y 
 gene_cov.hdf5 is optional [default=n]
+multiple_test_correction= fdr | bonferroni [default=fdr]
 '''
 
 def run_lmm(use_kinship,peer_cov,Xc,Y,cov,K):
@@ -49,7 +56,7 @@ def run_lmm(use_kinship,peer_cov,Xc,Y,cov,K):
 			lmm = QTL.test_lmm(Xc,Y, K=SP.eye(Xc.shape[0])) #exclude cov in the model since already used by peer
 	return lmm
 
-if len(sys.argv[1:]) < 15:
+if len(sys.argv[1:]) < 16:
 	sys.stderr.write('ERROR: missing parameters\n')
 	usage()
 	sys.exit(1)
@@ -89,14 +96,16 @@ elif use_kinship != 'y' and use_kinship != 'n':
 #open outfile 
 fout  = sys.argv[14]  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 info_out = sys.argv[15] #hdf5 file to store permuted pvalues and inflation factors
+multiple_test_correction = sys.argv[16] #multiple test correction method chosen
 
-if len(sys.argv[1:]) == 16:
-	gene_cov = h5py.File(sys.argv[16],'r')
+if len(sys.argv[1:]) == 17:
+	gene_cov = h5py.File(sys.argv[17],'r')
 	gene_cov_matrix = gene_cov['covariates'][:] #get matrix of covariates
 	gene_cov_genes = gene_cov['col_header/phenotype_ID'][:] #get phenotype names from gene covariates
 	g_cov_used = 'y'
 else:
 	g_cov_used = 'n'
+
 sys.stderr.write('\nParameters set in the association analysis:\ngenotype={0}; phenotype={1}; correction_metho={2}; correction_method_file={3}; Kinship_file={4}; covariates_file={5}; use_kinship={6}; peer_covariates={7}; cis_window={8}; number_permutation={9}; change_beta_sign={10}; n_folds={11}; fold_j={12}; outfile={13}; gene_covariates_used={14}'.format(geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign,nfolds,fold_j,fout,g_cov_used))
 
 #open the outfile
@@ -214,8 +223,10 @@ for gene in genes:
 		#RV['pv_perm'] = SP.array([perm_pv[:].min()])
 		RV['pv_perm'] = SP.array([min_perm_pvalue])
 
-		
-	RV['qv'] = FDR.qvalues(pv) #multiple test correction for nominal pvalues
+	if multiple_test_correction == 'fdr': #default
+		RV['qv'] = FDR.qvalues(pv) #multiple test correction for nominal pvalues with B-H
+	else:
+		RV['qv'] = SP.array(stats.p_adjust(FloatVector(pv[0].tolist()),method = 'bonferroni',n=float(pv.shape[1]))) #multiple test correction for nominal pvalues with Bonferroni 
 	RV['lambda'] = getLambda(pv) #get lambda for nominal pvalues
 	if n_perm <= 100:
 		#RV['lambda_perm'] = getLambda(perm_pv[:]) #calculate lambda on the the permutation
