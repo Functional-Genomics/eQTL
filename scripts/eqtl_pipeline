@@ -318,6 +318,7 @@ $(info * )
 $(info * Optional Parameters:)
 $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
 
+
 settings_vars=$(def_vars) sample2class_file cov_matrix dna_rna_mapfile expr_matrix corr_method maf
 
 ##############################
@@ -486,19 +487,24 @@ $(info * Output will be placed in $(name)/)
 ifndef var_matrix
 $(info * Genotype folder (step1_dir)=$(step1_dir))
 $(info * Genotype folder - merged vcfs=$(step1a_dir))
+genotype_folder=$(step1a_dir)
 else
 $(info * Genotype folder (step1_dir)=$(step1_dir))
 $(info * Genotype folder - files per chr=$(step1a_dir))
+genotype_folder=$(step1a_dir)
 endif
 
 ifneq ($(aggr_bed_file),)
 $(info * Genotype folder - burden and hdf5 files=$(step1b_dir))
+genotype_folder=$(step1b_dir)
 endif
 $(info * Phenotype folder (step2_dir)=$(step2_dir))
 $(info * Phenotype folder (step3_dir)=$(step3_dir))
 $(info * QTL folder (step4_dir)=$(eqtl_dir))
 $(info * Report/plots folder =$(report_dir))
 $(info * )
+
+
 ###############
 # names of files
 cov_hdf5=$(name)/$(notdir $(basename $(cov_matrix))).hdf5
@@ -526,6 +532,13 @@ var_matrix_filename=$(notdir $(basename $(var_matrix)))
 matched_var_matrix=$(step1a_dir)/$(var_matrix_filename).matched.tsv
 
 endif
+
+# also print the folders in the settings file
+report_folder=$(report_dir)
+phenotype_folder=$(step2_dir)
+norm_phenotye_folder=$(step3_dir)
+# genotype_folder defined above
+settings_vars+=report_folder phenotype_folder norm_phenotye_folder genotype_folder aggr_bed_file pheno_cov_hdf5_sorted kpop_file samples_hdf5
 
 
 ##############################
