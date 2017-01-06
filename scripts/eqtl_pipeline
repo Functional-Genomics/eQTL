@@ -244,7 +244,21 @@ geno_chr?=
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn collect_filter_summary_stats gtf_feature
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn collect_filter_summary_stats gtf_feature multiple_test_correction
+
+# default (only for cis analysis)
+multiple_test_correction?=fdr
+
+ifeq (,$(filter $(multiple_test_correction),fdr bonferroni))
+$(error FATAL ERROR: invalid value for multiple_test_correction)
+else
+ifeq (fdr,$(multiple_test_correction))
+# keep backwards compatibility
+multiple_test_correction_hash=
+else
+multiple_test_correction_hash=$(multiple_test_correction)
+endif
+endif
 
 # Generate summary statistics of the filters applied to the VCFs
 collect_filter_summary_stats?=y
@@ -455,7 +469,7 @@ endif
 endif
 
 # qtl/step4 hash
-step4_hash!=echo $(step3_hash) $(eqtl_method) $(cis_window) $(n_permutations) $(snp_alpha) $(qtl_threshold) $(pheno_cov_matrix)|md5sum|cut -f 1 -d' '
+step4_hash!=echo $(step3_hash) $(eqtl_method) $(cis_window) $(n_permutations) $(snp_alpha) $(qtl_threshold) $(pheno_cov_matrix) $(multiple_test_correction_hash)|md5sum|cut -f 1 -d' '
 
 ##########
 # Folders
