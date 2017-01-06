@@ -226,7 +226,9 @@ for gene in genes:
 	if multiple_test_correction == 'fdr': #default
 		RV['qv'] = FDR.qvalues(pv) #multiple test correction for nominal pvalues with B-H
 	else:
-		RV['qv'] = SP.array(stats.p_adjust(FloatVector(pv[0].tolist()),method = 'bonferroni',n=float(pv.shape[1]))) #multiple test correction for nominal pvalues with Bonferroni 
+		RV['qv'] = SP.empty(pv.shape,dtype=float)
+		tmp_qv = SP.array(stats.p_adjust(FloatVector(pv[0].tolist()),method = 'bonferroni',n=float(pv.shape[1]))) #multiple test correction for nominal pvalues with Bonferroni 
+		RV['qv'][0,:]=tmp_qv
 	RV['lambda'] = getLambda(pv) #get lambda for nominal pvalues
 	if n_perm <= 100:
 		#RV['lambda_perm'] = getLambda(perm_pv[:]) #calculate lambda on the the permutation
