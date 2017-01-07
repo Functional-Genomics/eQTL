@@ -101,8 +101,8 @@ class data():
 		else:
 			#Icis  = (chrom==float(genePos[0])) # force comparison on the same chromosome of the gene
 			Icis  = (chrom==genePos[0]) # force comparison on the same chromosome of the gene
-			Icis *= (pos>float(genePos[1])-w) # select downstream cis SNPs
-			Icis *= (pos<float(genePos[2])+w) # select upstream cis SNPs
+			Icis *= (pos>=float(genePos[1])-w) # select downstream cis SNPs
+			Icis *= (pos<=float(genePos[2])+w) # select upstream cis SNPs
 			assert Icis.sum()>0, 'no cis intersection found'
 			X = self.g['genotype/matrix'][:,Icis]
 			info = {}
