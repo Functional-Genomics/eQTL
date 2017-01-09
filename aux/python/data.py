@@ -103,12 +103,21 @@ class data():
 			Icis  = (chrom==genePos[0]) # force comparison on the same chromosome of the gene
 			Icis *= (pos>=float(genePos[1])-w) # select downstream cis SNPs
 			Icis *= (pos<=float(genePos[2])+w) # select upstream cis SNPs
-			assert Icis.sum()>0, 'no cis intersection found'
-			X = self.g['genotype/matrix'][:,Icis]
-			info = {}
-			for key in self.g['genotype/col_header'].keys():
-				info[key] = self.g['genotype/col_header'][key][:][Icis] 
-			return X, info
+			#assert Icis.sum()>0, 'no cis intersection found'
+			if Icis.sum()==0: #no cis interesction found
+				X=''
+				info=''
+				return X, info
+			else:
+				if self.g['genotype/matrix'].shape[1] == 1: #catch exceptions with numpy array with shape (n,1), otherwise they will fail
+					X = self.g['genotype/matrix'][Icis[0]]
+				else:
+					X = self.g['genotype/matrix'][:,Icis] 
+
+				info = {}
+				for key in self.g['genotype/col_header'].keys():
+					info[key] = self.g['genotype/col_header'][key][:][Icis] 
+				return X, info
 
 
 
