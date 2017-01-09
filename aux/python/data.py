@@ -110,7 +110,7 @@ class data():
 				return X, info
 			else:
 				if self.g['genotype/matrix'].shape[1] == 1: #catch exceptions with numpy array with shape (n,1), otherwise they will fail
-					X = self.g['genotype/matrix'][:,0]
+					X = self.g['genotype/matrix'][:]
 				else:
 					X = self.g['genotype/matrix'][:,Icis] 
 
