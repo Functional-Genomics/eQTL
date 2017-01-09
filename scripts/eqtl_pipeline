@@ -328,6 +328,15 @@ endif
 # 
 qtl_threshold?=$(fdr_threshold)
 
+# temporary workaround for cis
+ifneq ($(cis_window),0)
+ifneq ($(qtl_threshold),1)
+override qtl_threshold=1
+$(info * overriding $(qtl_threshold))
+endif
+endif
+
+
 $(info * )
 $(info * Optional Parameters:)
 $(foreach v,$(def_vars),$(info * 	$(v)=$($(v))))
