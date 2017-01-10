@@ -87,7 +87,7 @@ if __name__ == '__main__':
 #	i_file = h5py.File(file,'r')
 	i_file = pd.read_csv(file,sep="\t",na_values='NA',compression='gzip')
 	#check if file is non-empty
-	if i_file.shape[0] == 1 : #file is empty:
+	if i_file.shape[0] == 0 : #file is empty:
 		out.close()
 		sys.stdout.write('WARNING: file '+file+' is empty\n')
 		sys.exit(0)
