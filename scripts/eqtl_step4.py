@@ -81,6 +81,9 @@ if __name__ == '__main__':
 	header = "\t".join(name_keys)+'\n'
 	#open tsv file
 	out = gzip.open(outfile,'wb')
+    # write header
+    out.write(header)
+    
 	metainfo = pd.read_csv(metainfo,sep="\t",header=None,index_col=[0])
 
 	#open hdf5 file with final results
@@ -111,11 +114,10 @@ if __name__ == '__main__':
 	o = get_res(a,name_keys,fdr)
 	if genes.shape[0] == 0:
 		print 'no significant result found for file {0}'.format(outfile)
-		out.write(header)
+		#out.write(header)
 		pass
 	else:	
-
-		out.write(header)
+        #out.write(header)
 		#initialise an array with final results
 		finalarray = sp.arange(o[0].shape[0])
 		finalarray = o[0]
