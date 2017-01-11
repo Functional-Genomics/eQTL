@@ -82,7 +82,7 @@ if __name__ == '__main__':
 	#open tsv file
 	out = gzip.open(outfile,'wb')
     # write header
-    out.write(header)
+	out.write(header)
     
 	metainfo = pd.read_csv(metainfo,sep="\t",header=None,index_col=[0])
 
