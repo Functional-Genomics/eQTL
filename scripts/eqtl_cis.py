@@ -98,6 +98,12 @@ fout  = sys.argv[14]  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argume
 info_out = sys.argv[15] #hdf5 file to store permuted pvalues and inflation factors
 multiple_test_correction = sys.argv[16] #multiple test correction method chosen
 
+if len(sys.argv[1:]) > 17:
+	usage()
+	sys.stderr.write("ERROR: Too many arguments\n")
+	sys.exit(1)
+
+
 if len(sys.argv[1:]) == 17:
 	gene_cov = h5py.File(sys.argv[17],'r')
 	gene_cov_matrix = gene_cov['covariates'][:] #get matrix of covariates

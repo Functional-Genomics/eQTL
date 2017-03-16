@@ -86,6 +86,12 @@ elif use_kinship !='y' and use_kinship !='n':
 	sys.stderr.write('\nERROR: Please use either y or n for use_kinship\n')
 	sys.exit(1)
 
+if len(sys.argv[1:]) > 16:
+	usage()
+	sys.stderr.write("ERROR: Too many arguments\n")
+	sys.exit(1)
+
+
 #open outfiles 
 fout  = h5py.File(sys.argv[14],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
 info_out = h5py.File(sys.argv[15],'w')
