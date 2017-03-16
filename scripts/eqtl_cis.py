@@ -158,7 +158,10 @@ for gene in genes:
 	print "+"
 	
 	if g_cov_used == 'y': #if gene covariates are used
-		i = SP.in1d(gene_cov_genes[:],gene)
+		gene_split = gene.split('.')[0]
+		#i = SP.in1d(gene_cov_genes[:],gene)
+		gene_cov_genes_split = SP.array(map(lambda x:x.split('.')[0],gene_cov_genes.tolist()))
+		i = SP.in1d(gene_cov_genes_split[:],gene_split)
 		igene_cov_matrix = gene_cov_matrix[:,i]
 		g_cov = SP.hstack((cov[:],igene_cov_matrix[:]))
 	else:
