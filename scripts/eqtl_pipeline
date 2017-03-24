@@ -244,7 +244,7 @@ geno_chr?=
 
 
 #
-def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn collect_filter_summary_stats gtf_feature multiple_test_correction
+def_vars=minGQ minRD  min_expr min_perc_samples expr_transform hidden_k  mac peer_iterations snr_threshold max_missing vcf_filter_cmd chromosomes n_folds fdr_threshold subfolder_name use_kinship cis_window limix_use_peer_covariates vcf_filter_pass fix_vcf_cmd n_permutations snp_alpha geno_threshold expr_corr_transform volcano_title qtl_threshold 2d_plot_title 2d_plot_xlab expr_qn collect_filter_summary_stats gtf_feature multiple_test_correction flanking_only
 
 # default (only for cis analysis)
 multiple_test_correction?=fdr
@@ -270,6 +270,9 @@ expr_qn?=y
 volcano_title?=
 2d_plot_xlab?=
 2d_plot_title?=
+
+# backwards compatible
+flanking_only?=n
 
 # optional: bed file to aggregate the variants
 aggr_bed_file?=
@@ -451,6 +454,13 @@ else
 vcfs2hash=$(words $(vcfs))
 endif
 
+# keep backward compatibility
+ifeq ($(flanking_only),y)
+flanking_only_hash=y
+else
+flanking_only_hash=
+endif
+
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) $(fix_vcf_cmd) |md5sum|cut -f1 -d' ' 
 step1a_hash!=echo $(step1_hash) $(mac) $(max_missing) $(vcfs2hash) $(use_kinship_option) $(geno_chr) |md5sum|cut -f1 -d' '
@@ -478,7 +488,7 @@ endif
 endif
 
 # qtl/step4 hash
-step4_hash!=echo $(step3_hash) $(eqtl_method) $(cis_window) $(n_permutations) $(snp_alpha) $(qtl_threshold) $(pheno_cov_matrix) $(multiple_test_correction_hash)|md5sum|cut -f 1 -d' '
+step4_hash!=echo $(step3_hash) $(eqtl_method) $(flanking_only_hash) $(cis_window) $(n_permutations) $(snp_alpha) $(qtl_threshold) $(pheno_cov_matrix) $(multiple_test_correction_hash)|md5sum|cut -f 1 -d' '
 
 ##########
 # Folders

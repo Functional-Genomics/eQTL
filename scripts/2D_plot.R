@@ -72,11 +72,12 @@ myParseArgs <- function(usage,option_list,filenames.exist=NULL,multiple.options=
 
 usage <- "2D_plot.R -s summary_file -p phenotype_info -c chr_sizes -o output_tsv_file [-t title -s sign. threshold]"
 option_list <- list(
-  make_option(c("-o","--out"),type="character",default="",dest="out",help="Output quantification file"),
-  make_option(c("-s","--sum"),type="character",default=NULL,dest="sum_file",help="Quantification matrix"),
+  make_option(c("-o","--out"),type="character",default="",dest="out",help="Output image"),
+  make_option(c("-s","--sum"),type="character",default=NULL,dest="sum_file",help="Summary file"),
   make_option(c("-p","--pheno"),type="character",default=NULL,dest="pheno_file",help="Phenotype information"),
-  make_option(c("-c","--chr"),type="character",default=NULL,dest="chr_file",help="Phenotype information"),
-  make_option(c("-x","--xlab"),type="character",default="Variant",dest="xlab",help="x-label"),
+  make_option(c("-c","--chr"),type="character",default=NULL,dest="chr_file",help="Chr. sizes"),
+  make_option(c("-x","--xlab"),type="character",default="",dest="xlab",help="x-label"),
+  make_option(c("-y","--ylab"),type="character",default="",dest="ylab",help="y-label"),
   make_option(c("-t","--title"),type="character",default="",dest="title",help="Plot title"),
   make_option(c("--save_image"),action="store_true",dest="save.image",default=FALSE,help="Save the R image"),  
   make_option(c("--sig"),type="numeric",default=0.05,dest="sign.threshold",help=""))
@@ -189,8 +190,8 @@ geno.pos <- chr.offset[as.character(data$chrom)]+ data$pos
 #pheno.pos <- geno.pos
 pheno.pos <- chr.offset[data$"Gene Chr"]+data$"Gene Start"
 col <- rep("black",length(pheno.pos))
-col[data$beta<0.5] <- "blue"
-col[data$beta>0.5] <- "red"
+col[data$beta<0] <- "blue"
+col[data$beta>0] <- "red"
 #par(
 #length(geno.pos)
 #length(pheno.pos)
@@ -200,7 +201,7 @@ png(filename=opt$out,width=900,height=900,res=150)
 par(bty="l",mar=c(4,4,4,4),mgp=c(2.5,0.2,0))
 plot(x=geno.pos,y=pheno.pos,
      xlab=opt$xlab,
-     ylab=paste("E-Genes (Bonferroni adj. pvalue <=",opt$sign.threshold,")",sep=""),
+     ylab=opt$ylab,
      main=opt$title,
      col=col,pch=20,
      xlim=c(0,max(chr.offset)+chr.length[1]),
@@ -238,7 +239,8 @@ axis(2, at=append(0,cumsum(chr.length)), labels=FALSE,col="darkgrey",
      asp=1,xaxs="i",yaxs="i")
 axis(2, at=cumsum(chr.length)-chr.length/2, labels=rownames(rects), las=2,col="darkgrey",tck=0,col.axis="darkgrey",cex.axis=0.6)
 
-legend("right",inset=c(-0.1,0),title="Effect\nsize",c(">0.5","<0.5","~0"),pch=20,col=c("red","blue","black"),bty="n")
+#legend("right",inset=c(-0.1,0),title="Effect\nsize",c(">0","<0","0"),pch=20,col=c("red","blue","black"),bty="n")
+legend("right",inset=c(-0.1,0),title="Effect\nsize",c(">0","<0"),pch=20,col=c("red","blue"),bty="n")
 dev.off()
 
 if ( opt$save.image ) { 
