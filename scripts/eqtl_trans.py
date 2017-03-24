@@ -23,10 +23,11 @@ This script runs the eqtl analysis on a chunk of the gene expression matrix VS a
 
 Usage:
 
-eqtl_trans.py <allchr.hdf5> <pheno.filtered.hdf5> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename> <info_perm_file> <gene_cov.hdf5>
+eqtl_trans.py <allchr.hdf5> <pheno.filtered.hdf5> <flanking> <peer> <peer.hdf5> <Kpop.hdf5> <covariates.hdf5> <use_kinship> <peer_cov> <cis_window> <n_perm> <change_beta_sign> <nfolds> <fold_j> <outfilename> <info_perm_file> <gene_cov.hdf5>
 
 peer_cov values = n | y [default=n] 
 use_kinship = n| y
+flanking = n | y [default=n]
 gene_cov.hdf5 is optional [default=n]
 '''
 
@@ -49,21 +50,25 @@ def run_lmm(use_kinship,peer_cov,Xc,Y,cov,K):
 	return lmm
 
 
-if len(sys.argv[1:]) < 15:
+if len(sys.argv[1:]) < 17:
 	usage()
 	sys.stderr.write('ERROR: missing parameters\n')
 	sys.exit(1)
 
+if len(sys.argv[1:]) > 17:
+	usage()
+	sys.stderr.write("ERROR: Too many arguments\n")
+	sys.exit(1)
 #read args
-geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign = sys.argv[1:12]
+geno,pheno,flanking,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign = sys.argv[1:13]
 window=float(window)
 n_perm=int(n_perm)
 
 #populate dictionary with all the data needed for eqtl analysis
 
 #take nfold and j to name the out file for each j
-nfolds = int(sys.argv[12])
-fold_j = int(sys.argv[13])
+nfolds = int(sys.argv[13])
+fold_j = int(sys.argv[14])
 
 if type(nfolds) != (int):
         usage()
@@ -85,19 +90,19 @@ elif use_kinship !='y' and use_kinship !='n':
 	usage()
 	sys.stderr.write('\nERROR: Please use either y or n for use_kinship\n')
 	sys.exit(1)
-
-if len(sys.argv[1:]) > 16:
+elif flanking !='y' and flanking != 'n':
 	usage()
-	sys.stderr.write("ERROR: Too many arguments\n")
+	sys.stderr.write('\nERROR: Please use either y or n for flanking\n')
 	sys.exit(1)
 
 
 #open outfiles 
-fout  = h5py.File(sys.argv[14],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
-info_out = h5py.File(sys.argv[15],'w')
+fout  = h5py.File(sys.argv[15],'w')  #%d_%.3d.hdf5'%(nfolds,fold_j) #this should take as argument a name like nfolds_j.hdf5
+info_out = h5py.File(sys.argv[16],'w')
 
-if sys.argv[16]!='n':
-        gene_cov = h5py.File(sys.argv[16],'r')
+
+if len(sys.argv[1:]) == 17:
+        gene_cov = h5py.File(sys.argv[17],'r')
         gene_cov_matrix = gene_cov['covariates'][:] #get matrix of covariates
         gene_cov_genes = gene_cov['col_header/phenotype_ID'][:] #get phenotype names from gene covariates
         g_cov_used = 'y'
@@ -105,11 +110,11 @@ else:
         g_cov_used = 'n'
 
 
-sys.stderr.write('\nParameters set in the association analysis:\ngenotype={0}; phenotype={1}; correction_metho={2}; correction_method_file={3}; Kinship_file={4}; covariates_file={5}; use_kinship={6}; peer_covariates={7}; cis_window={8}; number_permutation={9}; change_beta_sign={10}; n_folds={11}; fold_j={12}; outfile={13}; gene_covariates_used={14}'.format(geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign,nfolds,fold_j,fout,g_cov_used))
-
+sys.stderr.write('\nParameters set in the association analysis:\ngenotype={0}; phenotype={1}; correction_metho={2}; correction_method_file={3}; Kinship_file={4}; covariates_file={5}; use_kinship={6}; peer_covariates={7}; cis_window={8}; number_permutation={9}; change_beta_sign={10}; n_folds={11}; fold_j={12}; outfile={13}; flanking_only={14}; gene_covariates_used={15}'.format(geno,pheno,cm,cm_hdf5,kinship,cov_hdf5,use_kinship,peer_cov,window,n_perm,change_beta_sign,nfolds,fold_j,fout,flanking,g_cov_used))
+sys.stderr.write('\nFlanking_only parameter will be ignored in the trans analysis.\n')
 # load data 
 import data as DATA
-data  = DATA.data(geno,kinship,pheno,cov_hdf5,cm_hdf5,cm,window)
+data  = DATA.data(geno,kinship,pheno,cov_hdf5,cm_hdf5,cm,window,flanking)
 #get kinship
 K  = data.getK(normalize=False) #at the moment normalisation is not optional. Kpop/Ktot will be always normalised
 #get number of samples
