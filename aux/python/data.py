@@ -9,7 +9,7 @@ import warnings
 
 
 class data():
-	def __init__(self,geno,kinship,pheno,cov,cor,cormethod,window):
+	def __init__(self,geno,kinship,pheno,cov,cor,cormethod,window,flanking):
 		"""load data file"""
 		self.g	= h5py.File(geno,'r') #import geno data
 		self.k = h5py.File(kinship,'r') # import kinship
@@ -19,6 +19,7 @@ class data():
 		self.geneID = self.p['phenotype']['col_header']['phenotype_ID'][:] # ENSEMBL genes
 		self.corrmeth = cormethod #string [ peer | panama | none ]
 		self.window = float(window) #float value with nt window
+		self.flanking=flanking #boolean. If True look only, exclude the gene body from analysis. Default is False
 	def getGeneIDs(self):
 		""" get GeneID """
 		#_chr = self.p['phenotype/chrom'][:] #upload vector of chr for each gene
@@ -86,6 +87,7 @@ class data():
 		"""
 		get genotypes, chrom, pos to be tested with each gene. 
 		"""
+		flanking=self.flanking
 		w = self.window
 		genePos = self.getGenePos(geneID)
 		pos = self.g['genotype/col_header/pos'][:]
@@ -99,25 +101,56 @@ class data():
 				info[key] = self.g['genotype/col_header'][key][:]
 			return X, info
 		else:
-			#Icis  = (chrom==float(genePos[0])) # force comparison on the same chromosome of the gene
-			Icis  = (chrom==genePos[0]) # force comparison on the same chromosome of the gene
-			Icis *= (pos>=float(genePos[1])-w) # select downstream cis SNPs
-			Icis *= (pos<=float(genePos[2])+w) # select upstream cis SNPs
-			#assert Icis.sum()>0, 'no cis intersection found'
-			if Icis.sum()==0: #no cis interesction found
-				X=''
-				info=''
-				return X, info
-			else:
-				if self.g['genotype/matrix'].shape[1] == 1: #catch exceptions with numpy array with shape (n,1), otherwise they will fail
-					X = self.g['genotype/matrix'][:]
+			if flanking=='n': #default
+				#Icis  = (chrom==float(genePos[0])) # force comparison on the same chromosome of the gene
+				Icis  = (chrom==genePos[0]) # force comparison on the same chromosome of the gene
+				Icis *= (pos>=float(genePos[1])-w) # select downstream cis SNPs
+				Icis *= (pos<=float(genePos[2])+w) # select upstream cis SNPs
+				#assert Icis.sum()>0, 'no cis intersection found'
+				if Icis.sum()==0: #no cis interesction found
+					X=''
+					info=''
+					return X, info
 				else:
-					X = self.g['genotype/matrix'][:,Icis] 
+					if self.g['genotype/matrix'].shape[1] == 1: #catch exceptions with numpy array with shape (n,1), otherwise they will fail
+						X = self.g['genotype/matrix'][:]
+					else:
+						X = self.g['genotype/matrix'][:,Icis] 
 
-				info = {}
-				for key in self.g['genotype/col_header'].keys():
-					info[key] = self.g['genotype/col_header'][key][:][Icis] 
-				return X, info
-
-
-
+					info = {}
+					for key in self.g['genotype/col_header'].keys():
+						info[key] = self.g['genotype/col_header'][key][:][Icis] 
+					return X, info
+			else: #look only at flanking regions and exclude gene body
+				Icis  = (chrom==genePos[0]) # force comparison on the same chromosome of the gene
+				Icis *= (pos>=float(genePos[1])-w) # select downstream cis SNPs
+				Icis *= (pos<=float(genePos[2])+w) # select upstream cis SNPs
+				pos_new = pos[Icis]
+				Igene = (pos_new>=float(genePos[1])) #index for positions overlapping the gene body
+				Igene *= (pos_new<=float(genePos[2])) #index for positions overlapping the gene body
+				#assert Icis.sum()>0, 'no cis intersection found'
+				if Icis.sum()==0: #no cis interesction found
+					X=''
+					info=''
+					return X, info
+				else:
+					if self.g['genotype/matrix'].shape[1] == 1: #catch exceptions with numpy array with shape (n,1), otherwise they will fail
+						#X = self.g['genotype/matrix'][:]
+						if True in Igene: #if the only element tested is within gene coordinates
+							X='' #return nothing
+							info=''
+							return X, info
+						else:
+							X = self.g['genotype/matrix'][:] #return the single element
+							info = {}
+							for key in self.g['genotype/col_header'].keys():
+								info[key] = self.g['genotype/col_header'][key][:][Icis]
+							return X, info
+					else:
+						X = self.g['genotype/matrix'][:,Icis]
+						X = X[:,~Igene] #exclude positions overlapping the gene body
+						info = {}
+						for key in self.g['genotype/col_header'].keys():
+							info[key] = self.g['genotype/col_header'][key][:][Icis]
+							info[key] = info[key][~Igene]
+						return X, info
