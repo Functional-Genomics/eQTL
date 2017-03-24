@@ -50,7 +50,7 @@ def run_lmm(use_kinship,peer_cov,Xc,Y,cov,K):
 	return lmm
 
 
-if len(sys.argv[1:]) < 17:
+if len(sys.argv[1:]) < 16:
 	usage()
 	sys.stderr.write('ERROR: missing parameters\n')
 	sys.exit(1)
