@@ -224,14 +224,14 @@ function plink_install {
     pprint_msg "Installing plink..."
     PLINK_VERSION=1.07
     if [ "$OS" == "mac" ]; then
-	PLINK_FILE=plink-$PLINK_VERSION-mac-intel.zip	    	
+	PLINK_FILE=plink-$PLINK_VERSION-mac-intel.zip        
 	echo "Complain with Claudia!!"
 	#exit 1
 	#http://pngu.mgh.harvard.edu/~purcell/plink/dist/plink-1.07-mac-intel.zip
     else
 	PLINK_FILE=plink-$PLINK_VERSION-x86_64.zip
     fi
-    PLINK_URL=http://pngu.mgh.harvard.edu/~purcell/plink/dist/$PLINK_FILE
+    PLINK_URL=http://zzz.bwh.harvard.edu/plink/dist/$PLINK_FILE
     download $PLINK_URL $PLINK_FILE
     unzip $PLINK_FILE
     cp `echo $PLINK_FILE|sed "s/.zip//"`/plink $EPIPELINE_DIR/bin/
