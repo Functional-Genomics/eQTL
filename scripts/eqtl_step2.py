@@ -38,11 +38,13 @@ if __name__=='__main__':
 	header = ['geneID','chrom','pos','var_name','pv','pv_perm','qv','beta','lambda','lambda_perm_mean','lambda_perm_std','file']
 	header = pd.DataFrame(SP.array(header))
 	header.T.to_csv(summary,mode = 'a',sep='\t',header=None,index=None,compression='gzip')
+	#set flanking value to default (False). This argument is not used from now on, although it may have been set to True in the association analysis step. TODO: change here
+	flanking = 'False'
 	#populate dictionary with data for eqtl
 	import eqtlsettings
 	import data as DATA	
 	#load doata
-	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, correction_method,window)
+	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, correction_method,window,flanking)
 	
 	#check if file with samples list exist
 	if os.path.isfile(in_hdf5) != True:
@@ -71,7 +73,6 @@ if __name__=='__main__':
 		try:
 			temp = {}
 			# store pv, pv_perm,cis qv,lambda,lambda_perm,lambda_empirical,beta
-			#take the minimum pvalue for each gene. TODO: still don't know which strategy to use for trans!
 			if window > 0: #is cis
 				print "gene {0} kept".format(geneID)
 				temp['geneID'] = SP.array([str(geneID)])
