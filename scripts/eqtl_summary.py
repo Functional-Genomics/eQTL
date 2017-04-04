@@ -39,11 +39,13 @@ if __name__=='__main__':
 	header = ['geneID','chrom','pos','pv','pv_perm','qv','beta','lambda','lambda_perm','file']
 	header = pd.DataFrame(SP.array(header))
 	header.T.to_csv(summary,mode = 'a',sep='\t',header=None,index=None)
+	#set flanking to default value (False). This parameter is not used anymore from now on, although it may have been set to True in the association analysis step. TODO: change here
+	flanking = 'False'
 	#populate dictionary with data for eqtl
 	import eqtlsettings
 	import data as DATA	
 	#load doata
-	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, correction_method,window)
+	data = DATA.data(geno, Kpop, pheno, covariates,  hdf_correction, correction_method,window,flanking)
 	
 	#check if file with samples list exist
 	if os.path.isfile(in_hdf5) != True:
