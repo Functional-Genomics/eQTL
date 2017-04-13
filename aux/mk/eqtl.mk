@@ -100,7 +100,7 @@ $(eqtl_dir)/$(1)/$(n_folds)_%.hdf5 $(eqtl_dir)/$(1)/aux/$(n_folds)_%.hdf5: $(ste
 	mkdir -p $$(@D)/aux && $(eqtl_cmd1) $(step1b_dir)/$(1)/chr$(1).hdf5   $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(flanking_only) $(corr_method)  $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(use_kinship) $(limix_use_peer_covariates) $(cis_window) $(n_permutations) $(CHANGE_BETA_SIGN)  $(n_folds) $$* $$@.tmp  $$(subst /$(1)/,/$(1)/aux/,$$@) $(multiple_test_correction) $(pheno_cov_option) && mv $$@.tmp $$@
 
 $(eqtl_dir)/$(1)/%.step2.tsv.gz $(eqtl_dir)/$(1)/%.step2.tsv.gz.meta.tsv: $(eqtl_dir)/$(1)/%.hdf5 $(step1b_dir)/$(1)/chr$(1).hdf5  $(cov_sorted_hdf5) $(step2_dir)/$(expr_matrix_filename).filtered.hdf5 $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5
-	eqtl_step2.py $(step1b_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha)  $$<  $$@.tmp $$@.meta && mv $$@.meta $$@.meta.tsv && mv $$@.tmp $$@
+	eqtl_step2.py $(step1b_dir)/$(1)/chr$(1).hdf5  $(step2_dir)/$(expr_matrix_filename).filtered.hdf5  $(corr_method) $(step3_dir)/$(corr_method)/$(corr_method).$(expr_corr_transform).hdf5  $(kpop_file) $(cov_sorted_hdf5) $(cis_window) $(n_permutations) $(snp_alpha) $(flanking_only) $$<  $$@.tmp $$@.meta && mv $$@.meta $$@.meta.tsv && mv $$@.tmp $$@
 endef
 
 # %.step2.tsv.gz.meta.tsv
