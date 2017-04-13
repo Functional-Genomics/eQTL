@@ -240,7 +240,6 @@ chr_sizes_file?=none
 $(info * )
 
 expr_corr_transform?=none
-geno_chr?=
 
 
 #
