@@ -32,9 +32,11 @@ if ( length(args) == 4 ) {
 # TODO: validate files
 
 
+cat("Loading expression:",expr.file,"...")
 #
 expr.df <- read.table(expr.file,header = T,check.names=F,sep='\t')
 rownames(expr.df) <- expr.df[,1]
+cat("done.\n")
 #rownames(expr.df)
 expr.df <- expr.df[,-1,drop=FALSE]
 cat(dim(expr.df),"\n")
@@ -53,14 +55,15 @@ if ( sum(is.na(expr.df))>0 ) {
   q(status=0)
 }
 
-
+cat("Loading file with the mapping between samples and class:",map.file,"...")
 map.df <- read.table(map.file,header = F,check.names=F,sep='\t')
 # 1st column=sample
 # 2nd column=class/label
 if ( length(rownames(expr.df))==length(colnames(expr.df)) && sum(rownames(expr.df)== colnames(expr.df)) ==0 ) {
-  cat("ERROR: some samples in expr matrix were not found in ",map.file,"\n")
+  cat("\nERROR: some samples in expr matrix were not found in ",map.file,"\n")
   quit(status=1)
 }
+cat("done.\n")
 
 # subset the mapping
 map.df <- map.df[map.df$V1 %in% colnames(expr.df),]
