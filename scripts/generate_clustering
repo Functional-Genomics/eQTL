@@ -55,7 +55,7 @@ if ( sum(is.na(expr.df))>0 ) {
   q(status=0)
 }
 
-cat("Loading file with the mapping between samples and class:",map.file,"...")
+cat("Loading file mapping the samples to a class:",map.file,"...")
 map.df <- read.table(map.file,header = F,check.names=F,sep='\t')
 # 1st column=sample
 # 2nd column=class/label
