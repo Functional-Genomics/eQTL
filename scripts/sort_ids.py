@@ -68,7 +68,7 @@ if tag == 'phenotype':
 		sys.exit(1)
 else: #for covariates
 	if len(ic) != covids.shape[0]:
-		sys.stderr.write('Incosistency found between number of samples in sample.hdf5 and covariate file\n'
+		sys.stderr.write('Incosistency found between number of samples in sample.hdf5 and covariate file\n')
 		bv = sp.in1d(covids,genoids)
 		for x in xrange(len(covids[~bv])):
 			sys.stderr.write('The following genotype id {0} was not found in the covariates file\n'.format(covids[~bv][x]))
