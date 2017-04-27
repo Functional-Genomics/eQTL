@@ -444,6 +444,13 @@ endif
 # optional
 #   |+-------------dna_[dna_filter_options_md5]/plink_[dna_filder_options_md5]/[aggr_bed]
 
+# keep backward compatibility
+ifeq ($(flanking_only),y)
+flanking_only_hash=y
+else
+flanking_only_hash=
+endif
+
 #
 ifndef var_matrix
 # VCFs
@@ -453,12 +460,6 @@ else
 vcfs2hash=$(words $(vcfs))
 endif
 
-# keep backward compatibility
-ifeq ($(flanking_only),y)
-flanking_only_hash=y
-else
-flanking_only_hash=
-endif
 
 # HASH
 step1_hash!=echo $(minGQ) $(minRD) $(vcf_filter_cmd) $(vcf_filter_option) $(fix_vcf_cmd) |md5sum|cut -f1 -d' ' 
@@ -471,6 +472,7 @@ step1_hash!=echo $(var_matrix) |md5sum|cut -f1 -d' '
 step1a_hash!=echo $(step1_hash) $(geno_threshold) $(geno_chr) |md5sum|cut -f1 -d' '
 step1b_hash!=echo $(aggr_bed_file) $(geno_threshold) $(step1a_hash) |md5sum|cut -f1 -d' '
 endif
+
 
 
 step2_hash!=echo $(min_expr) $(min_perc_samples) $(expr_transform) $(pheno_chr) $(internal_expr_qn)  |md5sum|cut -f1 -d' '
