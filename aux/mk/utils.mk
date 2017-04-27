@@ -20,7 +20,7 @@
 
 #Version and license info
 pname=eqtlXXXXX
-version=0.0.4
+version=0.0.5
 contact="Add contact"
 license=This pipeline is distributed  under the terms of the GNU General Public License 3
 

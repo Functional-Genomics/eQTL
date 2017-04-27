@@ -624,10 +624,10 @@ phony_targets+=all step1 step2 step3 step4 reports
 ifndef var_matrix
 # ensure that the samples in the cov matrix are the same that are in the expr. matrix
 # TODO: change filter rows to accept a parameter!
-$(cov_hdf5).tsv:  $(cov_matrix) $(dna_rna_mapfile).samples
+$(cov_hdf5).tsv:  $(cov_matrix) $(name)/$(dna_rna_mapfile).samples
 	filter_rows.R $^ $@.tmp && mv $@.tmp $@
 
-$(dna_rna_mapfile).samples: $(dna_rna_mapfile)
+$(name)/$(dna_rna_mapfile).samples: $(dna_rna_mapfile)
 	cut -f 1 $< | tr "\n" "\t" > $@.tmp && mv $@.tmp $@
 	echo "" >> $@
 

@@ -22,20 +22,25 @@ eqtl_summary.py <chr1.hdf5/all_chr.hdf5> <pheno.filtered.hdf5> <correction_metho
 
 if __name__=='__main__':
 
-	if len(sys.argv[1:]) != 12:
+	if len(sys.argv[1:]) != 13:
 		sys.stderr.write('ERROR: missing parameters\n')
 		usage()
 		sys.exit(1)
 
 	#load data from that are just needed to import data module 
-	geno, pheno, correction_method, hdf_correction, Kpop, covariates,window,n_perm,alpha = sys.argv[1:10]
-        window=float(window) #chromosomal window
+	geno, pheno, correction_method, hdf_correction, Kpop, covariates,window,n_perm,alpha,flanking = sys.argv[1:11]
+    if flanking !='y' and flanking != 'n':
+		usage()
+		sys.stderr.write('\nERROR: Please use either y or n for flanking\n')
+		sys.exit(1)
+
+    window = float(window) #chromosomal window
 	n_perm = int(n_perm) #number of permutations
 	alpha = float(alpha) #level of significance for trans
 	#nfolds = int(sys.argv[10]) #number of folds used for gene expr matrix
-	in_hdf5 = sys.argv[10] #list of fold_j files
-	summary = open(sys.argv[11],'w') #outfile
-	metainfo = open(sys.argv[12],'w') #metainformation
+	in_hdf5 = sys.argv[11] #list of fold_j files
+	summary = open(sys.argv[12],'w') #outfile
+	metainfo = open(sys.argv[13],'w') #metainformation
 	header = ['geneID','chrom','pos','pv','pv_perm','qv','beta','lambda','lambda_perm','file']
 	header = pd.DataFrame(SP.array(header))
 	header.T.to_csv(summary,mode = 'a',sep='\t',header=None,index=None)

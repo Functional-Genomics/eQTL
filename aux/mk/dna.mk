@@ -1,5 +1,5 @@
 # =========================================================
-# Copyright 2015-2016
+# Copyright 2015-2017
 #
 #
 # This is free software: you can redistribute it and/or modify
@@ -150,34 +150,34 @@ $(matched_var_matrix): $(var_matrix) $(expr_matrix)
 	filter_columns.R $^ $@.tmp && mv $@.tmp $@ 
 
 
-$(var_matrix).consistent: $(var_matrix) $(var_pos)
+$(step1a_dir)/$(var_matrix).consistent: $(var_matrix) $(var_pos)
 	geno_check_consistency.py $^ && touch $@
 
-$(step1a_dir)/data_consistent: $(var_matrix).consistent $(matched_var_matrix) $(matched_expr_matrix)
+$(step1a_dir)/data_consistent: $(step1a_dir)/$(var_matrix).consistent $(matched_var_matrix) $(matched_expr_matrix)
 	touch $(step1a_dir)/data_consistent
 
-$(var_pos).bed4: $(var_pos)
+$(step1a_dir)/$(var_pos).bed4: $(var_pos)
 	tail -n +2 $< | awk  'BEGIN {OFS="\t";} {print $$2,$$3,$$3,$$1;}'  >> $@.tmp && \
 	mv $@.tmp $@
 
 #
 # The (.filt.)bed4 file should only contain the entries that are in $(matched_var_matrix).filt.tsv
-$(var_pos).filt.bed4: $(var_pos).bed4 $(matched_var_matrix).filt.tsv
+$(step1a_dir)/$(var_pos).filt.bed4: $(step1a_dir)/$(var_pos).bed4 $(matched_var_matrix).filt.tsv
 	cut -f 1 $(matched_var_matrix).filt.tsv | tail -n +2 > $(matched_var_matrix).filt.tsv.tmp && \
 	if [ `wc -l $(matched_var_matrix).filt.tsv.tmp|cut -f 1 -d\ ` -eq 0 ]; then echo "ERROR: No variants after filtering - unable to continue"; exit 1; fi 
 	grep -F -f $(matched_var_matrix).filt.tsv.tmp $< > $@.tmp && mv $@.tmp $@ && rm -f $(matched_var_matrix).filt.tsv.tmp
 
 
 # var_min_freq [0,1]
-$(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(var_matrix).consistent
+$(matched_var_matrix).filt.tsv: $(matched_var_matrix) $(step1a_dir)/$(var_matrix).consistent
 	cat $< | geno_filtering.py $(geno_threshold) > $@.tmp && mv $@.tmp $@
 
 define make-rules-for-chr=
 $(shell mkdir -p $(step1b_dir)/$(1))
-$(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(var_pos).filt.bed4 
-	cat $$< | generate_hdf5_mqtl.py  $(var_pos).filt.bed4 $(1) $$@.tmp && mv $$@.tmp $$@
+$(step1b_dir)/$(1)/chr$(1).hdf5: $(matched_var_matrix).filt.tsv $(step1a_dir)/$(var_pos).filt.bed4 
+	cat $$< | generate_hdf5_mqtl.py  $(step1a_dir)/$(var_pos).filt.bed4 $(1) $$@.tmp && mv $$@.tmp $$@
 
-$(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(var_pos).filt.bed4
+$(step1b_dir)/$(1)/chr$(1).genotype.tsv: $(matched_var_matrix).filt.tsv $(step1a_dir)/$(var_pos).filt.bed4
 	filter_geno_matrix.py $$^ $$@.tmp &&\
 	mv $$@.tmp $$@
 
